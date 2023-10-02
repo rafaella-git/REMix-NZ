@@ -1,0 +1,13 @@
+Island,Acronym,Region,Load (MW),Generation,Shadow price,Colour,National % Load,National % Generation,lsland % Load,Island% Generation,,,Totals,Load (MW),Generation (MW)
+NI,AKL,Auckland,1415,112, $60 ,Blue,25%,2%,39%,3%,,,National,5639,5667
+NI,BOP,Bay of Plenty,319,319, $59 ,Bright light blue,6%,6%,9%,9%,,,NI,3666,3584
+NI,CEN,Central,236,86, $59 ,Muted green,4%,2%,6%,2%,,,SI,1973,2083
+NI,HBY,Hawke's Bay,90,88, $59 ,Bright light green,2%,2%,2%,2%,,,,,
+NI,NIS,Northern Isthmus Region,210,0, $61 ,Purple,4%,0%,6%,0%,,,,,
+NI,TRN,Taranaki,395,782, $58 ,"Green (muted, darkish)",7%,14%,11%,22%,,,,,
+NI,WEL,Wellington,481,167, $59 ,Yellow,9%,3%,13%,5%,,,,,
+NI,WTO,Waikato,520,2030, $59 ,"Blue (light, mutted)",9%,36%,14%,57%,,,,,
+SI,CAN,Canterbury,795,1086, $59 ,Orange,14%,19%,40%,52%,,,,,
+SI,NEL,Nelson,215,34, $60 ,Red,4%,1%,11%,2%,,,,,
+SI,OTG,Otago,963,963, $59 ,Bright light purple,17%,17%,49%,46%,,,,,
+Total,,,5639,5667,,,100%,100%,,,,,,,

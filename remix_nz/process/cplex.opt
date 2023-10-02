@@ -1,0 +1,16 @@
+rerun no
+lpmethod 4
+barorder 0
+preind 1
+scaind 0
+predual -1
+baralg 0
+barstartalg 1
+barepcomp 1e-6
+solutiontype 2
+startalg 4
+epgap 1e-3
+quality 1
+barcolnz 0
+threads 4
+parallelmode 1
