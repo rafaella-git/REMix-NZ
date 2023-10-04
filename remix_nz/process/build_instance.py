@@ -18,17 +18,18 @@ idx = pd.IndexSlice
 
 # Useful lists
 nodes_lst=["NIS","AKL","WTO","TRN","BOP","HBY","CEN","WEL","NEL","CAN","OTG" ]
-yrs2run=[2050] # years to be optimised
+yrs2run=[2020,2030,2040,2050] #[2050] # years to be optimised
 yrs_str='-'.join([str(item) for item in yrs2run])
 yrs_demand= [2020, 2025, 2030, 2035, 2040, 2045, 2050]
 yrs_mentioned= [2020, 2025, 2030, 2035, 2040, 2045, 2050] # must include all years that data is provided for in the model
 # Demand files available for different scenarios
-files_lst=["nz_profile_11nodes","medpop_evs","low_pop_out","med_pop_out","high_pop_out"] 
+files_lst=["nz_profile_11nodes","medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] 
 files_493=["medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] #493 as in the course 493, this is for Liv and Sam
 
+indx=0
 # %% [markdown]
 # ### Customise the dataset changing these
-demand_file=files_lst[0] 
+demand_file=files_lst[indx] #files_493[indx] 
 case_name=f"{demand_file}_{yrs_str}"
 geofile="11regionsNZ.geojson"
 
@@ -45,6 +46,7 @@ path_geo = f"{path_input}/shapefiles"      # geojson
 
 # output
 data_dir = Path(f"C:/Local/REMix/remix_nz/output/{case_name}/data").mkdir(parents=True, exist_ok=True)
+results_dir = Path(f"C:/Local/REMix/remix_nz/output/{case_name}/result").mkdir(parents=True, exist_ok=True)
 
 
 
@@ -741,8 +743,6 @@ def add_lithium_batteries(m):
     )  # Mio EUR per unit
     m.parameter.add(stor_acc, "accounting_storageunits")
 
-
-
 def add_network(m):
     #First we need to set up the link connections in the data by defining the starting and ending node of each link
     link_names = ["NIS__AKL",
@@ -1212,8 +1212,6 @@ def plot_avg(m):
 
 
 if __name__ == "__main__":
-
-
     # Create instance
     s1 = time.perf_counter()
     m = Instance()
@@ -1235,12 +1233,13 @@ if __name__ == "__main__":
     add_accounting(m)
     validate_scope(m)
     e1 = time.perf_counter()
-    print(f"Dataframe management took {e1-s1} seconds.")
+    d1=time.strftime("%Hh %Mm %Ss", time.gmtime(e1-s1))
+    print(f"Dataframe management took {d1}.")
 
     # Create data
     s2 = int(time.perf_counter())
     m.write(output_path=f"../output/{case_name}/data", fileformat="csv")
     e2 = time.perf_counter()
-    print(f"Writing dataset took {e2-s2} seconds.")
-
+    d2=time.strftime("%Hh %Mm %Ss", time.gmtime(e2-s2))
+    print(f"Writing dataset took {d2}.")
 

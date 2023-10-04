@@ -1,6 +1,99 @@
+# %% [markdown]
+# ## Part c: evaluation of results
+
 
 # %% [markdown]
-# ## Part b: running the model
+# Overview of installed capacities
+
+# %%
+# importing dependencies
+from remix.framework.tools.gdx import GDXEval
+from remix.framework.tools.plots import plot_network, plot_choropleth
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+# %%
+# Define case to be evaluated (based on demand file name and the yeas optimised)
+indx=0
+# Demand files available (different scenarios)
+files_lst=["nz_profile_11nodes"] 
+files_493=["medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] #493 as in the course 493, this is for Liv and Sam
+yrs=[2020,2030,2040,2050] # years optimised
+yrs_str='-'.join([str(item) for item in yrs])
+demand_file=files_lst[indx] 
+case_name=f"{demand_file}_{yrs_str}"
+idx = pd.IndexSlice #often used shortcut
+
+
+path_base = "C:/Local/REMix"  
+path_input = f"{path_base}/remix_nz/input"
+path_output = f"{path_base}/remix_nz/output" 
+path_result = f"{path_output}/{case_name}/result" 
+
+
+# %%
+# read in the output `*.gdx` file from the optimization in GAMS
+results = GDXEval(f"{path_result}/{case_name}.gdx")
+
+
+# %% [markdown]
+# ### Evaluating converter (PV, wind, battery) capacities
+caps = results["converter_caps"]   # convert converter capacities to a Pandas DataFrame
+caps = caps[caps > 0.01].dropna()  # remove all capacities with less than 10 MW
+caps.loc[idx[:, "2030", :, "Elec", "total"], :].round(2) # accNodesModel=all, accYears=2030 only, techs=all, commodit=only Elec, capType=total
+
+
+# %% [markdown]
+# ### Evaluating installed connection capacities between the different model nodes.
+transfer_caps = results["transfer_caps"]
+# nodesModel_start=all, nodesModel_end=all, linksModel=all, years=2030 only, techs=all (we only have HV), commodity=Elec, capType=total
+transfer_caps.loc[idx[:, :, :, "2030", :, "Elec", "total"], :].round(2) 
+
+
+
+# %% [markdown]
+# To get a feeling on where we benefit from the electrical network, we can check
+# the annual transferred energy between model nodes.
+# Since the network contains information on the direction of flows, we need to
+# also account for the direction.
+# The energy flow from model region A (nodesModel) to B (nodesModel_a) is
+# defined as positive, whereas the flow from B to A is accounted negative.
+# With the "balanceType" entry we can check for the individual flows from A to
+# B (positive), flows from B to A (negative), annual sum of directed flows
+# (netto = positive + negative), annual sum of energy transferred
+# (brutto = positive - negative), or link utilization
+# (flh = brutto / link capacity).
+
+# %%
+transfer_flows = results["transfer_flows_annual"]
+transfer_flows = transfer_flows[transfer_flows.abs() > 0.1].dropna()  # Remove all flows with less than 0.1 GWh
+transfer_flows = (transfer_flows.loc[idx[:, :, :, :, :, "Elec", "netto"], :].div(1e3).round(2))  # Convert to TWh
+
+transfer_flows
+
+
+# %% [markdown]
+#  We identified `R3_model` as the main importing model region, so we can
+# further check the behavior of the hourly electricity supply.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# %% [markdown]
+# ## Part c: running the model
 
 # %%
 # loading model built in `build_instance`

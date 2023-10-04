@@ -52,7 +52,7 @@ def getRegions():
     """
     dict = {}
     # (longitude, latitude)
-    with open(Path(path_netred).joinpath(geofile)) as f:
+    with open(Path(path_geo).joinpath(geofile)) as f:
         netred_json = json.load(f)
     for zone in netred_json['features']:
         dict[zone['id']] = zone['geometry']
@@ -63,7 +63,7 @@ def getPOIs():
     Returns a list of tuples of POIs lat/long coordinates.
     """
     POIs = []       
-    csv = pd.read_csv(f"{path_generators}/{generatorsfile}.csv", usecols = ['Name', 'Type', 'Primary_fuel', 'Secondary_fuel', 'Capacity_MW', 'Year', 'Group_name', 'Basin', 'Lifetime', 'lat', 'long'])
+    csv = pd.read_csv(f"{path_input}/brownfield/{generatorsfile}.csv", usecols = ['Name', 'Type', 'Primary_fuel', 'Secondary_fuel', 'Capacity_MW', 'Year', 'Group_name', 'Basin', 'Lifetime', 'lat', 'long'])
     #was getting some errors with some coordenates 
     # "I altered the CSV file 
     #  separating -43.54257171	from 172.5854649
@@ -119,9 +119,13 @@ def RegionOfPOI(regions, POIs):
 if __name__ == '__main__':
     geofile="11regionsNZ.geojson";
     generatorsfile="power-plant-db2"; #this is from the tab "current" in the original file reciebed from Bec"
-    path_base = "C:/Local/REMix/projects/remix_nz";
-    path_netred = "C:/Local/REMix/";
-    path_generators = f"{path_base}/input"
+    path_base = "C:/Local/REMix"  
+    path_input = f"{path_base}/remix_nz/input"
+    path_output = f"{path_base}/remix_nz/output" 
+    path_demand = f"{path_input}/demand"       # eletricity, h2
+    path_profiles = f"{path_input}/profiles"   # renewables, hydro
+    path_geo = f"{path_input}/shapefiles"      # geojson
+
 
     # Geographical Features
     regions_bbox = getRegions()
@@ -140,4 +144,4 @@ if __name__ == '__main__':
     # RegionOfPOI = POIsInRegion(regions_bbox, POIs)
     # print(RegionOfPOI)
  
-    
+
