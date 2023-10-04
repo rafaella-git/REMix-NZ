@@ -1,5 +1,14 @@
 # %% [markdown]
 # ## Part c: evaluation of results
+# https://dlr-ve.gitlab.io/esy/remix/framework/dev/getting-started/tutorials/tutorial-103.html
+
+technology_colors = {
+    "CCGT": "#ff5f2d",
+    "PV": "#ffc000",
+    "WindOnshore": "#9dc3e6",
+    "HVDC": "#70ad47",
+}
+background_color = "#fffaebff"
 
 
 # %% [markdown]
@@ -15,10 +24,9 @@ import matplotlib.pyplot as plt
 
 # %%
 # Define case to be evaluated (based on demand file name and the yeas optimised)
-indx=0
+indx=1
 # Demand files available (different scenarios)
-files_lst=["nz_profile_11nodes"] 
-files_493=["medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] #493 as in the course 493, this is for Liv and Sam
+files_lst=["nz_profile_11nodes","medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] #493 as in the course 493, this is for Liv and Sam
 yrs=[2020,2030,2040,2050] # years optimised
 yrs_str='-'.join([str(item) for item in yrs])
 demand_file=files_lst[indx] 
@@ -30,6 +38,8 @@ path_base = "C:/Local/REMix"
 path_input = f"{path_base}/remix_nz/input"
 path_output = f"{path_base}/remix_nz/output" 
 path_result = f"{path_output}/{case_name}/result" 
+path_geo = f"{path_input}/shapefiles"      # geojson
+geofile="11regionsNZ.geojson"
 
 
 # %%
@@ -74,248 +84,25 @@ transfer_flows
 
 
 # %% [markdown]
-#  We identified `R3_model` as the main importing model region, so we can
-# further check the behavior of the hourly electricity supply.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#  We identified `CEN` as the main importing model region, so we can
+# further check the behavior of the hourly electricity supply (if we wanted to).
 
 
 # %% [markdown]
-# ## Part c: running the model
-
-# %%
-# loading model built in `build_instance`
-from remix.framework.api.instance import Instance
-import pathlib as pt
-
-
-# %%
-# ### Select case
-# The case we want to run is defined by:
-# 1) The name of the demand file (as we are currently varying demand to test different scenarios)
-# 2) The years we are optimising 
-# If the case data has not been created already, you can run that case in the build_instance file and come back
-
-yrs2run=[2050] # years to be optimised
-indx=0
-
-# Demand files available for different scenarios
-files_lst=["nz_profile_11nodes","medpop_evs","low_pop_out","med_pop_out","high_pop_out"] 
-files_493=["medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] #493 as in the course 493, this is for Liv and Sam
-yrs_str='-'.join([str(item) for item in yrs2run])
-
-# %% [markdown]
-# ### Customise the dataset changing these
-demand_file=files_lst[indx] 
-case_name=f"{demand_file}_{yrs_str}"
+#  ## Maps
+nodes_lst=["NIS","AKL","WTO","TRN","BOP","HBY","CEN","WEL","NEL","CAN","OTG"]
+nodes_lat=[-35.8758611, -36.9547333, -38.4192333, -39.3342222, -37.9867861, -39.5516472, -40.2813000, -41.1502722, -41.6735722, -43.8619833, -45.481222]
+nodes_lon=[174.4669472, 174.8625250, 175.8000111, 174.3204333, 176.8294056, 176.8208167, 175.6404750, 174.9811500, 172.8737917, 171.3427694, 169.3195194]    
+nodes_coords=[(nodes_lat[i],nodes_lon[i]) for i in range(0,len(nodes_lon))]
+# dictionary with 'Node': [lat,long]
+coord_dict = dict.fromkeys(nodes_lst)
+for key, value in zip(coord_dict.keys(), nodes_coords):
+    coord_dict[key] = value
+print(coord_dict)
 
 
-
-output_dir = pt.Path(f"C:/Local/REMix/remix_nz/output/{case_name}")
-data_dir = pt.Path(f"{output_dir}/data")
-result_dir = pt.Path(f"{output_dir}/result").mkdir(parents=False, exist_ok=True)
-
-if not data_dir.exists():
-    raise IOError("You need to load the data (run build_instance) first!")
-
-m = Instance.from_path(data_dir)
-
-# %%
-# Running GAMS from Python script
-m.run(
-    resultdir=result_dir,
-    resultfile=case_name,
-    lo=4, 
-    roundts=1,
-    names=1, 
-    )
-
-
-
-
-__________________
-
-# %% [markdown]
-# ## Part c: evaluation of results
-#
-# As in the first basic tutorial, we want to have a quick look at the
-# optimization results.
-# The first part will be an overview of installed capacities again, in the
-# second part we will have a look at the influence that the battery has on the
-# generation profiles.
-
-def colors():
-    technology_colors = {
-        "CCGT": "#ff5f2d",
-        "CCGT_H2": "#ff5f2d",
-        "GT_H2": "#ff5f2d",
-        "OCGT": "#e7864b",
-        "PV": "#ffc000",
-        "WindOnshore": "#9dc3e6",
-        "HVDC": "#70ad47",
-        "HV": "#70ad47",
-        "HV": "#70ad47",
-        "LiIon": "#cc99ff",
-        "Battery": "#cc99ff",
-        "Electrolyser": "#cc99ff",
-        "Slack": "#cc99ff",
-        "pv_central_fixed": "#ffc000",
-        "pv_central_track_azimuth": "#ffc000",
-        "pv_decentral": "#ffc000",
-        "wind_onshore": "#9dc3e6",
-        "wind_offshore_floating": "#9dc3e6",
-        "wind_offshore_foundation": "#9dc3e6",
-        
-    }
-    background_color = "#FFFFFF" # "#fffaebff"
-    sns.set(color_codes=True)
-    sns.set_style("whitegrid")
-
-
-
-# %%
-# importing dependencies
-from remix.framework.tools.gdx import GDXEval
-from remix.framework.tools.plots import plot_network, plot_choropleth
-import pandas as pd
-import matplotlib.pyplot as plt
-
-result_dir = "./results"
-
-# define often-used shortcut
-idx = pd.IndexSlice
-# %%
-# read in the output `*.gdx` file from the optimization in GAMS
-results = GDXEval(f"{result_dir}/tutorial_103.gdx")
-# %% [markdown]
-# ### Evaluating converter capacities
-
-# %%
-# convert converter capacities to a Pandas DataFrame
-caps = results["converter_caps"]
-caps = caps[caps > 0.01].dropna()  # Remove all capacities with less than 10 MW
-
-caps.loc[idx[:, "2030", :, "Elec", "total"], :].round(2)
-# %% [markdown]
-# We can now check the installed connection capacities between the different
-# model nodes.
-# This is done in a similar fashion as with the converter capacities.
-# %%
-transfer_caps = results["transfer_caps"]
-
-transfer_caps.loc[idx[:, :, :, "2030", :, "Elec", "total"], :].round(2)
-# %% [markdown]
-# To get a feeling on where we benefit from the electrical network, we can check
-# the annual transferred energy between model nodes.
-# Since the network contains information on the direction of flows, we need to
-# also account for the direction.
-# The energy flow from model region A (nodesModel) to B (nodesModel_a) is
-# defined as positive, whereas the flow from B to A is accounted negative.
-# With the "balanceType" entry we can check for the individual flows from A to
-# B (positive), flows from B to A (negative), annual sum of directed flows
-# (netto = positive + negative), annual sum of energy transferred
-# (brutto = positive - negative), or link utilization
-# (flh = brutto / link capacity).
-
-# %%
-transfer_flows = results["transfer_flows_annual"]
-transfer_flows = transfer_flows[
-    transfer_flows.abs() > 0.1
-].dropna()  # Remove all flows with less than 0.1 GWh
-
-transfer_flows = (
-    transfer_flows.loc[idx[:, :, :, :, :, "Elec", "netto"], :].div(1e3).round(2)
-)  # Convert to TWh
-
-transfer_flows
-# %% [markdown]
-#  We identified `R3_model` as the main importing model region, so we can
-# further check the behavior of the hourly electricity supply.
-
-# %%
-# visualization of commodity balance for model region R3_model
-commodities = results["commodity_balance"]
-
-elec_R3 = (
-    commodities.loc[idx[:, "R3_model", "2030", :, "Elec"], :]
-    .groupby(["timeModel", "techs"])
-    .sum()
-    .unstack("techs")
-)
-
-demand_R3 = elec_R3.loc[:, idx[:, "Demand"]]
-demand_R3.columns = demand_R3.columns.get_level_values(1)
-
-positive_R3 = elec_R3.drop(columns=("value", "Demand"))
-positive_R3 = positive_R3[positive_R3 > 0].fillna(0)
-positive_R3.columns = positive_R3.columns.get_level_values(1)
-
-negative_R3 = elec_R3.drop(columns=("value", "Demand"))
-negative_R3 = negative_R3[negative_R3 < 0].fillna(0)
-negative_R3.columns = negative_R3.columns.get_level_values(1)
-# %% [markdown]
-# Finding out the week with the highest / lowest usage of HVDC
-# (The result of the calculation outputs the last hour of the interval)
-
-# %%
-hours_per_interval = 168  # 168 hours per week
-rolling_mean = positive_R3[["HVDC"]].sum(axis=1).rolling(hours_per_interval).mean()
-last_hour_max = rolling_mean.argmax()
-last_hour_min = rolling_mean.argmin()
-# %%
-# visualization of generation in week with highest transmission to model region R3
-technology_colors = {
-    "CCGT": "#ff5f2d",
-    "PV": "#ffc000",
-    "WindOnshore": "#9dc3e6",
-    "HVDC": "#70ad47",
-}
-background_color = "#fffaebff"
-timeslice = range(last_hour_max - hours_per_interval, last_hour_max)
-
-fig, ax1 = plt.subplots(figsize=(10, 6))
-fig.patch.set_facecolor(background_color)
-ax1.set_facecolor(background_color)
-positive_R3.iloc[timeslice].plot.area(stacked=True, ax=ax1, color=technology_colors)
-
-plt.legend(loc="upper left")
-plt.ylabel("Generation in GWh_el")
-plt.title("Generation in week with highest transmission to model region R3")
-
-ax2 = ax1.twinx()
-demand_R3.iloc[timeslice].mul(-1).plot(kind="line", stacked=True, ax=ax2, color="black")
-plt.legend(loc="upper right")
-plt.ylabel("Demand in GWh_el")
-ax2.set_ylim(ax1.get_ylim())
-
-fig.subplots_adjust(bottom=0.1 * demand_R3.index.nlevels)
-# %%
-# map defaults and options
-shp_file = "../_input/shp_file/tutorial"
+shp_file = f"{path_geo}/geofile"
 shp_attrcol = "ISO"
-
-lat = [35.0, 57.0]
-lon = [-6.0, 20.0]
-
-centroids = {
-    "FR": (2.34, 47.15),
-    "DE": (10.18, 51.35),
-    "IT": (12.80, 42.61),
-    "CH": (8.17, 46.86),
-}
-
 plt.rcParams.update({"figure.autolayout": True})  # use tight_layout
 plt.rcParams.update({"figure.titlesize": 20})  # size subtitle
 plt.rcParams.update({"figure.dpi": 75})  # size subtitle
@@ -326,19 +113,23 @@ plt.rcParams.update({"axes.labelsize": 18})  # label size colormap
 
 figsize_dual = (13.0, 6)
 figsize_single = (7.5, 6)
-# %%
+
+#limits of the plot 
+lat = [-47.758239, -34.111702]
+lon = [165.692103, 179.050919]
+
+
+centroids = coord_dict
+
+
 # visualization of renewable generation per model region
 df_annual = results["commodity_balance_annual"]
-df_annual = (
-    df_annual.reset_index()
-    .replace({"R3_model": "CH", "R1_model": "DE", "R2_model": "FR", "R4_model": "IT"})
-    .set_index(df_annual.index.names)
-)
-df_annual = df_annual.loc[idx[["DE", "CH", "FR", "IT"], "2030", :, "Elec", "netto"]]
+df_annual = df_annual.loc[idx[nodes_lst, "2030", :, "Elec", "netto"]]
 
-map_pv = df_annual.loc[idx[:, :, "PV"], idx[:]].groupby("accNodesModel").sum().div(1e3)
+
+map_pv = df_annual.loc[idx[:, :, "pv_central_fixed"], idx[:]].groupby("accNodesModel").sum().div(1e3)
 map_wind = (
-    df_annual.loc[idx[:, :, "WindOnshore"], idx[:]]
+    df_annual.loc[idx[:, :, "wind_onshore"], idx[:]]
     .groupby("accNodesModel")
     .sum()
     .div(1e3)
@@ -350,8 +141,8 @@ ax1 = fig.add_subplot(121)
 ax1.set_facecolor("#F0F8FF")
 plot_choropleth(
     map_pv,
-    shp_file,
-    shp_attrcol,
+    geojson=geofile,
+    #locations=nodes_lst,
     lat,
     lon,
     title="Power generation from PV",
@@ -363,8 +154,8 @@ ax2 = fig.add_subplot(122)
 ax2.set_facecolor("#F0F8FF")
 plot_choropleth(
     map_wind,
-    shp_file,
-    shp_attrcol,
+    geojson=geofile,
+    #locations=nodes_lst,
     lat,
     lon,
     title="Power generation from wind",
@@ -372,77 +163,7 @@ plot_choropleth(
     cmap="Blues",
     ax=ax2,
 )
-# %%
-# visualization of energy flows between model regions
-n2n_flow = results["transfer_flows_annual"]
-n2n_flow = (
-    n2n_flow.reset_index()
-    .replace({"R3_model": "CH", "R1_model": "DE", "R2_model": "FR", "R4_model": "IT"})
-    .set_index(n2n_flow.index.names)
-)
 
-n2n_flow = n2n_flow[n2n_flow != 0].dropna(how="all")
 
-flow_elec = (
-    n2n_flow[n2n_flow != 0]
-    .loc[idx[:, :, :, :, :, "Elec", "netto"]]
-    .dropna()
-    .groupby(["nodesModel_start", "nodesModel_end"])
-    .sum()
-    .div(1e3)
-    .abs()
-)
 
-flow_elec = flow_elec[flow_elec > 0.1]
-flow_flh = (
-    n2n_flow[n2n_flow != 0]
-    .loc[idx[:, :, :, :, :, "Elec", "flh"]]
-    .dropna()
-    .groupby(["nodesModel_start", "nodesModel_end"])
-    .sum()
-    .abs()
-)
 
-flow_flh = flow_flh[flow_flh > 10]
-
-fig = plt.figure(figsize=figsize_dual)
-fig.patch.set_facecolor(background_color)
-ax1 = fig.add_subplot(121)
-ax1.set_facecolor("#F0F8FF")
-plot_network(
-    flow_elec,
-    shp_file,
-    shp_attrcol,
-    lat,
-    lon,
-    centroids=centroids,
-    title="Annual netto transmission",
-    clabel="Energy in TWh",
-    cmap="Greens",
-    ax=ax1,
-    cbar=True,
-)
-
-ax2 = fig.add_subplot(122)
-ax2.set_facecolor("#F0F8FF")
-plot_network(
-    flow_flh,
-    shp_file,
-    shp_attrcol,
-    lat,
-    lon,
-    centroids=centroids,
-    title="Annual full load hours",
-    clabel="Full load hours",
-    cmap="Reds",
-    ax=ax2,
-    cbar=True,
-    limits=[0, 8760],
-)
-
-plt.show()
-# %% [markdown]
-#
-# This concludes the tutorial. You should now have a fundamental understanding
-# on how to use sources, sinks, converters, storage technologies and links in
-# REMix. These build the basis for working with energy system models.
