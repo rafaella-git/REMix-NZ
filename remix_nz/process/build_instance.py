@@ -18,7 +18,10 @@ idx = pd.IndexSlice
 
 # Useful lists
 nodes_lst=["NIS","AKL","WTO","TRN","BOP","HBY","CEN","WEL","NEL","CAN","OTG" ]
-yrs2run=[2020,2030,2040,2050] #[2050] # years to be optimised
+yrs2run=[2020] #[2020,2030,2040,2050] #[2050] # years to be optimised
+indx=0
+
+
 yrs_str='-'.join([str(item) for item in yrs2run])
 yrs_demand= [2020, 2025, 2030, 2035, 2040, 2045, 2050]
 yrs_mentioned= [2020, 2025, 2030, 2035, 2040, 2045, 2050] # must include all years that data is provided for in the model
@@ -26,7 +29,7 @@ yrs_mentioned= [2020, 2025, 2030, 2035, 2040, 2045, 2050] # must include all yea
 files_lst=["nz_profile_11nodes","medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] 
 files_493=["medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] #493 as in the course 493, this is for Liv and Sam
 
-indx=0
+
 # %% [markdown]
 # ### Customise the dataset changing these
 demand_file=files_lst[indx] #files_493[indx] 
@@ -85,6 +88,8 @@ def add_nodes(m):
     m.set.add(yrs_mentioned, "years")  # must include all years that data is provided for in the model
     # "set_yearsSel"
     m.set.add(yrs2run, "yearssel")  # years to be optimised
+
+
 
 def add_demand_ffe(m):
     rename_commodity = {"Electricity": "Elec",
@@ -175,7 +180,7 @@ def add_renewables(m):
         #2011: 2025,
         #2012: 2030,
         #2013: 2035,
-        #2014: 2040,
+        #2012: 2040,
         #2016: 2045,
         2012: 2050
     }
@@ -186,6 +191,7 @@ def add_renewables(m):
     wind_techs = [i for i in re_techs if i.startswith("wind")]
 
     re_tech = pd.DataFrame(index=pd.MultiIndex.from_product([re_techs, re_vintage]))
+    re_tech.loc[idx[:, :], "activityUpperLimit"] = 0 # so it is overwritten by the availabity from the timeseriesfiles
     re_tech.loc[idx[pv_techs, [2020]], "lifeTime"] = 35  # years
     re_tech.loc[idx[pv_techs, [2030, 2040, 2050]], "lifeTime"] = 40  # years
     re_tech.loc[idx[csp_techs + wind_techs, [2020]], "lifeTime"] = 27  # years
@@ -202,14 +208,35 @@ def add_renewables(m):
     m.parameter.add(re_caps, "converter_capacityparam")
 
     # activity
+    # FIX THIS (PART 1): it is ok while we only have 1 weather year
     re_feedin = pd.concat([load_feedin_csv(y) for y in year_mapping])
+    print(re_feedin)
+    #re_feedin = pd.concat([re_feedin.rename(index={2050:y} for y in [2020, 2030, 2040, 2050])])
     re_feedin = re_feedin.unstack("t_model").swaplevel(1, 2)
     re_feedin["type"] = "upper"
     re_feedin = re_feedin.set_index("type", append=True)
     re_feedin = re_feedin[re_feedin >= 0.01].dropna(how="all").fillna(0)
     re_feedin = re_feedin.iloc[:, 0:8760]
     re_feedin.columns = [f"t{str(t+1).zfill(4)}" for t in range(8760)]
-    re_feedin = re_feedin.rename(index=year_mapping).sort_index(level=["region", "technology", "year"])
+    # FIX THIS (PART 2):
+    # original:
+    # re_feedin = re_feedin.rename(index=year_mapping).sort_index(level=["region", "technology", "year"])
+    # to fix:
+    #re_feedin = re_feedin.rename(index={y} for y in [2020, 2030, 2040, 2050]).sort_index(level=["region", "technology", "year"])
+    re_feedin_lst=[]
+    df_assist=re_feedin
+    for y in [2020, 2030, 2040, 2050]:
+        re_feedin_lst.append(df_assist.rename(index={2012:y}).sort_index(level=["region", "technology", "year"]))
+        print(re_feedin_lst)
+        #frames = [df1, df2, df3]
+    re_feedin = pd.concat(re_feedin_lst)
+    re_feedin = re_feedin.sort_index(level=["region", "technology", "year"])
+    
+    #pd.concat[re_feedin.rename((index={2012:y}) for y in [2020, 2030, 2040, 2050])]
+    #re_feedin = re_feedin.rename(index=year_mapping).sort_index(level=["region", "technology", "year"])
+    
+    
+    
     m.profile.add(re_feedin, "converter_activityprofile")
 
     # coefficients
@@ -369,12 +396,16 @@ def add_gas_turbines(m):
     gt_tech.loc[idx[:, :], "activityUpperLimit"] = 1
     m.parameter.add(gt_tech, "converter_techparam")
 
+    #fix: m.alltheyears or smth for the list - not years calculate
     gt_cap = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [gt_nodes, [2020, 2025, 2030, 2035, 2040, 2045, 2050], gt_techs]
         )
     )
+    #model regions years techs
     gt_cap.loc[idx[:, :, gt_techs], "unitsUpperLimit"] = 100  # GW_el
+    # FIX: update this for brownfield
+    #gt_cap.loc[idx[["AKL"], [2020], "CCGT"], "unitsBuild"] = 5  # GW_el
     m.parameter.add(gt_cap, "converter_capacityparam")
 
     gt_coef = pd.DataFrame(
@@ -384,7 +415,7 @@ def add_gas_turbines(m):
     )
 
     gt_coef.loc[idx[:, :, :, "Elec"], "coefficient"] = 1 # GW_el
-    gt_coef.loc[idx["GT", :, :, "CH4"], "coefficient"] = np.round(-1 / np.array([0.41, 0.43]), 3) # GW_el
+    gt_coef.loc[idx["GT", :, :, "CH4"], "coefficient"] = np.round(-1 / np.array([0.41, 0.43]), 3) # GW_el #-1/efficiency=coef, rounded to 3, line above output of 1 GW
     gt_coef.loc[idx["CCGT", :, :, "CH4"], "coefficient"] = np.round(-1 / np.array([0.58, 0.61]), 3) # GW_el
     gt_coef.loc[idx["GT_H2", :, :, "H2"], "coefficient"] = np.round(-1 / np.array([0.41, 0.43]), 3) # GW_elel
     gt_coef.loc[idx["CCGT_H2", :, :, "H2"], "coefficient"] = np.round(-1 / np.array([0.58, 0.61]), 3) # GW_el
@@ -1051,14 +1082,14 @@ def add_lng_terminals(m):
     lng_acc.loc[idx["LNG_to_LH2", "global", "LH2_Terminal", 2015], "perUnitBuild"] = -1
     m.parameter.add(lng_acc, "accounting_converterunits")
 
-#Q4M why is scope set for 2045 and not 2050?
+#Q4M why is scope set for 2045 and not 2050? !!! #fix 
 def add_scope(m):
     # nodes data and years added via ffe_demand
     # m.set.add([2020,2025,2030,2035,2040,2045,2050], "years")
     m.infer_set_data()
     nodes_sourcesink = set(m.parameter.sourcesink_config.index.get_level_values(0))
     nodes_transit = {"AKL", "BOP", "NEL","NIS",  "OTG",  "TRN","WEL", "WTO", "CAN", "CEN", "HBY"}
-    m.set.add([2045], "yearssel")
+    m.set.add(yrs2run, "yearssel")
     m.set.add(list(nodes_sourcesink) + list(nodes_transit), "nodesmodel")
     m.set.add(list(nodes_sourcesink) + list(nodes_transit), "nodesmodelsel") #Q4M: this is not in manuel's original build_instance
 
