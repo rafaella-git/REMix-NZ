@@ -23,8 +23,8 @@ idx = pd.IndexSlice
 # Useful lists
 nodes_lst=["NIS","AKL","WTO","TRN","BOP","HBY","CEN","WEL","NEL","CAN","OTG" ]
 fixsingleyear=2050
-yrs2run=[2020,2030,2040,2050] #[2050] # years to be optimised
-indx=0
+yrs2run=[2030,2040,2050] #[2020,2030,2040,2050] #[2050] # years to be optimised
+indx=1
 
 yrs_str='-'.join([str(item) for item in yrs2run])
 yrs_demand= [2020, 2025, 2030, 2035, 2040, 2045, 2050]
@@ -32,6 +32,7 @@ yrs_mentioned= [2020, 2025, 2030, 2035, 2040, 2045, 2050] # must include all yea
 # Demand files available for different scenarios
 files_lst=["nz_profile_11nodes","medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] 
 files_493=["medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] #493 as in the course 493, this is for Liv and Sam
+files_lst=["medpop_evs","low_pop_out","med_pop_out","high_pop_out"] 
 
 
 
@@ -55,7 +56,7 @@ path_geo = f"{path_input}/shapefiles"      # geojson
 # output
 data_dir = Path(f"C:/Local/REMix/remix_nz/output/{case_name}/data").mkdir(parents=True, exist_ok=True)
 results_dir = Path(f"C:/Local/REMix/remix_nz/output/{case_name}/result").mkdir(parents=True, exist_ok=True)
-
+print(f"----------Creating data for {case_name}")
 
 
 
@@ -187,7 +188,7 @@ def add_renewables(m):
         #2013: 2035,
         #2014: 2040,
         #2016: 2045,
-        2012: fixsingleyear
+        2012: fixsingleyear #this mapping is only used with different weather years
     }
 
     re_techs = list(set(re_inst_csv.index.get_level_values(1)))

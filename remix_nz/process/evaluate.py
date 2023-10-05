@@ -5,7 +5,8 @@
 technology_colors = {
     "CCGT": "#ff5f2d",
     "PV": "#ffc000",
-    "WindOnshore": "#9dc3e6",
+    "pv_central_fixed": "#ffc000",
+    "wind_onshore": "#9dc3e6",
     "HVDC": "#70ad47",
 }
 background_color = "#fffaebff"
@@ -20,6 +21,7 @@ from remix.framework.tools.gdx import GDXEval
 from remix.framework.tools.plots import plot_network, plot_choropleth
 import pandas as pd
 import matplotlib.pyplot as plt
+import geopandas as gpd
 
 
 # %%
@@ -74,15 +76,10 @@ transfer_caps.loc[idx[:, :, :, "2030", :, "Elec", "total"], :].round(2)
 # (netto = positive + negative), annual sum of energy transferred
 # (brutto = positive - negative), or link utilization
 # (flh = brutto / link capacity).
-
-# %%
 transfer_flows = results["transfer_flows_annual"]
 transfer_flows = transfer_flows[transfer_flows.abs() > 0.1].dropna()  # Remove all flows with less than 0.1 GWh
 transfer_flows = (transfer_flows.loc[idx[:, :, :, :, :, "Elec", "netto"], :].div(1e3).round(2))  # Convert to TWh
-
 transfer_flows
-
-
 # %% [markdown]
 #  We identified `CEN` as the main importing model region, so we can
 # further check the behavior of the hourly electricity supply (if we wanted to).
@@ -101,8 +98,7 @@ for key, value in zip(coord_dict.keys(), nodes_coords):
 print(coord_dict)
 
 
-shp_file = f"{path_geo}/geofile"
-shp_attrcol = "ISO"
+
 plt.rcParams.update({"figure.autolayout": True})  # use tight_layout
 plt.rcParams.update({"figure.titlesize": 20})  # size subtitle
 plt.rcParams.update({"figure.dpi": 75})  # size subtitle
@@ -122,6 +118,10 @@ lon = [165.692103, 179.050919]
 centroids = coord_dict
 
 
+
+shp_file = f"{path_geo}/11regionsNZ"
+shp_attrcol = "id"
+
 # visualization of renewable generation per model region
 df_annual = results["commodity_balance_annual"]
 df_annual = df_annual.loc[idx[nodes_lst, "2030", :, "Elec", "netto"]]
@@ -135,14 +135,16 @@ map_wind = (
     .div(1e3)
 )
 
+
+
 fig = plt.figure(figsize=figsize_dual)
 fig.patch.set_facecolor(background_color)
 ax1 = fig.add_subplot(121)
 ax1.set_facecolor("#F0F8FF")
 plot_choropleth(
-    map_pv,
-    geojson=geofile,
-    #locations=nodes_lst,
+    map_pv,   #df
+    shp_file,
+    shp_attrcol,
     lat,
     lon,
     title="Power generation from PV",
@@ -150,12 +152,13 @@ plot_choropleth(
     cmap="Oranges",
     ax=ax1,
 )
+
 ax2 = fig.add_subplot(122)
 ax2.set_facecolor("#F0F8FF")
 plot_choropleth(
     map_wind,
-    geojson=geofile,
-    #locations=nodes_lst,
+    shp_file,
+    shp_attrcol,
     lat,
     lon,
     title="Power generation from wind",
@@ -163,7 +166,3 @@ plot_choropleth(
     cmap="Blues",
     ax=ax2,
 )
-
-
-
-
