@@ -1,6 +1,6 @@
 
 # %% [markdown]
-# ## Part a: setting up the model
+# ## Part A: setting up the model
 
 # Import dependencies
 import os
@@ -16,11 +16,15 @@ from remix.framework.tools.plots import plot_network, plot_choropleth
 import networkx as nx
 idx = pd.IndexSlice
 
+# %% [markdown]
+# ### Define the years to run the optimisation and the demand file
+# The demand file and the years run determine the name of the case and its results
+
 # Useful lists
 nodes_lst=["NIS","AKL","WTO","TRN","BOP","HBY","CEN","WEL","NEL","CAN","OTG" ]
-yrs2run=[2020] #[2020,2030,2040,2050] #[2050] # years to be optimised
+fixsingleyear=2050
+yrs2run=[2020,2030,2040,2050] #[2050] # years to be optimised
 indx=0
-
 
 yrs_str='-'.join([str(item) for item in yrs2run])
 yrs_demand= [2020, 2025, 2030, 2035, 2040, 2045, 2050]
@@ -28,6 +32,7 @@ yrs_mentioned= [2020, 2025, 2030, 2035, 2040, 2045, 2050] # must include all yea
 # Demand files available for different scenarios
 files_lst=["nz_profile_11nodes","medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] 
 files_493=["medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] #493 as in the course 493, this is for Liv and Sam
+
 
 
 # %% [markdown]
@@ -180,9 +185,9 @@ def add_renewables(m):
         #2011: 2025,
         #2012: 2030,
         #2013: 2035,
-        #2012: 2040,
+        #2014: 2040,
         #2016: 2045,
-        2012: 2050
+        2012: fixsingleyear
     }
 
     re_techs = list(set(re_inst_csv.index.get_level_values(1)))
@@ -209,34 +214,23 @@ def add_renewables(m):
 
     # activity
     # FIX THIS (PART 1): it is ok while we only have 1 weather year
-    re_feedin = pd.concat([load_feedin_csv(y) for y in year_mapping])
-    print(re_feedin)
-    #re_feedin = pd.concat([re_feedin.rename(index={2050:y} for y in [2020, 2030, 2040, 2050])])
+    re_feedin = load_feedin_csv(2012)  # Load data for the year 2012
+    # Create a list of dataframes with different years
+    years_to_generate = [2020, 2030, 2040, 2050]
+    dfs = []
+    for year in years_to_generate:
+        re_feedin_copy = re_feedin.copy()
+        re_feedin_copy.index = re_feedin_copy.index.set_levels([year], level='year')
+        dfs.append(re_feedin_copy)
+    # Concatenate the separate dataframes into one
+    re_feedin = pd.concat(dfs)
     re_feedin = re_feedin.unstack("t_model").swaplevel(1, 2)
     re_feedin["type"] = "upper"
     re_feedin = re_feedin.set_index("type", append=True)
     re_feedin = re_feedin[re_feedin >= 0.01].dropna(how="all").fillna(0)
     re_feedin = re_feedin.iloc[:, 0:8760]
     re_feedin.columns = [f"t{str(t+1).zfill(4)}" for t in range(8760)]
-    # FIX THIS (PART 2):
-    # original:
-    # re_feedin = re_feedin.rename(index=year_mapping).sort_index(level=["region", "technology", "year"])
-    # to fix:
-    #re_feedin = re_feedin.rename(index={y} for y in [2020, 2030, 2040, 2050]).sort_index(level=["region", "technology", "year"])
-    re_feedin_lst=[]
-    df_assist=re_feedin
-    for y in [2020, 2030, 2040, 2050]:
-        re_feedin_lst.append(df_assist.rename(index={2012:y}).sort_index(level=["region", "technology", "year"]))
-        print(re_feedin_lst)
-        #frames = [df1, df2, df3]
-    re_feedin = pd.concat(re_feedin_lst)
     re_feedin = re_feedin.sort_index(level=["region", "technology", "year"])
-    
-    #pd.concat[re_feedin.rename((index={2012:y}) for y in [2020, 2030, 2040, 2050])]
-    #re_feedin = re_feedin.rename(index=year_mapping).sort_index(level=["region", "technology", "year"])
-    
-    
-    
     m.profile.add(re_feedin, "converter_activityprofile")
 
     # coefficients
@@ -1254,12 +1248,12 @@ if __name__ == "__main__":
     add_renewables(m)
     #add_csp_system(m) #not for NZ
     add_lithium_batteries(m)
-    add_gas_turbines(m)
-    add_electrolyser(m)
+    #add_gas_turbines(m)
+    #add_electrolyser(m)
     #add_dac(m)
-    add_methanizer(m)
-    add_methanol_syn(m)
-    add_ftropsch_syn(m)
+    #add_methanizer(m)
+    #add_methanol_syn(m)
+    #add_ftropsch_syn(m)
     add_network(m)
     add_accounting(m)
     validate_scope(m)
