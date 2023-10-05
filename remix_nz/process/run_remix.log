@@ -1,4 +1,4 @@
---- Job run_remix.gms Start 10/05/23 16:01:13 40.4.0 d540b52e WEX-WEI x86 64bit/MS Windows
+--- Job run_remix.gms Start 10/06/23 11:39:41 40.4.0 d540b52e WEX-WEI x86 64bit/MS Windows
 --- Applying:
     C:\GAMS\40\gmsprmNT.txt
     \\file\Usersr$\rca139\Home\My Documents\GAMS\gamsconfig.yaml
@@ -8,13 +8,14 @@
     SysDir C:\GAMS\40\
     LogOption 4
     Keep 0
-    --datadir C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2040\data
-    --resultdir C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2040\result
+    --datadir C:\Local\REMix\remix_nz\output\high_pop_out_2030-2040-2050\data
+    --resultdir C:\Local\REMix\remix_nz\output\high_pop_out_2030-2040-2050\result
     --scendir ./
-    --resultfile nz_profile_11nodes_2040_test_re
+    --resultfile high_pop_out_2030-2040-2050
     --names 1
     --postcalc 1
     --roundts 1
+    --timeres 3
     --sourcedir C:\Local\REMix\framework\remix\framework\model\source
 Licensee: Medium MUD - 10 User License                   S220920|0002AO-GEN
           University of Canterbury, Civil Engineering Department    DC16319
@@ -27,15 +28,15 @@ GAMS 40.4.0   Copyright (C) 1987-2022 GAMS Development. All rights reserved
 ### Metadata ###
 Using REMix version 0.9.2
 Using GAMS version 40.4.0
-Using data directory C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2040\data and scenario directory ./
+Using data directory C:\Local\REMix\remix_nz\output\high_pop_out_2030-2040-2050\data and scenario directory ./
 Using framework path C:\Local\REMix\framework\remix\framework\model\source
-Using project path C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2040\data./
+Using project path C:\Local\REMix\remix_nz\output\high_pop_out_2030-2040-2050\data./
 --- . metadata.gms(8) 2 Mb
 --- call printf "remix_version \"0.9.2\"\n" > c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(9) 2 Mb
 --- call printf "gams_version \"40.4.0\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(10) 2 Mb
---- call printf "timestamp \"10/05/23 16:01:13\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+--- call printf "timestamp \"10/06/23 11:39:41\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(12) 2 Mb
 --- call printf "framework_path " >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(14) 2 Mb
@@ -57,19 +58,19 @@ Using project path C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2040\data./
 --- . metadata.gms(34) 2 Mb
 --- call printf "project_path " >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(36) 2 Mb
---- call cd C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2040\data\./ && cd| sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+--- call cd C:\Local\REMix\remix_nz\output\high_pop_out_2030-2040-2050\data\./ && cd| sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(40) 2 Mb
 --- call printf "\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(41) 2 Mb
 --- call printf "project_hash " >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(43) 2 Mb
---- call cd C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2040\data\./ && git rev-parse HEAD >nul 2>&1 && git rev-parse HEAD | sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+--- call cd C:\Local\REMix\remix_nz\output\high_pop_out_2030-2040-2050\data\./ && git rev-parse HEAD >nul 2>&1 && git rev-parse HEAD | sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(47) 2 Mb
 --- call printf "\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(48) 2 Mb
 --- call printf "project_branch " >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(50) 2 Mb
---- call cd C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2040\data\./ && git rev-parse --abbrev-ref HEAD >nul 2>&1 && git rev-parse --abbrev-ref HEAD | sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+--- call cd C:\Local\REMix\remix_nz\output\high_pop_out_2030-2040-2050\data\./ && git rev-parse --abbrev-ref HEAD >nul 2>&1 && git rev-parse --abbrev-ref HEAD | sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(54) 2 Mb
 --- call printf "\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(57) 2 Mb
@@ -82,196 +83,196 @@ Using project path C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2040\data./
 --- . data_inheritance.gms(36) 3 Mb
 --- run_remix.gms(25) 3 Mb
 --- . remix.gms(21) 3 Mb
---- .. sets.gms(97) 6 Mb
---- ... set_nodesmodel.csv(11) 6 Mb
---- .. sets.gms(106) 6 Mb
---- ... set_nodesdata.csv(11) 6 Mb
---- .. sets.gms(114) 6 Mb
---- ... set_nodesmodelsel.csv(11) 6 Mb
---- .. sets.gms(131) 6 Mb
---- ... map_aggregatenodesmodel.csv(11) 6 Mb
---- .. sets.gms(159) 6 Mb
---- ... set_years.csv(7) 6 Mb
---- .. sets.gms(170) 6 Mb
---- ... set_years.csv(7) 6 Mb
---- .. sets.gms(178) 6 Mb
---- ... set_yearssel.csv(1) 6 Mb
---- .. sets.gms(198) 6 Mb
---- ... set_activities.csv(4) 6 Mb
+--- .. sets.gms(97) 5 Mb
+--- ... set_nodesmodel.csv(11) 5 Mb
+--- .. sets.gms(106) 5 Mb
+--- ... set_nodesdata.csv(11) 5 Mb
+--- .. sets.gms(114) 5 Mb
+--- ... set_nodesmodelsel.csv(11) 5 Mb
+--- .. sets.gms(131) 5 Mb
+--- ... map_aggregatenodesmodel.csv(11) 5 Mb
+--- .. sets.gms(159) 5 Mb
+--- ... set_years.csv(7) 5 Mb
+--- .. sets.gms(170) 5 Mb
+--- ... set_years.csv(7) 5 Mb
+--- .. sets.gms(178) 5 Mb
+--- ... set_yearssel.csv(3) 5 Mb
+--- .. sets.gms(198) 5 Mb
+--- ... set_activities.csv(4) 5 Mb
 "No set elements for grid segments included."
---- .. sets.gms(218) 6 Mb
---- ... set_linksdata.csv(12) 6 Mb
---- .. sets.gms(238) 6 Mb
---- ... set_link_types.csv(2) 6 Mb
---- .. sets.gms(249) 6 Mb
---- ... set_commodities.csv(4) 6 Mb
---- .. sets.gms(260) 6 Mb
---- ... set_indicators.csv(6) 6 Mb
---- .. sets.gms(271) 6 Mb
---- ... set_converter_techs.csv(7) 6 Mb
---- .. sets.gms(274) 6 Mb
---- ... set_storage_techs.csv(1) 6 Mb
---- .. sets.gms(277) 6 Mb
---- ... set_transfer_techs.csv(1) 6 Mb
---- .. sets.gms(280) 6 Mb
---- ... set_sourcesink_techs.csv(3) 6 Mb
---- .. sets.gms(285) 6 Mb
---- ... set_converter_techs.csv(7) 6 Mb
---- .. sets.gms(290) 6 Mb
---- ... set_storage_techs.csv(1) 6 Mb
---- .. sets.gms(296) 6 Mb
---- ... set_transfer_techs.csv(1) 6 Mb
---- .. sets.gms(301) 6 Mb
---- ... set_sourcesink_techs.csv(3) 6 Mb
+--- .. sets.gms(218) 5 Mb
+--- ... set_linksdata.csv(12) 5 Mb
+--- .. sets.gms(238) 5 Mb
+--- ... set_link_types.csv(2) 5 Mb
+--- .. sets.gms(249) 5 Mb
+--- ... set_commodities.csv(3) 5 Mb
+--- .. sets.gms(260) 5 Mb
+--- ... set_indicators.csv(6) 5 Mb
+--- .. sets.gms(271) 5 Mb
+--- ... set_converter_techs.csv(7) 5 Mb
+--- .. sets.gms(274) 5 Mb
+--- ... set_storage_techs.csv(1) 5 Mb
+--- .. sets.gms(277) 5 Mb
+--- ... set_transfer_techs.csv(1) 5 Mb
+--- .. sets.gms(280) 5 Mb
+--- ... set_sourcesink_techs.csv(2) 5 Mb
+--- .. sets.gms(285) 5 Mb
+--- ... set_converter_techs.csv(7) 5 Mb
+--- .. sets.gms(290) 5 Mb
+--- ... set_storage_techs.csv(1) 5 Mb
+--- .. sets.gms(296) 5 Mb
+--- ... set_transfer_techs.csv(1) 5 Mb
+--- .. sets.gms(301) 5 Mb
+--- ... set_sourcesink_techs.csv(2) 5 Mb
 "No set elements for storage degradation states included."
 "No set elements for SoC included."
---- .. sets.gms(341) 6 Mb
---- ... transfer_linkstartend.csv(25) 6 Mb
---- .. sets.gms(357) 6 Mb
---- ... aggregateNodes.gms(10) 6 Mb
+--- .. sets.gms(341) 5 Mb
+--- ... transfer_linkstartend.csv(25) 5 Mb
+--- .. sets.gms(357) 5 Mb
+--- ... aggregateNodes.gms(10) 5 Mb
 "No set elements for accounting nodes included."
 "No set elements for nodesData to nodesAcc mapping included."
---- .. sets.gms(586) 6 Mb
---- . remix.gms(22) 6 Mb
---- .. input.gms(32) 6 Mb
---- ... accounting_converterunits.csv(57) 6 Mb
+--- .. sets.gms(586) 5 Mb
+--- . remix.gms(22) 5 Mb
+--- .. input.gms(32) 5 Mb
+--- ... accounting_converterunits.csv(57) 5 Mb
 "No accounting for converter activities included"
 "No accounting for converter startups included"
---- .. input.gms(88) 6 Mb
---- ... accounting_storageunits.csv(9) 6 Mb
---- .. input.gms(112) 6 Mb
---- ... accounting_transferlinks.csv(3) 6 Mb
---- .. input.gms(136) 6 Mb
---- ... accounting_transferperlength.csv(5) 6 Mb
---- .. input.gms(153) 6 Mb
---- ... accounting_sourcesinkflow.csv(8) 6 Mb
---- .. input.gms(169) 6 Mb
---- ... accounting_perindicator.csv(6) 6 Mb
---- .. input.gms(197) 6 Mb
---- ... accounting_indicatorbounds.csv(2) 6 Mb
+--- .. input.gms(88) 5 Mb
+--- ... accounting_storageunits.csv(9) 5 Mb
+--- .. input.gms(112) 5 Mb
+--- ... accounting_transferlinks.csv(7) 5 Mb
+--- .. input.gms(136) 5 Mb
+--- ... accounting_transferperlength.csv(13) 5 Mb
+--- .. input.gms(153) 5 Mb
+--- ... accounting_sourcesinkflow.csv(8) 5 Mb
+--- .. input.gms(169) 5 Mb
+--- ... accounting_perindicator.csv(6) 5 Mb
+--- .. input.gms(197) 5 Mb
+--- ... accounting_indicatorbounds.csv(2) 5 Mb
 "No bounds for indicator per links included"
---- .. input.gms(226) 6 Mb
---- ... aggregateAccountingMean.gms(58) 6 Mb
---- .. input.gms(227) 6 Mb
---- ... aggregateAccountingMean.gms(58) 6 Mb
---- .. input.gms(228) 6 Mb
---- ... aggregateAccountingMean.gms(58) 6 Mb
---- .. input.gms(229) 6 Mb
---- ... aggregateAccountingMean.gms(58) 6 Mb
---- .. input.gms(230) 6 Mb
---- ... aggregateAccountingMean.gms(58) 6 Mb
---- .. input.gms(231) 6 Mb
---- ... aggregateAccountingMean.gms(58) 6 Mb
---- .. input.gms(232) 6 Mb
---- ... aggregateAccountingMean.gms(58) 6 Mb
---- .. input.gms(602) 6 Mb
---- . remix.gms(23) 6 Mb
---- .. annuities.gms(70) 6 Mb
---- . remix.gms(25) 6 Mb
---- .. mga_pre.gms(5) 6 Mb
---- . remix.gms(26) 6 Mb
---- .. pareto_pre.gms(5) 6 Mb
---- . remix.gms(27) 6 Mb
---- .. declaration.gms(217) 6 Mb
---- . remix.gms(28) 6 Mb
---- .. loadgdx.gms(7) 6 Mb
---- . remix.gms(30) 6 Mb
---- .. converter.gms(103) 6 Mb
---- ... converter_capacityparam.csv(540) 7 Mb
---- .. converter.gms(113) 7 Mb
---- ... aggregateNodes.gms(10) 7 Mb
---- .. converter.gms(114) 7 Mb
---- ... aggregateNodes.gms(10) 7 Mb
---- .. converter.gms(137) 7 Mb
---- ... converter_techparam.csv(29) 7 Mb
---- .. converter.gms(161) 7 Mb
---- ... converter_activityprofile.csv(67) 20 Mb
+--- .. input.gms(226) 5 Mb
+--- ... aggregateAccountingMean.gms(58) 5 Mb
+--- .. input.gms(227) 5 Mb
+--- ... aggregateAccountingMean.gms(58) 5 Mb
+--- .. input.gms(228) 5 Mb
+--- ... aggregateAccountingMean.gms(58) 5 Mb
+--- .. input.gms(229) 5 Mb
+--- ... aggregateAccountingMean.gms(58) 5 Mb
+--- .. input.gms(230) 5 Mb
+--- ... aggregateAccountingMean.gms(58) 5 Mb
+--- .. input.gms(231) 5 Mb
+--- ... aggregateAccountingMean.gms(58) 5 Mb
+--- .. input.gms(232) 5 Mb
+--- ... aggregateAccountingMean.gms(58) 5 Mb
+--- .. input.gms(602) 5 Mb
+--- . remix.gms(23) 5 Mb
+--- .. annuities.gms(70) 5 Mb
+--- . remix.gms(25) 5 Mb
+--- .. mga_pre.gms(5) 5 Mb
+--- . remix.gms(26) 5 Mb
+--- .. pareto_pre.gms(5) 5 Mb
+--- . remix.gms(27) 5 Mb
+--- .. declaration.gms(217) 5 Mb
+--- . remix.gms(28) 5 Mb
+--- .. loadgdx.gms(7) 5 Mb
+--- . remix.gms(30) 5 Mb
+--- .. converter.gms(103) 5 Mb
+--- ... converter_capacityparam.csv(540) 5 Mb
+--- .. converter.gms(113) 5 Mb
+--- ... aggregateNodes.gms(10) 5 Mb
+--- .. converter.gms(114) 5 Mb
+--- ... aggregateNodes.gms(10) 5 Mb
+--- .. converter.gms(137) 5 Mb
+--- ... converter_techparam.csv(29) 5 Mb
+--- .. converter.gms(161) 5 Mb
+--- ... converter_activityprofile.csv(265) 59 Mb
 "Converter activity profiles given. Warning: will overwrite activity limits for respective technologies"
---- .. converter.gms(184) 20 Mb
---- ... converter_coefficient.csv(113) 20 Mb
+--- .. converter.gms(184) 59 Mb
+--- ... converter_coefficient.csv(113) 59 Mb
 "No time-dependent coefficients for converter activities included"
---- .. converter.gms(1158) 20 Mb
---- . remix.gms(31) 20 Mb
---- .. storage.gms(91) 20 Mb
---- ... storage_reservoirparam.csv(78) 20 Mb
---- .. storage.gms(97) 20 Mb
---- ... aggregateNodes.gms(10) 20 Mb
---- .. storage.gms(98) 20 Mb
---- ... aggregateNodes.gms(10) 20 Mb
---- .. storage.gms(124) 20 Mb
---- ... storage_techparam.csv(5) 20 Mb
---- .. storage.gms(147) 20 Mb
---- ... storage_sizeparam.csv(5) 20 Mb
+--- .. converter.gms(1158) 59 Mb
+--- . remix.gms(31) 59 Mb
+--- .. storage.gms(91) 59 Mb
+--- ... storage_reservoirparam.csv(78) 59 Mb
+--- .. storage.gms(97) 59 Mb
+--- ... aggregateNodes.gms(10) 59 Mb
+--- .. storage.gms(98) 59 Mb
+--- ... aggregateNodes.gms(10) 59 Mb
+--- .. storage.gms(124) 59 Mb
+--- ... storage_techparam.csv(5) 59 Mb
+--- .. storage.gms(147) 59 Mb
+--- ... storage_sizeparam.csv(5) 59 Mb
 "No reservoir state of charge dependent information included"
 "No reservoir degradation states included"
 "No profile for storage level limits included"
---- .. storage.gms(1054) 20 Mb
---- . remix.gms(32) 20 Mb
+--- .. storage.gms(1054) 59 Mb
+--- . remix.gms(32) 59 Mb
 Transfer: Using voltage angle-based DC optimal power flow
---- .. transfer.gms(73) 20 Mb
---- ... transfer_linksparam.csv(13) 20 Mb
+--- .. transfer.gms(73) 59 Mb
+--- ... transfer_linksparam.csv(37) 59 Mb
 "No profile for transfer flow limits included."
---- .. transfer.gms(113) 20 Mb
---- ... transfer_techparam.csv(2) 20 Mb
---- .. transfer.gms(129) 20 Mb
---- ... transfer_coefficient.csv(2) 20 Mb
---- .. transfer.gms(145) 20 Mb
---- ... transfer_coefperflow.csv(2) 20 Mb
---- .. transfer.gms(161) 20 Mb
---- ... transfer_coefperlength.csv(3) 20 Mb
+--- .. transfer.gms(113) 59 Mb
+--- ... transfer_techparam.csv(4) 59 Mb
+--- .. transfer.gms(129) 59 Mb
+--- ... transfer_coefficient.csv(4) 59 Mb
+--- .. transfer.gms(145) 59 Mb
+--- ... transfer_coefperflow.csv(4) 59 Mb
+--- .. transfer.gms(161) 59 Mb
+--- ... transfer_coefperlength.csv(7) 59 Mb
 "No electrical reactance per length included"
---- .. transfer.gms(193) 20 Mb
---- ... transfer_lengthparam.csv(25) 20 Mb
+--- .. transfer.gms(193) 59 Mb
+--- ... transfer_lengthparam.csv(25) 59 Mb
 "No grid segments for links included"
---- .. transfer.gms(849) 20 Mb
---- . remix.gms(33) 20 Mb
---- .. sourcesink.gms(38) 20 Mb
---- ... sourcesink_config.csv(100) 20 Mb
---- .. sourcesink.gms(44) 21 Mb
---- ... aggregateNodes.gms(10) 21 Mb
---- .. sourcesink.gms(62) 21 Mb
---- ... sourcesink_profile.csv(56) 36 Mb
---- .. sourcesink.gms(86) 36 Mb
---- ... sourcesink_annualsum.csv(45) 36 Mb
---- .. sourcesink.gms(91) 36 Mb
---- ... aggregateNodes.gms(10) 36 Mb
---- .. sourcesink.gms(260) 36 Mb
---- . remix.gms(34) 36 Mb
---- .. balance.gms(139) 36 Mb
---- . remix.gms(36) 36 Mb
---- .. equations.gms(421) 36 Mb
---- . remix.gms(37) 36 Mb
---- .. optiframe.gms(25) 36 Mb
+--- .. transfer.gms(849) 59 Mb
+--- . remix.gms(33) 59 Mb
+--- .. sourcesink.gms(38) 59 Mb
+--- ... sourcesink_config.csv(67) 59 Mb
+--- .. sourcesink.gms(44) 59 Mb
+--- ... aggregateNodes.gms(10) 59 Mb
+--- .. sourcesink.gms(62) 59 Mb
+--- ... sourcesink_profile.csv(34) 68 Mb
+--- .. sourcesink.gms(86) 68 Mb
+--- ... sourcesink_annualsum.csv(34) 68 Mb
+--- .. sourcesink.gms(91) 68 Mb
+--- ... aggregateNodes.gms(10) 68 Mb
+--- .. sourcesink.gms(260) 68 Mb
+--- . remix.gms(34) 68 Mb
+--- .. balance.gms(139) 68 Mb
+--- . remix.gms(36) 68 Mb
+--- .. equations.gms(421) 68 Mb
+--- . remix.gms(37) 68 Mb
+--- .. optiframe.gms(25) 68 Mb
 "Solving the REMix model"
---- . remix.gms(71) 36 Mb
---- .. checkanno.gms(252) 36 Mb
---- . remix.gms(74) 36 Mb
---- .. pips.gms(392) 36 Mb
---- . remix.gms(77) 36 Mb
---- .. solve.gms(269) 36 Mb
---- . remix.gms(80) 36 Mb
---- .. pareto.gms(202) 36 Mb
---- . remix.gms(83) 36 Mb
---- .. mga.gms(404) 36 Mb
---- . remix.gms(86) 36 Mb
---- .. iternodes.gms(129) 36 Mb
---- . remix.gms(89) 36 Mb
---- .. definition.gms(925) 36 Mb
---- . remix.gms(90) 36 Mb
---- .. writegdx.gms(83) 36 Mb
---- . remix.gms(90) 36 Mb
---- run_remix.gms(28) 36 Mb
---- Starting execution: elapsed 0:00:04.476
---- run_remix.gms(7285) 302 Mb
+--- . remix.gms(71) 68 Mb
+--- .. checkanno.gms(252) 68 Mb
+--- . remix.gms(74) 68 Mb
+--- .. pips.gms(392) 68 Mb
+--- . remix.gms(77) 68 Mb
+--- .. solve.gms(269) 68 Mb
+--- . remix.gms(80) 68 Mb
+--- .. pareto.gms(202) 68 Mb
+--- . remix.gms(83) 68 Mb
+--- .. mga.gms(404) 68 Mb
+--- . remix.gms(86) 68 Mb
+--- .. iternodes.gms(129) 68 Mb
+--- . remix.gms(89) 68 Mb
+--- .. definition.gms(925) 68 Mb
+--- . remix.gms(90) 68 Mb
+--- .. writegdx.gms(83) 68 Mb
+--- . remix.gms(90) 68 Mb
+--- run_remix.gms(28) 68 Mb
+--- Starting execution: elapsed 0:00:10.308
+--- run_remix.gms(7462) 393 Mb
 --- Generating MIP model remix
---- run_remix.gms(7377) 1198 Mb
+--- run_remix.gms(7554) 1725 Mb
 --- LOOPS optiframeToCalc = of1
----   1,944,922 rows  1,945,022 columns  5,205,394 non-zeroes
+---   3,569,164 rows  3,633,982 columns  9,798,831 non-zeroes
 --- Range statistics (absolute non-zero finite values)
---- RHS       [min, max] : [ 1.170E-01, 1.165E+03] - Zero values observed as well
+--- RHS       [min, max] : [ 9.000E-03, 1.165E+03] - Zero values observed as well
 --- Bound     [min, max] : [        NA,        NA] - Zero values observed as well
---- Matrix    [min, max] : [ 1.000E-02, 1.890E+02]
---- Executing CPLEX (Solvelink=0): elapsed 0:00:24.368
+--- Matrix    [min, max] : [ 3.333E-03, 5.981E+02]
+--- Executing CPLEX (Solvelink=0): elapsed 0:00:40.886
 
 IBM ILOG CPLEX   40.4.0 d540b52e Oct 3, 2022           WEI x86 64bit/MS Window
 
@@ -297,11 +298,11 @@ Reading parameter(s) from "c:\Local\REMix\remix_nz\process\cplex.opt"
 Finished reading from "c:\Local\REMix\remix_nz\process\cplex.opt"
 
 --- GMO setup time: 0.00s
---- Space for names approximately 262.70 Mb
+--- Space for names approximately 490.12 Mb
 --- Use option 'names no' to turn use of names off
---- GMO memory 683.67 Mb (peak 698.51 Mb)
+--- GMO memory 1273.58 Mb (peak 1301.31 Mb)
 --- Dictionary memory 0.00 Mb
---- Cplex 22.1.0.0 link memory 59.36 Mb (peak 420.58 Mb)
+--- Cplex 22.1.0.0 link memory 110.16 Mb (peak 785.14 Mb)
 --- Starting Cplex
 
 Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
@@ -319,172 +320,78 @@ CPXPARAM_MIP_Tolerances_AbsMIPGap                0
 CPXPARAM_MIP_Tolerances_MIPGap                   0.001
 CPXPARAM_Barrier_ConvergeTol                     9.9999999999999995e-07
 Tried aggregator 1 time.
-LP Presolve eliminated 426563 rows and 426564 columns.
-Aggregator did 509519 substitutions.
-Reduced LP has 1008839 rows, 1008939 columns, and 3236757 nonzeros.
-Presolve time = 6.42 sec. (6041.76 ticks)
+LP Presolve eliminated 699413 rows and 699614 columns.
+Aggregator did 1047736 substitutions.
+Reduced LP has 1822014 rows, 1886632 columns, and 6207600 nonzeros.
+Presolve time = 9.63 sec. (7146.93 ticks)
 Parallel mode: using up to 4 threads for barrier.
 
-***NOTE: Found 100 dense columns.
+***NOTE: Found 578 dense columns.
 
-Number of nonzeros in lower triangle of A*A' = 1516919
+Number of nonzeros in lower triangle of A*A' = 2668336
 Using Approximate Minimum Degree ordering
-Total time for automatic ordering = 0.45 sec. (203.48 ticks)
+Total time for automatic ordering = 0.77 sec. (345.98 ticks)
 Summary statistics for Cholesky factor:
   Threads                   = 4
-  Rows in Factor            = 1008939
-  Integer space required    = 3544319
-  Total non-zeros in factor = 11624402
-  Total FP ops to factor    = 556840698
+  Rows in Factor            = 1822592
+  Integer space required    = 7052188
+  Total non-zeros in factor = 42918544
+  Total FP ops to factor    = 111026979256
  Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
-   0   2.9510575e+05  -1.2538042e+04  1.52e+06  1.59e+01  1.73e+06  1.00e+00
-   1   2.2932801e+05  -1.1706940e+04  1.20e+06  1.25e+01  9.71e+05  1.70e+00
-   2   2.1466382e+05  -9.0310143e+03  1.12e+06  1.17e+01  5.70e+05  2.58e+00
-   3   1.5024924e+05  -8.1586994e+03  7.95e+05  8.32e+00  3.33e+05  3.75e+00
-   4   1.0239009e+05  -6.1160383e+03  5.48e+05  5.73e+00  1.88e+05  5.74e+00
-   5   6.5325456e+04  -2.4496034e+03  3.48e+05  3.65e+00  8.48e+04  1.05e+01
-   6   3.9167605e+04  -8.0046758e+02  2.03e+05  2.13e+00  5.60e+04  1.48e+01
-   7   2.7854398e+04   5.7984090e+02  1.39e+05  1.46e+00  3.74e+04  2.12e+01
-   8   2.0506392e+04   1.2002028e+03  9.79e+04  1.02e+00  2.81e+04  2.78e+01
-   9   1.5945140e+04   1.5924077e+03  7.20e+04  7.54e-01  2.28e+04  3.43e+01
-  10   1.3105462e+04   1.8960726e+03  5.54e+04  5.80e-01  1.94e+04  4.06e+01
-  11   1.0829714e+04   2.4650839e+03  4.18e+04  4.38e-01  1.37e+04  5.78e+01
-  12   9.4765761e+03   2.7374544e+03  3.39e+04  3.55e-01  1.06e+04  7.57e+01
-  13   8.3805271e+03   2.8439369e+03  2.77e+04  2.90e-01  9.15e+03  8.80e+01
-  14   7.9487827e+03   2.8884823e+03  2.52e+04  2.63e-01  8.61e+03  9.39e+01
-  15   7.4069875e+03   2.9792689e+03  2.20e+04  2.30e-01  7.55e+03  1.08e+02
-  16   6.8037483e+03   3.0610412e+03  1.85e+04  1.93e-01  6.62e+03  1.24e+02
-  17   6.4676140e+03   3.1991406e+03  1.65e+04  1.72e-01  5.20e+03  1.61e+02
-  18   5.9640085e+03   3.3003590e+03  1.35e+04  1.42e-01  4.01e+03  2.12e+02
-  19   5.6076002e+03   3.3462447e+03  1.14e+04  1.20e-01  3.52e+03  2.44e+02
-  20   5.4851890e+03   3.3895722e+03  1.07e+04  1.12e-01  3.12e+03  2.78e+02
-  21   5.3530429e+03   3.4134672e+03  9.89e+03  1.04e-01  2.89e+03  3.02e+02
-  22   5.2534279e+03   3.4413472e+03  9.29e+03  9.72e-02  2.62e+03  3.34e+02
-  23   5.1620928e+03   3.4689744e+03  8.74e+03  9.15e-02  2.34e+03  3.75e+02
-  24   5.0526523e+03   3.4803391e+03  8.10e+03  8.48e-02  2.21e+03  4.00e+02
-  25   4.9692704e+03   3.4873716e+03  7.60e+03  7.96e-02  2.14e+03  4.14e+02
-  26   4.8323489e+03   3.5045672e+03  6.79e+03  7.11e-02  1.95e+03  4.56e+02
-  27   4.7890562e+03   3.5155157e+03  6.54e+03  6.85e-02  1.81e+03  4.92e+02
-  28   4.7208129e+03   3.5281157e+03  6.16e+03  6.45e-02  1.61e+03  5.57e+02
-  29   4.6260614e+03   3.5336726e+03  5.64e+03  5.90e-02  1.48e+03  6.07e+02
-  30   4.4931900e+03   3.5421841e+03  4.92e+03  5.15e-02  1.24e+03  7.31e+02
-  31   4.3278111e+03   3.5484651e+03  4.02e+03  4.21e-02  1.05e+03  8.70e+02
-  32   4.2588546e+03   3.5505024e+03  3.65e+03  3.83e-02  9.71e+02  9.43e+02
-  33   4.2439850e+03   3.5516138e+03  3.57e+03  3.74e-02  9.40e+02  9.74e+02
-  34   4.2278013e+03   3.5522433e+03  3.49e+03  3.65e-02  9.20e+02  9.97e+02
-  35   4.1599496e+03   3.5562727e+03  3.12e+03  3.27e-02  8.05e+02  1.15e+03
-  36   4.1581129e+03   3.5564055e+03  3.11e+03  3.25e-02  8.03e+02  1.15e+03
-  37   4.1406655e+03   3.5571255e+03  3.01e+03  3.16e-02  7.78e+02  1.19e+03
-  38   4.0390479e+03   3.5606312e+03  2.47e+03  2.58e-02  6.72e+02  1.38e+03
-  39   4.0198486e+03   3.5644003e+03  2.36e+03  2.47e-02  5.88e+02  1.59e+03
-  40   3.9365068e+03   3.5668730e+03  1.91e+03  2.00e-02  5.23e+02  1.80e+03
-  41   3.8880643e+03   3.5726533e+03  1.63e+03  1.71e-02  4.32e+02  2.20e+03
-  42   3.8761202e+03   3.5749753e+03  1.56e+03  1.64e-02  4.01e+02  2.38e+03
-  43   3.8402816e+03   3.5759824e+03  1.35e+03  1.42e-02  3.89e+02  2.45e+03
-  44   3.8059444e+03   3.5775951e+03  1.16e+03  1.21e-02  3.66e+02  2.61e+03
-  45   3.7930981e+03   3.5788322e+03  1.08e+03  1.13e-02  3.53e+02  2.71e+03
-  46   3.7750050e+03   3.5833902e+03  9.72e+02  1.02e-02  3.07e+02  3.16e+03
-  47   3.7683736e+03   3.5860014e+03  9.34e+02  9.78e-03  2.72e+02  3.60e+03
-  48   3.7512362e+03   3.5865528e+03  8.37e+02  8.76e-03  2.64e+02  3.71e+03
-  49   3.7304516e+03   3.5894973e+03  7.16e+02  7.50e-03  2.25e+02  4.39e+03
-  50   3.7191680e+03   3.5912536e+03  6.51e+02  6.81e-03  2.02e+02  4.92e+03
-  51   3.7092450e+03   3.5934671e+03  5.94e+02  6.22e-03  1.71e+02  5.89e+03
-  52   3.6997084e+03   3.5947369e+03  5.41e+02  5.66e-03  1.48e+02  6.87e+03
-  53   3.6808855e+03   3.5952465e+03  4.37e+02  4.58e-03  1.37e+02  7.44e+03
-  54   3.6739018e+03   3.5953747e+03  3.97e+02  4.15e-03  1.35e+02  7.54e+03
-  55   3.6647737e+03   3.5964108e+03  3.45e+02  3.61e-03  1.19e+02  8.59e+03
-  56   3.6568356e+03   3.5970748e+03  3.00e+02  3.14e-03  1.08e+02  9.52e+03
-  57   3.6547645e+03   3.5974401e+03  2.88e+02  3.02e-03  1.02e+02  1.01e+04
-  58   3.6449936e+03   3.5979757e+03  2.34e+02  2.45e-03  9.28e+01  1.12e+04
-  59   3.6385256e+03   3.5981735e+03  1.97e+02  2.06e-03  8.98e+01  1.16e+04
-  60   3.6367402e+03   3.5989602e+03  1.86e+02  1.95e-03  7.91e+01  1.33e+04
-  61   3.6341267e+03   3.5991259e+03  1.72e+02  1.80e-03  7.58e+01  1.40e+04
-  62   3.6297494e+03   3.5992861e+03  1.48e+02  1.55e-03  7.26e+01  1.46e+04
-  63   3.6283391e+03   3.5994382e+03  1.40e+02  1.46e-03  7.01e+01  1.52e+04
-  64   3.6266581e+03   3.5996373e+03  1.30e+02  1.36e-03  6.71e+01  1.59e+04
-  65   3.6231040e+03   3.6002530e+03  1.10e+02  1.15e-03  5.76e+01  1.88e+04
-  66   3.6211011e+03   3.6003968e+03  9.86e+01  1.03e-03  5.48e+01  1.99e+04
-  67   3.6207140e+03   3.6006583e+03  9.62e+01  1.01e-03  5.18e+01  2.11e+04
-  68   3.6188729e+03   3.6007749e+03  8.61e+01  9.02e-04  4.93e+01  2.23e+04
-  69   3.6165573e+03   3.6009843e+03  7.34e+01  7.69e-04  4.50e+01  2.46e+04
-  70   3.6157318e+03   3.6010447e+03  6.89e+01  7.22e-04  4.37e+01  2.54e+04
-  71   3.6144074e+03   3.6011403e+03  6.16e+01  6.45e-04  4.19e+01  2.66e+04
-  72   3.6129526e+03   3.6013234e+03  5.35e+01  5.60e-04  3.83e+01  2.93e+04
-  73   3.6112354e+03   3.6014212e+03  4.44e+01  4.64e-04  3.59e+01  3.15e+04
-  74   3.6101449e+03   3.6015235e+03  3.83e+01  4.01e-04  3.39e+01  3.36e+04
-  75   3.6099357e+03   3.6015283e+03  3.73e+01  3.91e-04  3.37e+01  3.38e+04
-  76   3.6092474e+03   3.6015830e+03  3.38e+01  3.54e-04  3.19e+01  3.59e+04
-  77   3.6084185e+03   3.6016292e+03  2.97e+01  3.10e-04  3.03e+01  3.80e+04
-  78   3.6079802e+03   3.6017024e+03  2.74e+01  2.87e-04  2.80e+01  4.15e+04
-  79   3.6078133e+03   3.6017253e+03  2.67e+01  2.79e-04  2.64e+01  4.43e+04
-  80   3.6070149e+03   3.6017702e+03  2.29e+01  2.40e-04  2.36e+01  5.02e+04
-  81   3.6065358e+03   3.6017648e+03  2.09e+01  2.18e-04  2.25e+01  5.29e+04
-  82   3.6064249e+03   3.6017634e+03  2.04e+01  2.13e-04  2.08e+01  5.78e+04
-  83   3.6060530e+03   3.6017447e+03  1.88e+01  1.97e-04  1.91e+01  6.35e+04
-  84   3.6055705e+03   3.6016977e+03  1.69e+01  1.77e-04  1.70e+01  7.22e+04
-  85   3.6050584e+03   3.6016602e+03  1.49e+01  1.56e-04  1.58e+01  7.82e+04
-  86   3.6045432e+03   3.6016039e+03  1.30e+01  1.36e-04  1.41e+01  8.83e+04
-  87   3.6042291e+03   3.6015862e+03  1.18e+01  1.24e-04  1.37e+01  9.14e+04
-  88   3.6038946e+03   3.6015579e+03  1.06e+01  1.11e-04  1.29e+01  9.74e+04
-  89   3.6035797e+03   3.6014950e+03  9.38e+00  9.82e-05  1.12e+01  1.14e+05
-  90   3.6034276e+03   3.6014117e+03  8.86e+00  9.28e-05  9.80e+00  1.32e+05
-  91   3.6033622e+03   3.6013791e+03  8.65e+00  9.06e-05  9.35e+00  1.39e+05
-  92   3.6033511e+03   3.6013581e+03  8.61e+00  9.02e-05  9.12e+00  1.42e+05
-  93   3.6030936e+03   3.6011831e+03  7.79e+00  8.15e-05  6.80e+00  1.96e+05
-  94   3.6028142e+03   3.6011164e+03  6.96e+00  7.29e-05  6.17e+00  2.18e+05
-  95   3.6027093e+03   3.6010942e+03  6.67e+00  6.99e-05  6.01e+00  2.24e+05
-  96   3.6024423e+03   3.6010374e+03  5.89e+00  6.17e-05  5.49e+00  2.46e+05
-  97   3.6022485e+03   3.6008699e+03  5.33e+00  5.58e-05  4.02e+00  3.43e+05
-  98   3.6020417e+03   3.6007762e+03  4.76e+00  4.99e-05  3.36e+00  4.14e+05
-  99   3.6019642e+03   3.6006880e+03  4.55e+00  4.76e-05  2.72e+00  5.12e+05
- 100   3.6017323e+03   3.6006588e+03  3.94e+00  4.12e-05  2.55e+00  5.47e+05
- 101   3.6014272e+03   3.6006242e+03  3.13e+00  3.28e-05  2.33e+00  5.96e+05
- 102   3.6014079e+03   3.6006145e+03  3.08e+00  3.22e-05  2.27e+00  6.14e+05
- 103   3.6013363e+03   3.6006042e+03  2.88e+00  3.02e-05  2.20e+00  6.35e+05
- 104   3.6012814e+03   3.6005994e+03  2.73e+00  2.86e-05  2.16e+00  6.45e+05
- 105   3.6012137e+03   3.6005773e+03  2.55e+00  2.67e-05  2.01e+00  6.95e+05
- 106   3.6010020e+03   3.6005201e+03  1.96e+00  2.06e-05  1.62e+00  8.71e+05
- 107   3.6009744e+03   3.6004895e+03  1.89e+00  1.98e-05  1.41e+00  1.00e+06
- 108   3.6009518e+03   3.6004703e+03  1.83e+00  1.91e-05  1.29e+00  1.10e+06
- 109   3.6009002e+03   3.6004673e+03  1.70e+00  1.78e-05  1.27e+00  1.12e+06
- 110   3.6007373e+03   3.6004451e+03  1.26e+00  1.32e-05  1.13e+00  1.26e+06
- 111   3.6007145e+03   3.6004405e+03  1.20e+00  1.25e-05  1.10e+00  1.30e+06
- 112   3.6006569e+03   3.6004316e+03  1.04e+00  1.09e-05  1.04e+00  1.38e+06
- 113   3.6006141e+03   3.6003845e+03  9.18e-01  9.61e-06  7.00e-01  2.09e+06
- 114   3.6005116e+03   3.6003473e+03  6.51e-01  6.82e-06  4.88e-01  3.02e+06
- 115   3.6004631e+03   3.6003359e+03  5.25e-01  5.50e-06  4.24e-01  3.48e+06
- 116   3.6004584e+03   3.6003284e+03  5.13e-01  5.38e-06  3.82e-01  3.87e+06
- 117   3.6003986e+03   3.6003133e+03  3.59e-01  3.76e-06  2.99e-01  4.96e+06
- 118   3.6003545e+03   3.6002920e+03  2.45e-01  2.56e-06  1.79e-01  8.35e+06
- 119   3.6003170e+03   3.6002804e+03  1.50e-01  1.57e-06  1.18e-01  1.27e+07
- 120   3.6003005e+03   3.6002731e+03  1.07e-01  1.12e-06  7.73e-02  1.94e+07
- 121   3.6002984e+03   3.6002719e+03  1.02e-01  1.06e-06  7.10e-02  2.11e+07
- 122   3.6002939e+03   3.6002713e+03  9.02e-02  9.43e-07  6.74e-02  2.23e+07
- 123   3.6002854e+03   3.6002629e+03  6.84e-02  7.15e-07  2.15e-02  7.03e+07
- 124   3.6002744e+03   3.6002598e+03  4.28e-02  4.48e-07  1.19e-02  1.09e+08
- 125   3.6002681e+03   3.6002596e+03  2.73e-02  2.80e-07  1.09e-02  1.17e+08
-Barrier time = 79.80 sec. (73602.57 ticks)
-
-Total time on 4 threads = 79.80 sec. (73602.57 ticks)
-
---- LP status (1): optimal.
---- Cplex Time: 79.80sec (det. 73608.13 ticks)
-
-
-Optimal solution found
-Objective:         3600.268064
-
-Solution Quality Statistics:
---- Restarting execution
---- run_remix.gms(7377) 539 Mb
---- Reading solution for model remix
---- Executing after solve: elapsed 0:01:49.658
---- run_remix.gms(7285) 540 Mb
-    Model status 13
-    Objective value 0.000
---- run_remix.gms(8208) 541 Mb
---- GDX File (execute_unload) C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2040\result\nz_profile_11nodes_2040_test_re.gdx
---- Putfile opt c:\Local\REMix\remix_nz\process\cplex.opt
-*** Status: Normal completion
---- run_remix.gms(8208) 540 Mb
---- Job run_remix.gms Stop 10/05/23 16:03:04 elapsed 0:01:51.578
+   0   8.4326663e+06  -1.2538042e+04  2.88e+07  4.11e+02  3.42e+06  1.00e+00
+   1   7.2222623e+06  -2.8323870e+04  2.47e+07  3.52e+02  1.38e+06  3.39e-01
+   2   5.6342115e+06  -1.5667826e+05  1.94e+07  2.77e+02  5.99e+05  3.64e-01
+   3   4.7082483e+06  -3.4325157e+05  1.65e+07  2.35e+02  2.30e+05  4.17e-01
+   4   3.5774756e+06  -5.1404645e+05  1.30e+07  1.85e+02  8.36e+04  6.14e-01
+   5   3.4238036e+06  -4.8730849e+05  1.25e+07  1.78e+02  6.79e+04  6.97e-01
+   6   2.0564377e+06  -4.4775289e+05  7.97e+06  1.14e+02  4.67e+04  9.05e-01
+   7   1.3596960e+06  -3.9336484e+05  5.59e+06  7.98e+01  3.19e+04  1.24e+00
+   8   1.0540325e+06  -3.0250739e+05  4.45e+06  6.35e+01  2.06e+04  1.80e+00
+   9   8.4247055e+05  -2.4337837e+05  3.65e+06  5.21e+01  1.35e+04  2.52e+00
+  10   7.4763463e+05  -2.0746505e+05  3.31e+06  4.72e+01  7.76e+03  3.49e+00
+  11   4.7249108e+05  -1.4262653e+05  2.16e+06  3.09e+01  4.61e+03  5.10e+00
+  12   3.5984326e+05  -9.7274071e+04  1.64e+06  2.34e+01  3.22e+03  6.88e+00
+  13   2.8192850e+05  -6.9307459e+04  1.26e+06  1.80e+01  2.46e+03  8.68e+00
+  14   2.3154604e+05  -5.9430155e+04  1.04e+06  1.49e+01  2.05e+03  1.04e+01
+  15   1.7329904e+05  -5.3749108e+04  8.11e+05  1.16e+01  1.66e+03  1.26e+01
+  16   1.3907991e+05  -4.0926238e+04  6.61e+05  9.44e+00  1.15e+03  1.75e+01
+  17   1.1040783e+05  -3.6088996e+04  5.16e+05  7.36e+00  1.04e+03  1.95e+01
+  18   8.2436312e+04  -1.9853461e+04  3.80e+05  5.43e+00  6.20e+02  3.14e+01
+  19   6.5154457e+04  -1.4423342e+04  2.98e+05  4.25e+00  4.69e+02  4.04e+01
+  20   5.7816663e+04  -1.1835697e+04  2.65e+05  3.78e+00  3.80e+02  4.86e+01
+  21   3.5772598e+04  -7.5839795e+03  1.58e+05  2.26e+00  2.71e+02  6.59e+01
+  22   3.3634255e+04  -6.1030853e+03  1.49e+05  2.12e+00  2.26e+02  7.83e+01
+  23   2.5849458e+04  -5.7871246e+03  1.18e+05  1.68e+00  1.91e+02  9.20e+01
+  24   2.3016178e+04  -3.2447121e+03  1.04e+05  1.49e+00  1.19e+02  1.43e+02
+  25   2.0712818e+04  -2.4247174e+03  9.38e+04  1.34e+00  9.32e+01  1.75e+02
+  26   1.9337996e+04  -1.7544109e+03  8.74e+04  1.25e+00  7.14e+01  2.16e+02
+  27   1.8170193e+04  -9.7298263e+02  8.21e+04  1.17e+00  4.41e+01  3.01e+02
+  28   1.3356838e+04  -6.1055374e+02  6.01e+04  8.57e-01  3.05e+01  3.70e+02
+  29   9.5969665e+03  -4.0442410e+02  4.29e+04  6.13e-01  2.24e+01  4.52e+02
+  30   2.9063634e+03  -1.4373644e+02  1.22e+04  1.73e-01  1.37e+01  6.50e+02
+  31   1.4097919e+03  -2.9578961e+01  5.12e+03  7.31e-02  1.03e+01  8.98e+02
+  32   1.3596606e+03   1.8272224e+02  4.82e+03  6.88e-02  6.55e+00  1.56e+03
+  33   1.0793320e+03   3.0901532e+02  3.07e+03  4.38e-02  4.51e+00  2.38e+03
+  34   1.0408630e+03   3.4305919e+02  2.80e+03  4.00e-02  4.04e+00  2.68e+03
+  35   9.9662339e+02   3.9255318e+02  2.49e+03  3.56e-02  3.37e+00  3.28e+03
+  36   9.6516533e+02   4.2437108e+02  2.28e+03  3.25e-02  2.93e+00  3.82e+03
+  37   8.8062277e+02   4.6004879e+02  1.76e+03  2.51e-02  2.31e+00  4.90e+03
+  38   8.2604875e+02   4.8002781e+02  1.42e+03  2.02e-02  1.98e+00  5.77e+03
+  39   7.9833769e+02   4.9466416e+02  1.25e+03  1.78e-02  1.73e+00  6.70e+03
+  40   7.6826772e+02   5.1393966e+02  1.04e+03  1.49e-02  1.45e+00  8.11e+03
+  41   7.5489705e+02   5.2572174e+02  9.47e+02  1.35e-02  1.29e+00  9.15e+03
+  42   7.3571776e+02   5.3938856e+02  8.14e+02  1.16e-02  1.10e+00  1.09e+04
+  43   7.1438960e+02   5.5326358e+02  6.64e+02  9.47e-03  9.14e-01  1.33e+04
+  44   7.0080128e+02   5.6128771e+02  5.68e+02  8.10e-03  8.04e-01  1.52e+04
+  45   6.9150287e+02   5.7452860e+02  5.00e+02  7.13e-03  6.32e-01  1.97e+04
+  46   6.8424038e+02   5.8383858e+02  4.47e+02  6.38e-03  5.11e-01  2.46e+04
+  47   6.7309180e+02   5.9247484e+02  3.65e+02  5.21e-03  3.98e-01  3.17e+04
+  48   6.7021667e+02   5.9611137e+02  3.44e+02  4.90e-03  3.54e-01  3.58e+04
+  49   6.6262403e+02   6.0197702e+02  2.86e+02  4.08e-03  2.82e-01  4.47e+04
+  50   6.5557387e+02   6.0806564e+02  2.29e+02  3.26e-03  2.14e-01  5.86e+04
+  51   6.5285694e+02   6.1032116e+02  2.06e+02  2.94e-03  1.90e-01  6.57e+04
+  52   6.4898627e+02   6.1322555e+02  1.72e+02  2.45e-03  1.61e-01  7.71e+04
+  53   6.4561570e+02   6.1663873e+02  1.41e+02  2.01e-03  1.29e-01  9.57e+04
+  54   6.4340741e+02   6.1911298e+02  1.20e+02  1.71e-03  1.07e-01  1.15e+05
+  55   6.4191910e+02   6.2000115e+02  1.06e+02  1.51e-03  9.87e-02  1.24e+05
+  56   6.3999762e+02   6.2199535e+02  8.67e+01  1.24e-03  8.11e-02  1.51e+05
