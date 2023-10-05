@@ -1,12 +1,4 @@
 Battery
-CCGT
-CCGT_H2
-Electrolyser
-FTropschSyn
-GT
-GT_H2
-Methanizer
-MethanolSyn
 pv_central_fixed
 pv_central_track_azimuth
 pv_decentral
