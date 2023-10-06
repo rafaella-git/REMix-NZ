@@ -1,4 +1,4 @@
---- Job run_remix.gms Start 10/06/23 11:39:41 40.4.0 d540b52e WEX-WEI x86 64bit/MS Windows
+--- Job run_remix.gms Start 10/06/23 11:52:08 40.4.0 d540b52e WEX-WEI x86 64bit/MS Windows
 --- Applying:
     C:\GAMS\40\gmsprmNT.txt
     \\file\Usersr$\rca139\Home\My Documents\GAMS\gamsconfig.yaml
@@ -36,7 +36,7 @@ Using project path C:\Local\REMix\remix_nz\output\high_pop_out_2030-2040-2050\da
 --- . metadata.gms(9) 2 Mb
 --- call printf "gams_version \"40.4.0\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(10) 2 Mb
---- call printf "timestamp \"10/06/23 11:39:41\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+--- call printf "timestamp \"10/06/23 11:52:08\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(12) 2 Mb
 --- call printf "framework_path " >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(14) 2 Mb
@@ -262,7 +262,7 @@ Transfer: Using voltage angle-based DC optimal power flow
 --- .. writegdx.gms(83) 68 Mb
 --- . remix.gms(90) 68 Mb
 --- run_remix.gms(28) 68 Mb
---- Starting execution: elapsed 0:00:10.308
+--- Starting execution: elapsed 0:00:10.567
 --- run_remix.gms(7462) 393 Mb
 --- Generating MIP model remix
 --- run_remix.gms(7554) 1725 Mb
@@ -272,7 +272,7 @@ Transfer: Using voltage angle-based DC optimal power flow
 --- RHS       [min, max] : [ 9.000E-03, 1.165E+03] - Zero values observed as well
 --- Bound     [min, max] : [        NA,        NA] - Zero values observed as well
 --- Matrix    [min, max] : [ 3.333E-03, 5.981E+02]
---- Executing CPLEX (Solvelink=0): elapsed 0:00:40.886
+--- Executing CPLEX (Solvelink=0): elapsed 0:00:42.768
 
 IBM ILOG CPLEX   40.4.0 d540b52e Oct 3, 2022           WEI x86 64bit/MS Window
 
@@ -323,14 +323,14 @@ Tried aggregator 1 time.
 LP Presolve eliminated 699413 rows and 699614 columns.
 Aggregator did 1047736 substitutions.
 Reduced LP has 1822014 rows, 1886632 columns, and 6207600 nonzeros.
-Presolve time = 9.63 sec. (7146.93 ticks)
+Presolve time = 9.70 sec. (7146.93 ticks)
 Parallel mode: using up to 4 threads for barrier.
 
 ***NOTE: Found 578 dense columns.
 
 Number of nonzeros in lower triangle of A*A' = 2668336
 Using Approximate Minimum Degree ordering
-Total time for automatic ordering = 0.77 sec. (345.98 ticks)
+Total time for automatic ordering = 0.78 sec. (345.98 ticks)
 Summary statistics for Cholesky factor:
   Threads                   = 4
   Rows in Factor            = 1822592
@@ -395,3 +395,81 @@ Summary statistics for Cholesky factor:
   54   6.4340741e+02   6.1911298e+02  1.20e+02  1.71e-03  1.07e-01  1.15e+05
   55   6.4191910e+02   6.2000115e+02  1.06e+02  1.51e-03  9.87e-02  1.24e+05
   56   6.3999762e+02   6.2199535e+02  8.67e+01  1.24e-03  8.11e-02  1.51e+05
+  57   6.3932811e+02   6.2220171e+02  8.01e+01  1.14e-03  7.93e-02  1.54e+05
+  58   6.3818292e+02   6.2336340e+02  6.80e+01  9.70e-04  6.97e-02  1.76e+05
+  59   6.3745414e+02   6.2529048e+02  6.02e+01  8.58e-04  5.38e-02  2.28e+05
+  60   6.3599527e+02   6.2700214e+02  4.51e+01  6.43e-04  3.93e-02  3.10e+05
+  61   6.3537933e+02   6.2790139e+02  3.87e+01  5.52e-04  3.17e-02  3.82e+05
+  62   6.3454272e+02   6.2846527e+02  2.98e+01  4.25e-04  2.70e-02  4.45e+05
+  63   6.3442169e+02   6.2855382e+02  2.86e+01  4.08e-04  2.62e-02  4.59e+05
+  64   6.3400531e+02   6.2933742e+02  2.39e+01  3.41e-04  2.01e-02  5.99e+05
+  65   6.3363906e+02   6.2980408e+02  1.98e+01  2.82e-04  1.64e-02  7.30e+05
+  66   6.3348604e+02   6.2987020e+02  1.80e+01  2.56e-04  1.59e-02  7.53e+05
+  67   6.3333755e+02   6.2992730e+02  1.62e+01  2.31e-04  1.55e-02  7.74e+05
+  68   6.3299718e+02   6.3040920e+02  1.22e+01  1.74e-04  1.18e-02  1.02e+06
+  69   6.3282962e+02   6.3054286e+02  1.01e+01  1.44e-04  1.08e-02  1.11e+06
+  70   6.3274683e+02   6.3060464e+02  9.07e+00  1.29e-04  1.04e-02  1.16e+06
+  71   6.3264532e+02   6.3082983e+02  7.77e+00  1.11e-04  8.75e-03  1.38e+06
+  72   6.3260208e+02   6.3086152e+02  7.26e+00  1.04e-04  8.51e-03  1.42e+06
+  73   6.3247100e+02   6.3101446e+02  5.61e+00  8.00e-05  7.39e-03  1.64e+06
+  74   6.3243761e+02   6.3110859e+02  5.14e+00  7.33e-05  6.73e-03  1.81e+06
+  75   6.3233695e+02   6.3125296e+02  3.84e+00  5.49e-05  5.69e-03  2.16e+06
+  76   6.3226623e+02   6.3136025e+02  2.92e+00  4.17e-05  4.91e-03  2.52e+06
+  77   6.3224506e+02   6.3140277e+02  2.66e+00  3.79e-05  4.60e-03  2.70e+06
+  78   6.3221615e+02   6.3146208e+02  2.28e+00  3.25e-05  4.18e-03  3.00e+06
+  79   6.3219397e+02   6.3153785e+02  2.01e+00  2.87e-05  3.62e-03  3.50e+06
+  80   6.3218061e+02   6.3168397e+02  1.86e+00  2.65e-05  2.51e-03  5.21e+06
+  81   6.3213017e+02   6.3182082e+02  1.34e+00  1.91e-05  1.43e-03  9.38e+06
+  82   6.3210556e+02   6.3184258e+02  1.09e+00  1.56e-05  1.25e-03  1.07e+07
+  83   6.3208539e+02   6.3185982e+02  8.97e-01  1.28e-05  1.11e-03  1.21e+07
+  84   6.3207805e+02   6.3187436e+02  8.23e-01  1.18e-05  9.88e-04  1.35e+07
+  85   6.3207422e+02   6.3188234e+02  7.85e-01  1.12e-05  9.23e-04  1.45e+07
+  86   6.3204359e+02   6.3190633e+02  4.80e-01  6.84e-06  7.28e-04  1.84e+07
+  87   6.3203637e+02   6.3192832e+02  4.03e-01  5.75e-06  5.54e-04  2.45e+07
+  88   6.3202021e+02   6.3194995e+02  2.38e-01  3.39e-06  3.79e-04  3.62e+07
+  89   6.3201315e+02   6.3196678e+02  1.65e-01  2.35e-06  2.44e-04  5.75e+07
+  90   6.3201128e+02   6.3196923e+02  1.46e-01  2.09e-06  2.24e-04  6.29e+07
+  91   6.3200246e+02   6.3198409e+02  6.11e-02  8.72e-07  1.00e-04  1.46e+08
+  92   6.3200075e+02   6.3199004e+02  4.57e-02  6.52e-07  4.88e-05  3.10e+08
+  93   6.3199979e+02   6.3199188e+02  3.79e-02  5.41e-07  3.10e-05  4.71e+08
+  94   6.3199798e+02   6.3199261e+02  2.37e-02  3.38e-07  2.37e-05  5.95e+08
+  95   6.3199730e+02   6.3199416e+02  1.76e-02  2.51e-07  1.01e-05  1.33e+09
+  96   6.3199646e+02   6.3199487e+02  1.07e-02  1.52e-07  3.32e-06  3.07e+09
+Barrier time = 523.50 sec. (534729.43 ticks)
+
+Total time on 4 threads = 523.50 sec. (534729.43 ticks)
+
+--- LP status (1): optimal.
+--- Cplex Time: 523.52sec (det. 534739.64 ticks)
+
+
+Optimal solution found
+Objective:          631.996456
+
+Solution Quality Statistics:
+                                   unscaled                scaled
+                               max         sum         max         sum
+primal infeasibility        1.100e-04   1.092e-02   1.100e-04   1.092e-02
+dual infeasibility          6.038e-13   6.618e-12   6.038e-13   6.618e-12
+primal residual             1.137e-13   9.211e-12   1.137e-13   9.211e-12
+dual residual               3.850e-08   1.772e-06   3.850e-08   1.772e-06
+primal solution vector      6.320e+02   1.120e+05   6.320e+02   1.120e+05
+dual solution vector        5.981e+02   3.039e+05   5.981e+02   3.039e+05
+slacks                      1.165e+03   8.996e+04   1.165e+03   8.996e+04
+reduced costs               5.981e+02   9.872e+05   5.981e+02   9.872e+05
+comp. slackness viol.       5.968e-07   1.921e-03
+
+
+--- Restarting execution
+--- run_remix.gms(7554) 712 Mb
+--- Reading solution for model remix
+--- run_remix.gms(7554) 1083 Mb
+--- Executing after solve: elapsed 0:09:37.716
+--- run_remix.gms(7462) 1084 Mb
+    Model status 1
+    Objective value 631.996
+--- run_remix.gms(8385) 1496 Mb
+--- GDX File (execute_unload) C:\Local\REMix\remix_nz\output\high_pop_out_2030-2040-2050\result\high_pop_out_2030-2040-2050.gdx
+--- Putfile opt c:\Local\REMix\remix_nz\process\cplex.opt
+*** Status: Normal completion
+--- Job run_remix.gms Stop 10/06/23 12:02:03 elapsed 0:09:55.239
