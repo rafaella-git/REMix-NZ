@@ -1,4 +1,4 @@
---- Job run_remix.gms Start 10/08/23 23:08:42 40.4.0 d540b52e WEX-WEI x86 64bit/MS Windows
+--- Job run_remix.gms Start 10/12/23 12:13:41 40.4.0 d540b52e WEX-WEI x86 64bit/MS Windows
 --- Applying:
     C:\GAMS\40\gmsprmNT.txt
     \\file\Usersr$\rca139\Home\My Documents\GAMS\gamsconfig.yaml
@@ -8,10 +8,10 @@
     SysDir C:\GAMS\40\
     LogOption 4
     Keep 0
-    --datadir C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020-2030-2040-2050\data
-    --resultdir C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020-2030-2040-2050\result
+    --datadir C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020\data
+    --resultdir C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020\result
     --scendir ./
-    --resultfile nz_profile_11nodes_2020-2030-2040-2050
+    --resultfile nz_profile_11nodes_2020
     --names 1
     --postcalc 1
     --roundts 1
@@ -27,15 +27,15 @@ GAMS 40.4.0   Copyright (C) 1987-2022 GAMS Development. All rights reserved
 ### Metadata ###
 Using REMix version 0.9.2
 Using GAMS version 40.4.0
-Using data directory C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020-2030-2040-2050\data and scenario directory ./
+Using data directory C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020\data and scenario directory ./
 Using framework path C:\Local\REMix\framework\remix\framework\model\source
-Using project path C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020-2030-2040-2050\data./
+Using project path C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020\data./
 --- . metadata.gms(8) 2 Mb
 --- call printf "remix_version \"0.9.2\"\n" > c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(9) 2 Mb
 --- call printf "gams_version \"40.4.0\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(10) 2 Mb
---- call printf "timestamp \"10/08/23 23:08:42\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+--- call printf "timestamp \"10/12/23 12:13:41\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(12) 2 Mb
 --- call printf "framework_path " >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(14) 2 Mb
@@ -57,19 +57,19 @@ Using project path C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020-2030-2
 --- . metadata.gms(34) 2 Mb
 --- call printf "project_path " >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(36) 2 Mb
---- call cd C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020-2030-2040-2050\data\./ && cd| sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+--- call cd C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020\data\./ && cd| sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(40) 2 Mb
 --- call printf "\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(41) 2 Mb
 --- call printf "project_hash " >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(43) 2 Mb
---- call cd C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020-2030-2040-2050\data\./ && git rev-parse HEAD >nul 2>&1 && git rev-parse HEAD | sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+--- call cd C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020\data\./ && git rev-parse HEAD >nul 2>&1 && git rev-parse HEAD | sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(47) 2 Mb
 --- call printf "\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(48) 2 Mb
 --- call printf "project_branch " >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(50) 2 Mb
---- call cd C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020-2030-2040-2050\data\./ && git rev-parse --abbrev-ref HEAD >nul 2>&1 && git rev-parse --abbrev-ref HEAD | sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+--- call cd C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020\data\./ && git rev-parse --abbrev-ref HEAD >nul 2>&1 && git rev-parse --abbrev-ref HEAD | sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(54) 2 Mb
 --- call printf "\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(57) 2 Mb
@@ -95,7 +95,7 @@ Using project path C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020-2030-2
 --- .. sets.gms(170) 6 Mb
 --- ... set_years.csv(7) 6 Mb
 --- .. sets.gms(178) 6 Mb
---- ... set_yearssel.csv(4) 6 Mb
+--- ... set_yearssel.csv(1) 6 Mb
 --- .. sets.gms(198) 6 Mb
 --- ... set_activities.csv(7) 6 Mb
 "No set elements for grid segments included."
@@ -140,9 +140,9 @@ Using project path C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020-2030-2
 --- .. input.gms(88) 6 Mb
 --- ... accounting_storageunits.csv(9) 6 Mb
 --- .. input.gms(112) 6 Mb
---- ... accounting_transferlinks.csv(9) 6 Mb
+--- ... accounting_transferlinks.csv(3) 6 Mb
 --- .. input.gms(136) 6 Mb
---- ... accounting_transferperlength.csv(17) 6 Mb
+--- ... accounting_transferperlength.csv(5) 6 Mb
 --- .. input.gms(153) 6 Mb
 --- ... accounting_sourcesinkflow.csv(8) 6 Mb
 --- .. input.gms(169) 6 Mb
@@ -209,16 +209,16 @@ Using project path C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020-2030-2
 --- . remix.gms(32) 60 Mb
 Transfer: Using voltage angle-based DC optimal power flow
 --- .. transfer.gms(73) 60 Mb
---- ... transfer_linksparam.csv(49) 60 Mb
+--- ... transfer_linksparam.csv(13) 60 Mb
 "No profile for transfer flow limits included."
 --- .. transfer.gms(113) 60 Mb
---- ... transfer_techparam.csv(5) 60 Mb
+--- ... transfer_techparam.csv(2) 60 Mb
 --- .. transfer.gms(129) 60 Mb
---- ... transfer_coefficient.csv(5) 60 Mb
+--- ... transfer_coefficient.csv(2) 60 Mb
 --- .. transfer.gms(145) 60 Mb
---- ... transfer_coefperflow.csv(5) 60 Mb
+--- ... transfer_coefperflow.csv(2) 60 Mb
 --- .. transfer.gms(161) 60 Mb
---- ... transfer_coefperlength.csv(9) 60 Mb
+--- ... transfer_coefperlength.csv(3) 60 Mb
 "No electrical reactance per length included"
 --- .. transfer.gms(193) 60 Mb
 --- ... transfer_lengthparam.csv(25) 60 Mb
@@ -261,17 +261,17 @@ Transfer: Using voltage angle-based DC optimal power flow
 --- .. writegdx.gms(83) 76 Mb
 --- . remix.gms(90) 76 Mb
 --- run_remix.gms(28) 76 Mb
---- Starting execution: elapsed 0:00:07.810
---- run_remix.gms(7947) 2116 Mb
+--- Starting execution: elapsed 0:00:11.032
+--- run_remix.gms(7875) 403 Mb
 --- Generating MIP model remix
---- run_remix.gms(8039) 12276 Mb
+--- run_remix.gms(7967) 1890 Mb
 --- LOOPS optiframeToCalc = of1
----   23,881,712 rows  22,244,779 columns  64,982,413 non-zeroes
+---   3,197,690 rows  2,716,034 columns  8,096,414 non-zeroes
 --- Range statistics (absolute non-zero finite values)
---- RHS       [min, max] : [ 5.000E-03, 1.165E+03] - Zero values observed as well
+--- RHS       [min, max] : [ 6.400E-02, 1.165E+03] - Zero values observed as well
 --- Bound     [min, max] : [        NA,        NA] - Zero values observed as well
---- Matrix    [min, max] : [ 6.000E-03, 5.981E+02]
---- Executing CPLEX (Solvelink=0): elapsed 0:03:01.430
+--- Matrix    [min, max] : [ 6.000E-03, 1.926E+02]
+--- Executing CPLEX (Solvelink=0): elapsed 0:00:39.278
 
 IBM ILOG CPLEX   40.4.0 d540b52e Oct 3, 2022           WEI x86 64bit/MS Window
 
@@ -297,11 +297,11 @@ Reading parameter(s) from "c:\Local\REMix\remix_nz\process\cplex.opt"
 Finished reading from "c:\Local\REMix\remix_nz\process\cplex.opt"
 
 --- GMO setup time: 0.00s
---- Space for names approximately 3096.00 Mb
+--- Space for names approximately 389.01 Mb
 --- Use option 'names no' to turn use of names off
---- GMO memory 8247.51 Mb (peak 8417.23 Mb)
+--- GMO memory 1045.93 Mb (peak 1066.66 Mb)
 --- Dictionary memory 0.00 Mb
---- Cplex 22.1.0.0 link memory 697.59 Mb (peak 4984.31 Mb)
+--- Cplex 22.1.0.0 link memory 88.40 Mb (peak 624.92 Mb)
 --- Starting Cplex
 
 Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
@@ -318,181 +318,153 @@ CPXPARAM_TimeLimit                               604800
 CPXPARAM_MIP_Tolerances_AbsMIPGap                0
 CPXPARAM_MIP_Tolerances_MIPGap                   0.001
 CPXPARAM_Barrier_ConvergeTol                     9.9999999999999995e-07
-Presolve has eliminated 10786005 rows and 8955532 columns...
-Aggregator has done 1371901 substitutions...
-Aggregator has done 2786101 substitutions...
-Aggregator has done 4243401 substitutions...
 Tried aggregator 1 time.
-Aggregator has done 4821716 substitutions...
-LP Presolve eliminated 10786082 rows and 8955708 columns.
-Aggregator did 4821716 substitutions.
-Reduced LP has 8273913 rows, 8467355 columns, and 28273091 nonzeros.
-Presolve time = 71.70 sec. (58697.72 ticks)
+LP Presolve eliminated 1679331 rows and 1197576 columns.
+Aggregator did 509519 substitutions.
+Reduced LP has 1008839 rows, 1008939 columns, and 3236757 nonzeros.
+Presolve time = 6.41 sec. (6700.14 ticks)
 Parallel mode: using up to 4 threads for barrier.
 
-***NOTE: Found 923 dense columns.
+***NOTE: Found 100 dense columns.
 
-Number of nonzeros in lower triangle of A*A' = 12241359
+Number of nonzeros in lower triangle of A*A' = 1516919
 Using Approximate Minimum Degree ordering
-Total time for automatic ordering = 3.61 sec. (1488.87 ticks)
+Total time for automatic ordering = 0.45 sec. (203.48 ticks)
 Summary statistics for Cholesky factor:
   Threads                   = 4
-  Rows in Factor            = 8274836
-  Integer space required    = 31852725
-  Total non-zeros in factor = 925910481
-  Total FP ops to factor    = 19047885221405
+  Rows in Factor            = 1008939
+  Integer space required    = 3544319
+  Total non-zeros in factor = 11624402
+  Total FP ops to factor    = 556840698
  Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
-   0   3.0772192e+07  -5.9740636e+04  3.56e+08  4.81e+06  3.23e+07  1.00e+00
-   1   2.6080281e+07  -1.3074559e+06  3.05e+08  4.12e+06  1.11e+07  7.97e-02
-   2   1.7022548e+07  -3.7669389e+06  2.14e+08  2.89e+06  2.26e+06  2.67e-01
-   3   9.7916218e+06  -2.7930510e+06  1.35e+08  1.82e+06  5.18e+05  5.04e-01
-   4   5.9009812e+06  -1.8259631e+06  8.82e+07  1.19e+06  1.44e+05  1.21e+00
-   5   3.9513690e+06  -1.2313028e+06  6.34e+07  8.57e+05  3.60e+04  2.64e+00
-   6   3.0630090e+06  -1.1099689e+06  5.08e+07  6.87e+05  2.99e+04  3.07e+00
-   7   2.0829807e+06  -7.0112435e+05  3.65e+07  4.93e+05  1.23e+04  5.34e+00
-   8   1.6359490e+06  -5.2505044e+05  3.00e+07  4.05e+05  4.48e+03  8.30e+00
-   9   1.2627598e+06  -3.6268081e+05  2.40e+07  3.24e+05  2.00e+03  1.22e+01
-  10   1.0887414e+06  -3.1038569e+05  2.11e+07  2.86e+05  1.37e+03  1.43e+01
-  11   9.0231617e+05  -2.5224641e+05  1.76e+07  2.38e+05  1.08e+03  1.66e+01
-  12   7.3709137e+05  -1.8213170e+05  1.47e+07  1.99e+05  6.13e+02  2.24e+01
-  13   6.3129943e+05  -1.4022514e+05  1.27e+07  1.72e+05  3.94e+02  2.84e+01
-  14   5.5285231e+05  -1.0673274e+05  1.12e+07  1.52e+05  2.83e+02  3.40e+01
-  15   3.6023471e+05  -7.1150845e+04  7.31e+06  9.88e+04  1.88e+02  4.37e+01
-  16   2.2625033e+05  -5.2716085e+04  4.72e+06  6.38e+04  1.23e+02  5.99e+01
-  17   1.4368194e+05  -3.7939597e+04  3.04e+06  4.12e+04  8.40e+01  8.19e+01
-  18   1.0602932e+05  -1.1653327e+04  2.18e+06  2.95e+04  3.88e+01  1.56e+02
-  19   7.8793505e+04  -6.1008063e+03  1.57e+06  2.12e+04  2.82e+01  1.99e+02
-  20   6.0354197e+04  -2.5298466e+03  1.18e+06  1.59e+04  1.93e+01  2.76e+02
-  21   4.7457456e+04   2.4025917e+03  8.69e+05  1.18e+04  1.23e+01  3.93e+02
-  22   3.9985435e+04   5.8794911e+03  6.80e+05  9.20e+03  8.26e+00  5.33e+02
-  23   2.9519910e+04   9.0642463e+03  4.02e+05  5.44e+03  5.17e+00  7.61e+02
-  24   2.7590864e+04   1.1149622e+04  3.43e+05  4.63e+03  3.72e+00  1.01e+03
-  25   2.5872476e+04   1.2612709e+04  2.90e+05  3.92e+03  2.70e+00  1.30e+03
-  26   2.4769266e+04   1.3206786e+04  2.55e+05  3.45e+03  2.29e+00  1.48e+03
-  27   2.3974590e+04   1.3329917e+04  2.30e+05  3.11e+03  2.21e+00  1.53e+03
-  28   2.3209652e+04   1.3677781e+04  2.06e+05  2.78e+03  1.98e+00  1.67e+03
-  29   2.2786601e+04   1.3931795e+04  1.92e+05  2.59e+03  1.83e+00  1.79e+03
-  30   2.2230574e+04   1.4758497e+04  1.74e+05  2.35e+03  1.31e+00  2.35e+03
-  31   2.1953269e+04   1.5170163e+04  1.65e+05  2.23e+03  1.03e+00  2.82e+03
-  32   2.1633387e+04   1.5544248e+04  1.55e+05  2.10e+03  7.55e-01  3.46e+03
-  33   2.1304410e+04   1.5701577e+04  1.45e+05  1.96e+03  6.62e-01  3.77e+03
-  34   2.0576016e+04   1.5846367e+04  1.21e+05  1.63e+03  5.84e-01  4.07e+03
-  35   2.0241803e+04   1.6035177e+04  1.09e+05  1.47e+03  4.94e-01  4.56e+03
-  36   1.9817594e+04   1.6190560e+04  9.36e+04  1.27e+03  4.30e-01  5.03e+03
-  37   1.9636894e+04   1.6296578e+04  8.64e+04  1.17e+03  3.95e-01  5.36e+03
-  38   1.9424623e+04   1.6449298e+04  7.80e+04  1.05e+03  3.43e-01  5.95e+03
-  39   1.9187750e+04   1.6676643e+04  6.85e+04  9.26e+02  2.68e-01  7.13e+03
-  40   1.8932583e+04   1.6968777e+04  5.82e+04  7.86e+02  1.72e-01  9.65e+03
-  41   1.8824571e+04   1.7077622e+04  5.36e+04  7.24e+02  1.40e-01  1.10e+04
-  42   1.8587468e+04   1.7187680e+04  4.32e+04  5.84e+02  1.11e-01  1.28e+04
-  43   1.8493756e+04   1.7261729e+04  3.85e+04  5.21e+02  9.56e-02  1.43e+04
-  44   1.8441953e+04   1.7286873e+04  3.60e+04  4.86e+02  9.02e-02  1.49e+04
-  45   1.8350849e+04   1.7396620e+04  3.14e+04  4.24e+02  6.80e-02  1.82e+04
-  46   1.8253857e+04   1.7474536e+04  2.63e+04  3.55e+02  5.31e-02  2.16e+04
-  47   1.8195599e+04   1.7505250e+04  2.30e+04  3.11e+02  4.79e-02  2.33e+04
-  48   1.8171758e+04   1.7563602e+04  2.15e+04  2.91e+02  3.89e-02  2.73e+04
-  49   1.8106641e+04   1.7604525e+04  1.77e+04  2.40e+02  3.23e-02  3.11e+04
-  50   1.8098886e+04   1.7631503e+04  1.72e+04  2.33e+02  2.86e-02  3.41e+04
-  51   1.8047875e+04   1.7662856e+04  1.39e+04  1.88e+02  2.41e-02  3.86e+04
-  52   1.8030944e+04   1.7694768e+04  1.27e+04  1.72e+02  2.02e-02  4.45e+04
-  53   1.8019425e+04   1.7703115e+04  1.18e+04  1.60e+02  1.92e-02  4.64e+04
-  54   1.8005688e+04   1.7733114e+04  1.08e+04  1.46e+02  1.55e-02  5.50e+04
-  55   1.7980511e+04   1.7753679e+04  8.96e+03  1.21e+02  1.29e-02  6.30e+04
-  56   1.7977057e+04   1.7754207e+04  8.70e+03  1.18e+02  1.29e-02  6.33e+04
-  57   1.7966908e+04   1.7769555e+04  7.82e+03  1.06e+02  1.13e-02  7.07e+04
-  58   1.7965750e+04   1.7776086e+04  7.73e+03  1.04e+02  1.05e-02  7.46e+04
-  59   1.7947349e+04   1.7783220e+04  6.19e+03  8.37e+01  9.77e-03  7.91e+04
-  60   1.7941480e+04   1.7792075e+04  5.61e+03  7.59e+01  8.92e-03  8.56e+04
-  61   1.7935740e+04   1.7799007e+04  5.03e+03  6.80e+01  8.26e-03  9.16e+04
-  62   1.7927284e+04   1.7816813e+04  4.18e+03  5.66e+01  6.56e-03  1.12e+05
-  63   1.7923910e+04   1.7821326e+04  3.84e+03  5.19e+01  6.13e-03  1.19e+05
-  64   1.7917464e+04   1.7830083e+04  3.18e+03  4.30e+01  5.31e-03  1.35e+05
-  65   1.7914662e+04   1.7837976e+04  2.86e+03  3.87e+01  4.60e-03  1.54e+05
-  66   1.7912121e+04   1.7839590e+04  2.58e+03  3.49e+01  4.45e-03  1.59e+05
-  67   1.7910710e+04   1.7844734e+04  2.41e+03  3.26e+01  4.00e-03  1.75e+05
-  68   1.7906937e+04   1.7848794e+04  1.96e+03  2.66e+01  3.65e-03  1.91e+05
-  69   1.7904956e+04   1.7855364e+04  1.72e+03  2.32e+01  3.08e-03  2.24e+05
-  70   1.7903104e+04   1.7857259e+04  1.50e+03  2.02e+01  2.92e-03  2.36e+05
-  71   1.7902570e+04   1.7860308e+04  1.43e+03  1.93e+01  2.65e-03  2.59e+05
-  72   1.7900125e+04   1.7862922e+04  1.12e+03  1.52e+01  2.43e-03  2.81e+05
-  73   1.7899766e+04   1.7864670e+04  1.07e+03  1.45e+01  2.28e-03  2.99e+05
-  74   1.7898967e+04   1.7865806e+04  9.67e+02  1.31e+01  2.19e-03  3.12e+05
-  75   1.7898490e+04   1.7870726e+04  9.04e+02  1.22e+01  1.77e-03  3.86e+05
-  76   1.7898287e+04   1.7871628e+04  8.79e+02  1.19e+01  1.69e-03  4.03e+05
-  77   1.7897400e+04   1.7874291e+04  7.73e+02  1.04e+01  1.46e-03  4.66e+05
-  78   1.7897196e+04   1.7875868e+04  7.48e+02  1.01e+01  1.32e-03  5.13e+05
-  79   1.7896223e+04   1.7878018e+04  6.34e+02  8.58e+00  1.13e-03  5.95e+05
-  80   1.7896041e+04   1.7878122e+04  6.13e+02  8.29e+00  1.12e-03  6.00e+05
-  81   1.7895472e+04   1.7879832e+04  5.46e+02  7.38e+00  9.72e-04  6.90e+05
-  82   1.7895202e+04   1.7880091e+04  5.13e+02  6.93e+00  9.49e-04  7.05e+05
-  83   1.7894654e+04   1.7880587e+04  4.43e+02  5.98e+00  9.07e-04  7.38e+05
-  84   1.7894647e+04   1.7881138e+04  4.42e+02  5.97e+00  8.61e-04  7.77e+05
-  85   1.7894011e+04   1.7884179e+04  3.60e+02  4.87e+00  6.01e-04  1.11e+06
-  86   1.7893730e+04   1.7884324e+04  3.25e+02  4.40e+00  5.88e-04  1.13e+06
-  87   1.7893376e+04   1.7884838e+04  2.82e+02  3.82e+00  5.43e-04  1.22e+06
-  88   1.7893108e+04   1.7886158e+04  2.49e+02  3.37e+00  4.29e-04  1.54e+06
-  89   1.7892611e+04   1.7886643e+04  1.89e+02  2.55e+00  3.86e-04  1.70e+06
-  90   1.7892372e+04   1.7886956e+04  1.58e+02  2.13e+00  3.60e-04  1.83e+06
-  91   1.7892287e+04   1.7887034e+04  1.46e+02  1.97e+00  3.53e-04  1.87e+06
-  92   1.7892045e+04   1.7887414e+04  1.11e+02  1.51e+00  3.21e-04  2.05e+06
-  93   1.7892006e+04   1.7888013e+04  1.05e+02  1.43e+00  2.72e-04  2.45e+06
-  94   1.7891910e+04   1.7888666e+04  9.25e+01  1.25e+00  2.17e-04  3.10e+06
-  95   1.7891797e+04   1.7889478e+04  7.88e+01  1.06e+00  1.47e-04  4.64e+06
-  96   1.7891734e+04   1.7889562e+04  7.20e+01  9.73e-01  1.40e-04  4.89e+06
-  97   1.7891649e+04   1.7889694e+04  6.25e+01  8.46e-01  1.27e-04  5.35e+06
-  98   1.7891565e+04   1.7890012e+04  5.33e+01  7.20e-01  9.82e-05  6.92e+06
-  99   1.7891536e+04   1.7890014e+04  4.99e+01  6.75e-01  9.80e-05  6.94e+06
- 100   1.7891475e+04   1.7890219e+04  4.32e+01  5.85e-01  7.92e-05  8.56e+06
- 101   1.7891456e+04   1.7890444e+04  4.12e+01  5.57e-01  5.83e-05  1.15e+07
- 102   1.7891435e+04   1.7890519e+04  3.92e+01  5.30e-01  5.12e-05  1.31e+07
- 103   1.7891353e+04   1.7890623e+04  3.12e+01  4.22e-01  4.11e-05  1.60e+07
- 104   1.7891255e+04   1.7890667e+04  2.11e+01  2.86e-01  3.75e-05  1.76e+07
- 105   1.7891221e+04   1.7890721e+04  1.70e+01  2.30e-01  3.26e-05  2.03e+07
- 106   1.7891219e+04   1.7890742e+04  1.68e+01  2.27e-01  3.07e-05  2.15e+07
- 107   1.7891202e+04   1.7890750e+04  1.47e+01  1.99e-01  2.99e-05  2.20e+07
- 108   1.7891178e+04   1.7890844e+04  1.15e+01  1.56e-01  2.21e-05  3.05e+07
- 109   1.7891164e+04   1.7890857e+04  9.93e+00  1.34e-01  2.09e-05  3.23e+07
- 110   1.7891161e+04   1.7890881e+04  9.56e+00  1.29e-01  1.88e-05  3.62e+07
- 111   1.7891150e+04   1.7890941e+04  8.21e+00  1.11e-01  1.67e-05  5.13e+07
- 112   1.7891132e+04   1.7890947e+04  6.13e+00  8.29e-02  1.60e-05  5.34e+07
- 113   1.7891112e+04   1.7891030e+04  3.61e+00  4.88e-02  8.77e-06  1.36e+08
- 114   1.7891111e+04   1.7891056e+04  3.44e+00  4.66e-02  4.25e-06  2.67e+08
- 115   1.7891103e+04   1.7891061e+04  2.69e+00  3.64e-02  3.17e-06  3.24e+08
-Barrier time = 145052.88 sec. (69545588.70 ticks)
+   0   2.9690009e+05  -1.2538042e+04  1.56e+06  1.59e+01  1.73e+06  1.00e+00
+   1   2.2263146e+05  -1.3371523e+04  1.19e+06  1.21e+01  9.43e+05  1.75e+00
+   2   1.9943966e+05  -1.1743387e+04  1.07e+06  1.09e+01  3.72e+05  3.63e+00
+   3   1.0842476e+05  -9.8643345e+03  6.00e+05  6.13e+00  2.07e+05  5.40e+00
+   4   5.7205541e+04  -4.6980989e+03  3.20e+05  3.27e+00  7.85e+04  1.24e+01
+   5   3.8424903e+04  -1.5380805e+03  2.13e+05  2.17e+00  3.71e+04  2.18e+01
+   6   2.4622363e+04  -2.5221936e+02  1.32e+05  1.35e+00  2.31e+04  3.25e+01
+   7   1.6192164e+04   9.8684518e+02  8.19e+04  8.37e-01  1.27e+04  5.48e+01
+   8   1.2821398e+04   1.2901360e+03  6.15e+04  6.28e-01  1.04e+04  6.68e+01
+   9   1.0589441e+04   1.8010762e+03  4.76e+04  4.87e-01  7.19e+03  9.55e+01
+  10   7.9266808e+03   2.0170789e+03  3.11e+04  3.18e-01  5.80e+03  1.20e+02
+  11   6.6647015e+03   2.1413059e+03  2.29e+04  2.34e-01  5.16e+03  1.39e+02
+  12   5.9805473e+03   2.3542021e+03  1.83e+04  1.87e-01  4.18e+03  1.74e+02
+  13   5.7716617e+03   2.4322715e+03  1.69e+04  1.72e-01  3.83e+03  1.91e+02
+  14   5.3643442e+03   2.5682594e+03  1.41e+04  1.44e-01  3.24e+03  2.30e+02
+  15   5.0032819e+03   2.6636988e+03  1.16e+04  1.18e-01  2.84e+03  2.66e+02
+  16   4.8280594e+03   2.7115720e+03  1.03e+04  1.05e-01  2.66e+03  2.88e+02
+  17   4.6658756e+03   2.7951343e+03  9.05e+03  9.25e-02  2.37e+03  3.28e+02
+  18   4.6153003e+03   2.8623001e+03  8.67e+03  8.85e-02  2.14e+03  3.66e+02
+  19   4.3980271e+03   2.9556020e+03  7.04e+03  7.19e-02  1.80e+03  4.44e+02
+  20   4.3265633e+03   3.0176836e+03  6.48e+03  6.63e-02  1.59e+03  5.09e+02
+  21   4.1779516e+03   3.1055831e+03  5.36e+03  5.48e-02  1.28e+03  6.48e+02
+  22   4.0353809e+03   3.1714584e+03  4.29e+03  4.38e-02  1.05e+03  8.12e+02
+  23   3.9593148e+03   3.2015272e+03  3.72e+03  3.80e-02  9.40e+02  9.17e+02
+  24   3.8901323e+03   3.2440787e+03  3.19e+03  3.26e-02  7.91e+02  1.11e+03
+  25   3.8365748e+03   3.2599881e+03  2.78e+03  2.84e-02  7.35e+02  1.21e+03
+  26   3.7864444e+03   3.2859654e+03  2.40e+03  2.45e-02  6.48e+02  1.39e+03
+  27   3.7703644e+03   3.3089727e+03  2.27e+03  2.32e-02  5.73e+02  1.60e+03
+  28   3.7330336e+03   3.3317194e+03  1.97e+03  2.01e-02  5.01e+02  1.86e+03
+  29   3.7034421e+03   3.3545835e+03  1.72e+03  1.76e-02  4.30e+02  2.20e+03
+  30   3.6920494e+03   3.3738393e+03  1.63e+03  1.66e-02  3.71e+02  2.59e+03
+  31   3.6837141e+03   3.3851205e+03  1.56e+03  1.60e-02  3.36e+02  2.89e+03
+  32   3.6461010e+03   3.3992743e+03  1.26e+03  1.29e-02  2.90e+02  3.39e+03
+  33   3.6284006e+03   3.4070270e+03  1.11e+03  1.13e-02  2.67e+02  3.72e+03
+  34   3.6016102e+03   3.4159811e+03  8.78e+02  8.97e-03  2.41e+02  4.16e+03
+  35   3.5939451e+03   3.4311270e+03  8.08e+02  8.26e-03  2.00e+02  5.13e+03
+  36   3.5734676e+03   3.4440708e+03  6.27e+02  6.41e-03  1.64e+02  6.41e+03
+  37   3.5582299e+03   3.4531371e+03  4.92e+02  5.03e-03  1.39e+02  7.73e+03
+  38   3.5488574e+03   3.4584439e+03  4.08e+02  4.17e-03  1.24e+02  8.76e+03
+  39   3.5451173e+03   3.4630966e+03  3.74e+02  3.82e-03  1.11e+02  9.87e+03
+  40   3.5410753e+03   3.4693620e+03  3.37e+02  3.44e-03  9.45e+01  1.19e+04
+  41   3.5367170e+03   3.4732682e+03  2.98e+02  3.04e-03  8.37e+01  1.36e+04
+  42   3.5323664e+03   3.4772958e+03  2.59e+02  2.64e-03  7.25e+01  1.59e+04
+  43   3.5278999e+03   3.4793976e+03  2.19e+02  2.23e-03  6.67e+01  1.74e+04
+  44   3.5246879e+03   3.4834355e+03  1.89e+02  1.93e-03  5.60e+01  2.12e+04
+  45   3.5233194e+03   3.4853856e+03  1.76e+02  1.80e-03  5.08e+01  2.35e+04
+  46   3.5193660e+03   3.4863222e+03  1.39e+02  1.42e-03  4.82e+01  2.49e+04
+  47   3.5183005e+03   3.4880445e+03  1.29e+02  1.32e-03  4.38e+01  2.77e+04
+  48   3.5166403e+03   3.4894099e+03  1.13e+02  1.16e-03  4.02e+01  3.05e+04
+  49   3.5148738e+03   3.4905374e+03  9.61e+01  9.82e-04  3.73e+01  3.31e+04
+  50   3.5137835e+03   3.4909269e+03  8.54e+01  8.73e-04  3.63e+01  3.41e+04
+  51   3.5117967e+03   3.4914806e+03  6.57e+01  6.71e-04  3.49e+01  3.57e+04
+  52   3.5108402e+03   3.4929221e+03  5.58e+01  5.70e-04  3.13e+01  4.04e+04
+  53   3.5106091e+03   3.4932035e+03  5.34e+01  5.46e-04  3.06e+01  4.14e+04
+  54   3.5100802e+03   3.4948764e+03  4.81e+01  4.91e-04  2.64e+01  4.90e+04
+  55   3.5093581e+03   3.4957651e+03  4.11e+01  4.20e-04  2.41e+01  5.43e+04
+  56   3.5090951e+03   3.4959267e+03  3.86e+01  3.94e-04  2.36e+01  5.54e+04
+  57   3.5089724e+03   3.4967973e+03  3.74e+01  3.82e-04  2.14e+01  6.20e+04
+  58   3.5088808e+03   3.4979361e+03  3.65e+01  3.73e-04  1.84e+01  7.32e+04
+  59   3.5079755e+03   3.4983005e+03  2.86e+01  2.92e-04  1.75e+01  7.78e+04
+  60   3.5072723e+03   3.5004820e+03  2.22e+01  2.27e-04  1.16e+01  1.24e+05
+  61   3.5072155e+03   3.5005307e+03  2.18e+01  2.22e-04  1.15e+01  1.26e+05
+  62   3.5071495e+03   3.5006331e+03  2.12e+01  2.17e-04  1.12e+01  1.29e+05
+  63   3.5066128e+03   3.5009594e+03  1.70e+01  1.74e-04  1.02e+01  1.43e+05
+  64   3.5062878e+03   3.5012304e+03  1.43e+01  1.46e-04  9.45e+00  1.55e+05
+  65   3.5061129e+03   3.5014419e+03  1.29e+01  1.32e-04  8.84e+00  1.67e+05
+  66   3.5059393e+03   3.5016838e+03  1.15e+01  1.17e-04  8.15e+00  1.83e+05
+  67   3.5056867e+03   3.5018991e+03  9.47e+00  9.67e-05  7.53e+00  2.00e+05
+  68   3.5056237e+03   3.5020357e+03  8.97e+00  9.16e-05  7.13e+00  2.12e+05
+  69   3.5055450e+03   3.5021012e+03  8.34e+00  8.52e-05  6.94e+00  2.19e+05
+  70   3.5053194e+03   3.5022698e+03  6.53e+00  6.67e-05  6.45e+00  2.37e+05
+  71   3.5052477e+03   3.5025265e+03  5.95e+00  6.08e-05  5.71e+00  2.72e+05
+  72   3.5051184e+03   3.5027942e+03  4.97e+00  5.07e-05  4.93e+00  3.21e+05
+  73   3.5050231e+03   3.5029934e+03  4.28e+00  4.37e-05  4.32e+00  3.71e+05
+  74   3.5047801e+03   3.5034663e+03  2.61e+00  2.67e-05  2.87e+00  5.89e+05
+  75   3.5047594e+03   3.5034859e+03  2.49e+00  2.55e-05  2.81e+00  6.04e+05
+  76   3.5047023e+03   3.5035299e+03  2.15e+00  2.20e-05  2.66e+00  6.40e+05
+  77   3.5046158e+03   3.5036056e+03  1.64e+00  1.68e-05  2.41e+00  7.13e+05
+  78   3.5045833e+03   3.5037644e+03  1.45e+00  1.48e-05  1.89e+00  9.39e+05
+  79   3.5045012e+03   3.5039707e+03  1.03e+00  1.05e-05  1.16e+00  1.62e+06
+  80   3.5044257e+03   3.5041019e+03  7.10e-01  7.26e-06  6.30e-01  3.12e+06
+  81   3.5043735e+03   3.5041221e+03  5.08e-01  5.19e-06  5.40e-01  3.66e+06
+  82   3.5043647e+03   3.5041341e+03  4.73e-01  4.83e-06  4.88e-01  4.07e+06
+  83   3.5042964e+03   3.5041542e+03  2.03e-01  2.07e-06  3.99e-01  5.03e+06
+  84   3.5042813e+03   3.5041757e+03  1.35e-01  1.38e-06  3.11e-01  6.60e+06
+  85   3.5042771e+03   3.5041859e+03  1.20e-01  1.22e-06  2.65e-01  7.81e+06
+  86   3.5042767e+03   3.5041863e+03  1.18e-01  1.21e-06  2.63e-01  7.87e+06
+  87   3.5042756e+03   3.5042086e+03  1.13e-01  1.16e-06  1.68e-01  1.29e+07
+  88   3.5042670e+03   3.5042142e+03  8.45e-02  8.64e-07  1.39e-01  1.58e+07
+  89   3.5042636e+03   3.5042163e+03  7.31e-02  7.47e-07  1.29e-01  1.71e+07
+  90   3.5042626e+03   3.5042310e+03  6.98e-02  7.14e-07  5.42e-02  4.44e+07
+  91   3.5042489e+03   3.5042363e+03  3.06e-02  3.13e-07  1.46e-02  1.55e+08
+  92   3.5042470e+03   3.5042370e+03  2.55e-02  2.60e-07  8.05e-03  2.48e+08
+Barrier time = 62.41 sec. (60315.47 ticks)
 
-Total time on 4 threads = 145052.88 sec. (69545588.70 ticks)
+Total time on 4 threads = 62.41 sec. (60315.47 ticks)
 
 --- LP status (1): optimal.
---- Cplex Time: 145052.92sec (det. 69545657.03 ticks)
+--- Cplex Time: 62.42sec (det. 60324.62 ticks)
 
 
 Optimal solution found
-Objective:        17891.103000
+Objective:         3504.247029
 
 Solution Quality Statistics:
                                    unscaled                scaled
                                max         sum         max         sum
-primal infeasibility        2.826e-04   1.212e+00   2.826e-04   1.079e+00
-dual infeasibility          3.309e-24   5.586e-22   3.309e-24   5.586e-22
-primal residual             1.101e-13   3.079e-10   1.101e-13   3.079e-10
-dual residual               1.420e-07   2.382e-06   1.420e-07   2.382e-06
-primal solution vector      1.789e+04   6.954e+06   1.789e+04   6.954e+06
-dual solution vector        5.981e+02   6.038e+05   5.981e+02   6.038e+05
-slacks                      1.164e+03   3.445e+06   1.164e+03   3.445e+06
-reduced costs               5.981e+02   1.473e+06   5.981e+02   1.473e+06
-comp. slackness viol.       8.808e-05   7.413e-02
+primal infeasibility        2.046e-05   7.991e-03   2.046e-05   7.991e-03
+dual infeasibility          2.962e-09   3.294e-05   2.962e-09   3.294e-05
+primal residual             4.547e-13   2.760e-11   4.547e-13   2.760e-11
+dual residual               4.655e-09   4.247e-03   4.655e-09   4.247e-03
+primal solution vector      3.504e+03   6.567e+05   3.504e+03   6.567e+05
+dual solution vector        1.926e+02   8.786e+04   1.926e+02   8.786e+04
+slacks                      1.162e+03   4.657e+05   1.162e+03   4.657e+05
+reduced costs               1.926e+02   3.222e+05   1.926e+02   3.222e+05
+comp. slackness viol.       6.512e-06   1.177e-02
 
 
 --- Restarting execution
---- run_remix.gms(8039) 4292 Mb
+--- run_remix.gms(7967) 745 Mb
 --- Reading solution for model remix
---- run_remix.gms(8039) 6677 Mb
---- Executing after solve: elapsed 40:21:54.096
---- run_remix.gms(7947) 6677 Mb
+--- run_remix.gms(7967) 1061 Mb
+--- Executing after solve: elapsed 0:01:51.544
+--- run_remix.gms(7875) 1063 Mb
     Model status 1
-    Objective value 17891.103
---- run_remix.gms(8870) 8244 Mb
---- GDX File (execute_unload) C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020-2030-2040-2050\result\nz_profile_11nodes_2020-2030-2040-2050.gdx
+    Objective value 3504.247
+--- run_remix.gms(8798) 1340 Mb
+--- GDX File (execute_unload) C:\Local\REMix\remix_nz\output\nz_profile_11nodes_2020\result\nz_profile_11nodes_2020.gdx
 --- Putfile opt c:\Local\REMix\remix_nz\process\cplex.opt
 *** Status: Normal completion
---- Job run_remix.gms Stop 10/10/23 15:32:25 elapsed 40:23:43.075
+--- Job run_remix.gms Stop 10/12/23 12:15:49 elapsed 0:02:07.911
