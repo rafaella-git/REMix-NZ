@@ -13,11 +13,11 @@ import time
 
 # %%
 # Changing years to be optimised and demand file selected
-yrs2run=[2050] # years to be optimised
+yrs2run=[2020, 2050] # years to be optimised
 indx=0
 # Demand files available (different scenarios)
-files_lst=["nz_profile_11nodes","medpop_evs","low_pop_out","med_pop_out","high_pop_out"] 
-files_493=["medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] #493 as in the course 493, this is for Liv and Sam
+files_lst=["nz-hydro","nz-elec","nz_profile_11nodes","medpop_evs","low_pop_out","med_pop_out","high_pop_out"] 
+# files_493=["medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] #493 as in the course 493, this is for Liv and Sam
 # Do not change these
 yrs_str='-'.join([str(item) for item in yrs2run])
 demand_file=files_lst[indx] 
@@ -40,8 +40,10 @@ m.run(
     resultdir = result_dir,
     resultfile=case_name,
     lo=4,
+    timeres=4,
     names=1,
     roundts=1,
+    iis=1,
 )
 print(os. getcwd())
 

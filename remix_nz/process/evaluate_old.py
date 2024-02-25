@@ -24,9 +24,21 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 
 
+
+#%%
+# ## Define useful functions
+# ### 1. Define datafame from gdx results file | (folder of file, name of dataframe)
+# ### 2. Plot capacities | (dataframe caps, tech you wnat to plot, year)
+# ### 3. Plot transfer (like triangles) | dataframe transfer flows/balance?
+# ### 4. Plot ISO plots x=day y=hour heat=intensity | dataframe balance
+# ### 5. Define function to export a figure | (figure, name, destiny folder) 
+
+
+
+
 # %%
 # Define case to be evaluated (based on demand file name and the yeas optimised)
-indx=1
+indx=0
 # Demand files available (different scenarios)
 files_lst=["nz_profile_11nodes","medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] #493 as in the course 493, this is for Liv and Sam
 yrs=[2020,2030,2040,2050] # years optimised
@@ -166,3 +178,5 @@ plot_choropleth(
     cmap="Blues",
     ax=ax2,
 )
+
+
