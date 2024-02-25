@@ -60,6 +60,7 @@ plt.rcParams.update({"savefig.dpi": 300})  # dpi
 plt.rcParams.update({"font.size": 16})  # default font size
 plt.rcParams.update({"axes.titlesize": 20})  # title size per subplot
 plt.rcParams.update({"axes.labelsize": 18})  # label size colormap
+nodes_lst=["NIS","AKL","WTO","TRN","BOP","HBY","CEN","WEL","NEL","CAN","OTG"]
 #figsize_dual = (13.0, 6)
 #figsize_single = (7.5, 6)
 
@@ -190,7 +191,7 @@ def plot_cap(tech,year,caps_dict=caps):
 
 
 
-def plot_caps_v(df_caps,year,bar_bol=False, case=demand_file):
+def plot_caps_v(df_caps,year,bar_bol=False, case=demand_files):
     # slice capacities dataframe for specified techs
     map_pv=df_caps.loc[idx[nodes_lst, f"{year}",  "PV", "Elec", "total"],  idx[:]].groupby("accNodesModel").sum().round(2)
     map_wind=df_caps.loc[idx[nodes_lst, f"{year}", "Wind", "Elec", "total"],  idx[:]].groupby("accNodesModel").sum().round(2)
@@ -241,7 +242,8 @@ def plot_caps_v(df_caps,year,bar_bol=False, case=demand_file):
     mini_fig=f"{minifig_file}_cap_v_{year}.png"
     plt.savefig(mini_fig, bbox_inches='tight', pad_inches=0.1)
 
-
+plot_cap(caps,2020)
+plot_caps_v(caps,2020)
 
 # %% [markdown]
 # ### 3. Plot transfer (like triangles) | dataframe transfer flows/balance?
