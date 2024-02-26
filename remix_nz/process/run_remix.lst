@@ -1,4 +1,4 @@
-GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 01/30/24 10:50:31 Page 1
+GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 02/26/24 18:21:15 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -18,19 +18,19 @@ INCLUDE    C:\Local\REMix\framework\remix\framework\model\source\metadata.gms
   42   
   58   
   59  set metadata(*) /
-INCLUDE    c:\Local\REMix\remix_nz\process\225b\metadata
+INCLUDE    c:\Local\REMix\remix_nz\process\225a\metadata
   61  remix_version "0.9.2"
   62  gams_version "40.4.0"
-  63  timestamp "01/30/24 10:50:31"
+  63  timestamp "02/26/24 18:21:15"
   64  framework_path "C:\Local\REMix\framework\remix\framework\model\source"
   65   
   66  framework_hash 96c2159997fb47c52b8300c49677756ddfb1ee40
   67   
   68  framework_branch "dev"
   69   
-  70  project_path "C:\Local\REMix\remix_nz\output\nz-h2_2020-2050\data"
+  70  project_path "C:\Local\REMix\remix_nz\output\nz-h2-noexp_2020-2050\data"
   71   
-  72  project_hash "d2f098d8b97c2ab1f5b12df7beb7782d36330f38"
+  72  project_hash "d4d317cddeb792c506a6034994ea52860c0e3201"
   73   
   74  project_branch "main"
   75   
@@ -5202,7 +5202,7 @@ INCLUDE    C:\Local\REMix\framework\remix\framework\model\source\postcalc\writeg
 13802  * SPDX-License-Identifier: BSD-3-Clause
 13803   
 13806   
-13807  execute_unload "C:\Local\REMix\remix_nz\output\nz-h2_2020-2050\result\nz-h2_2020-2050.gdx"
+13807  execute_unload "C:\Local\REMix\remix_nz\output\nz-h2-noexp_2020-2050\result\nz-h2-noexp_2020-2050.gdx"
 13808      metadata
 13809      timeModel
 13810      timeModelToCalc
@@ -5251,7 +5251,7 @@ INCLUDE    C:\Local\REMix\framework\remix\framework\model\source\postcalc\writeg
 13855      marginals_indicator_bounds
 13856   
 13858      ;
-GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 01/30/24 10:50:31 Page 2
+GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 02/26/24 18:21:15 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Include File Summary
 
@@ -5259,135 +5259,135 @@ Include File Summary
    SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
 
      1        1 INPUT          0       0  C:\Local\REMix\framework\remix\framework\model\run_remix.gms
-     2       12 IF DEXIST      1      12  C:\Local\REMix\remix_nz\output\nz-h2_2020-2050\data\
+     2       12 IF DEXIST      1      12  C:\Local\REMix\remix_nz\output\nz-h2-noexp_2020-2050\data\
      3       15 INCLUDE        1      15  .C:\Local\REMix\framework\remix\framework\model\source\metadata.gms
-     4       23 CALL           3       8  .printf "remix_version \"0.9.2\"\n" > c:\Local\REMix\remix_nz\process\225b\\metadata
-     5       24 CALL           3       9  .printf "gams_version \"40.4.0\"\n" >> c:\Local\REMix\remix_nz\process\225b\\metadata
-     6       25 CALL           3      10  .printf "timestamp \"01/30/24 10:50:31\"\n" >> c:\Local\REMix\remix_nz\process\225b\\metadata
-     7       27 CALL           3      12  .printf "framework_path " >> c:\Local\REMix\remix_nz\process\225b\\metadata
-     8       29 CALL           3      14  .cd C:\Local\REMix\framework\remix\framework\model\source && cd| sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225b\\metadata
-     9       31 CALL           3      18  .printf "\n" >> c:\Local\REMix\remix_nz\process\225b\\metadata
-    10       32 CALL           3      19  .printf "framework_hash " >> c:\Local\REMix\remix_nz\process\225b\\metadata
-    11       34 CALL           3      21  .cd C:\Local\REMix\framework\remix\framework\model\source && git rev-parse HEAD >nul 2>&1 && git rev-parse HEAD >> c:\Local\REMix\remix_nz\process\225b\\metadata
-    12       36 CALL           3      25  .printf "\n" >> c:\Local\REMix\remix_nz\process\225b\\metadata
-    13       37 CALL           3      26  .printf "framework_branch " >> c:\Local\REMix\remix_nz\process\225b\\metadata
-    14       39 CALL           3      28  .cd C:\Local\REMix\framework\remix\framework\model\source && git rev-parse --abbrev-ref HEAD >nul 2>&1 && git rev-parse --abbrev-ref HEAD | sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225b\\metadata
-    15       41 CALL           3      32  .printf "\n" >> c:\Local\REMix\remix_nz\process\225b\\metadata
-    16       43 CALL           3      34  .printf "project_path " >> c:\Local\REMix\remix_nz\process\225b\\metadata
-    17       45 CALL           3      36  .cd C:\Local\REMix\remix_nz\output\nz-h2_2020-2050\data\./ && cd| sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225b\\metadata
-    18       47 CALL           3      40  .printf "\n" >> c:\Local\REMix\remix_nz\process\225b\\metadata
-    19       48 CALL           3      41  .printf "project_hash " >> c:\Local\REMix\remix_nz\process\225b\\metadata
-    20       50 CALL           3      43  .cd C:\Local\REMix\remix_nz\output\nz-h2_2020-2050\data\./ && git rev-parse HEAD >nul 2>&1 && git rev-parse HEAD | sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225b\\metadata
-    21       52 CALL           3      47  .printf "\n" >> c:\Local\REMix\remix_nz\process\225b\\metadata
-    22       53 CALL           3      48  .printf "project_branch " >> c:\Local\REMix\remix_nz\process\225b\\metadata
-    23       55 CALL           3      50  .cd C:\Local\REMix\remix_nz\output\nz-h2_2020-2050\data\./ && git rev-parse --abbrev-ref HEAD >nul 2>&1 && git rev-parse --abbrev-ref HEAD | sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225b\\metadata
-    24       57 CALL           3      54  .printf "\n" >> c:\Local\REMix\remix_nz\process\225b\\metadata
-    25       60 INCLUDE        3      57  ..c:\Local\REMix\remix_nz\process\225b\metadata
+     4       23 CALL           3       8  .printf "remix_version \"0.9.2\"\n" > c:\Local\REMix\remix_nz\process\225a\\metadata
+     5       24 CALL           3       9  .printf "gams_version \"40.4.0\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+     6       25 CALL           3      10  .printf "timestamp \"02/26/24 18:21:15\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+     7       27 CALL           3      12  .printf "framework_path " >> c:\Local\REMix\remix_nz\process\225a\\metadata
+     8       29 CALL           3      14  .cd C:\Local\REMix\framework\remix\framework\model\source && cd| sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+     9       31 CALL           3      18  .printf "\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+    10       32 CALL           3      19  .printf "framework_hash " >> c:\Local\REMix\remix_nz\process\225a\\metadata
+    11       34 CALL           3      21  .cd C:\Local\REMix\framework\remix\framework\model\source && git rev-parse HEAD >nul 2>&1 && git rev-parse HEAD >> c:\Local\REMix\remix_nz\process\225a\\metadata
+    12       36 CALL           3      25  .printf "\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+    13       37 CALL           3      26  .printf "framework_branch " >> c:\Local\REMix\remix_nz\process\225a\\metadata
+    14       39 CALL           3      28  .cd C:\Local\REMix\framework\remix\framework\model\source && git rev-parse --abbrev-ref HEAD >nul 2>&1 && git rev-parse --abbrev-ref HEAD | sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+    15       41 CALL           3      32  .printf "\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+    16       43 CALL           3      34  .printf "project_path " >> c:\Local\REMix\remix_nz\process\225a\\metadata
+    17       45 CALL           3      36  .cd C:\Local\REMix\remix_nz\output\nz-h2-noexp_2020-2050\data\./ && cd| sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+    18       47 CALL           3      40  .printf "\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+    19       48 CALL           3      41  .printf "project_hash " >> c:\Local\REMix\remix_nz\process\225a\\metadata
+    20       50 CALL           3      43  .cd C:\Local\REMix\remix_nz\output\nz-h2-noexp_2020-2050\data\./ && git rev-parse HEAD >nul 2>&1 && git rev-parse HEAD | sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+    21       52 CALL           3      47  .printf "\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+    22       53 CALL           3      48  .printf "project_branch " >> c:\Local\REMix\remix_nz\process\225a\\metadata
+    23       55 CALL           3      50  .cd C:\Local\REMix\remix_nz\output\nz-h2-noexp_2020-2050\data\./ && git rev-parse --abbrev-ref HEAD >nul 2>&1 && git rev-parse --abbrev-ref HEAD | sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+    24       57 CALL           3      54  .printf "\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+    25       60 INCLUDE        3      57  ..c:\Local\REMix\remix_nz\process\225a\metadata
     26       77 INCLUDE        1      16  .C:\Local\REMix\framework\remix\framework\model\source\data_inheritance.gms
     27      119 INCLUDE        1      25  .C:\Local\REMix\framework\remix\framework\model\source\remix.gms
     28      140 INCLUDE       27      21  ..C:\Local\REMix\framework\remix\framework\model\source\sets.gms
-    29      160 IF EXIST      28      20  ..c:\Local\REMix\remix_nz\process\225b\map_aggregatetimemodel.csv
-    30      211 IF EXIST      28      97  ..c:\Local\REMix\remix_nz\process\225b\set_nodesmodel.csv
-    31      211 INCLUDE       28      97  ...c:\Local\REMix\remix_nz\process\225b\set_nodesmodel.csv
-    32      224 IF EXIST      28      99  ..c:\Local\REMix\remix_nz\process\225b\set_nodesmodel.csv
-    33      231 IF EXIST      28     106  ..c:\Local\REMix\remix_nz\process\225b\set_nodesdata.csv
-    34      231 INCLUDE       28     106  ...c:\Local\REMix\remix_nz\process\225b\set_nodesdata.csv
-    35      244 IF EXIST      28     108  ..c:\Local\REMix\remix_nz\process\225b\set_nodesdata.csv
-    36      250 IF EXIST      28     114  ..c:\Local\REMix\remix_nz\process\225b\set_nodesmodelsel.csv
-    37      250 INCLUDE       28     114  ...c:\Local\REMix\remix_nz\process\225b\set_nodesmodelsel.csv
-    38      263 IF EXIST      28     116  ..c:\Local\REMix\remix_nz\process\225b\set_nodesmodelsel.csv
-    39      265 IF EXIST      28     118  ..c:\Local\REMix\remix_nz\process\225b\set_nodesmodelsel.csv
-    40      278 IF EXIST      28     131  ..c:\Local\REMix\remix_nz\process\225b\map_aggregatenodesmodel.csv
-    41      278 INCLUDE       28     131  ...c:\Local\REMix\remix_nz\process\225b\map_aggregatenodesmodel.csv
-    42      291 IF EXIST      28     133  ..c:\Local\REMix\remix_nz\process\225b\map_aggregatenodesmodel.csv
-    43      294 IF EXIST      28     136  ..c:\Local\REMix\remix_nz\process\225b\map_aggregatenodesmodel.csv
-    44      317 IF EXIST      28     159  ..c:\Local\REMix\remix_nz\process\225b\set_years.csv
-    45      317 INCLUDE       28     159  ...c:\Local\REMix\remix_nz\process\225b\set_years.csv
-    46      439 IF EXIST      28     161  ..c:\Local\REMix\remix_nz\process\225b\set_years.csv
-    47      448 IF EXIST      28     170  ..c:\Local\REMix\remix_nz\process\225b\set_years.csv
-    48      448 INCLUDE       28     170  ...c:\Local\REMix\remix_nz\process\225b\set_years.csv
-    49      570 IF EXIST      28     172  ..c:\Local\REMix\remix_nz\process\225b\set_years.csv
-    50      576 IF EXIST      28     178  ..c:\Local\REMix\remix_nz\process\225b\set_yearssel.csv
-    51      576 INCLUDE       28     178  ...c:\Local\REMix\remix_nz\process\225b\set_yearssel.csv
-    52      580 IF EXIST      28     180  ..c:\Local\REMix\remix_nz\process\225b\set_yearssel.csv
-    53      598 IF EXIST      28     198  ..c:\Local\REMix\remix_nz\process\225b\set_activities.csv
-    54      598 INCLUDE       28     198  ...c:\Local\REMix\remix_nz\process\225b\set_activities.csv
-    55      607 IF EXIST      28     200  ..c:\Local\REMix\remix_nz\process\225b\set_activities.csv
-    56      615 IF EXIST      28     208  ..c:\Local\REMix\remix_nz\process\225b\set_gridsegments.csv
-    57      617 IF EXIST      28     210  ..c:\Local\REMix\remix_nz\process\225b\set_gridsegments.csv
-    58      625 IF EXIST      28     218  ..c:\Local\REMix\remix_nz\process\225b\set_linksdata.csv
-    59      625 INCLUDE       28     218  ...c:\Local\REMix\remix_nz\process\225b\set_linksdata.csv
-    60      639 IF EXIST      28     220  ..c:\Local\REMix\remix_nz\process\225b\set_linksdata.csv
-    61      657 IF EXIST      28     238  ..c:\Local\REMix\remix_nz\process\225b\set_link_types.csv
-    62      657 INCLUDE       28     238  ...c:\Local\REMix\remix_nz\process\225b\set_link_types.csv
-    63      661 IF EXIST      28     240  ..c:\Local\REMix\remix_nz\process\225b\set_link_types.csv
-    64      670 IF EXIST      28     249  ..c:\Local\REMix\remix_nz\process\225b\set_commodities.csv
-    65      670 INCLUDE       28     249  ...c:\Local\REMix\remix_nz\process\225b\set_commodities.csv
-    66      678 IF EXIST      28     251  ..c:\Local\REMix\remix_nz\process\225b\set_commodities.csv
-    67      687 IF EXIST      28     260  ..c:\Local\REMix\remix_nz\process\225b\set_indicators.csv
-    68      687 INCLUDE       28     260  ...c:\Local\REMix\remix_nz\process\225b\set_indicators.csv
-    69      696 IF EXIST      28     262  ..c:\Local\REMix\remix_nz\process\225b\set_indicators.csv
-    70      705 IF EXIST      28     271  ..c:\Local\REMix\remix_nz\process\225b\set_converter_techs.csv
-    71      705 INCLUDE       28     271  ...c:\Local\REMix\remix_nz\process\225b\set_converter_techs.csv
-    72      725 IF EXIST      28     274  ..c:\Local\REMix\remix_nz\process\225b\set_storage_techs.csv
-    73      725 INCLUDE       28     274  ...c:\Local\REMix\remix_nz\process\225b\set_storage_techs.csv
-    74      730 IF EXIST      28     277  ..c:\Local\REMix\remix_nz\process\225b\set_transfer_techs.csv
-    75      730 INCLUDE       28     277  ...c:\Local\REMix\remix_nz\process\225b\set_transfer_techs.csv
-    76      734 IF EXIST      28     280  ..c:\Local\REMix\remix_nz\process\225b\set_sourcesink_techs.csv
-    77      734 INCLUDE       28     280  ...c:\Local\REMix\remix_nz\process\225b\set_sourcesink_techs.csv
-    78      744 IF EXIST      28     285  ..c:\Local\REMix\remix_nz\process\225b\set_converter_techs.csv
-    79      744 INCLUDE       28     285  ...c:\Local\REMix\remix_nz\process\225b\set_converter_techs.csv
-    80      762 IF EXIST      28     286  ..c:\Local\REMix\remix_nz\process\225b\set_converter_techs.csv
-    81      766 IF EXIST      28     290  ..c:\Local\REMix\remix_nz\process\225b\set_storage_techs.csv
-    82      766 INCLUDE       28     290  ...c:\Local\REMix\remix_nz\process\225b\set_storage_techs.csv
-    83      769 IF EXIST      28     291  ..c:\Local\REMix\remix_nz\process\225b\set_storage_techs.csv
-    84      774 IF EXIST      28     296  ..c:\Local\REMix\remix_nz\process\225b\set_transfer_techs.csv
-    85      774 INCLUDE       28     296  ...c:\Local\REMix\remix_nz\process\225b\set_transfer_techs.csv
-    86      776 IF EXIST      28     297  ..c:\Local\REMix\remix_nz\process\225b\set_transfer_techs.csv
-    87      780 IF EXIST      28     301  ..c:\Local\REMix\remix_nz\process\225b\set_sourcesink_techs.csv
-    88      780 INCLUDE       28     301  ...c:\Local\REMix\remix_nz\process\225b\set_sourcesink_techs.csv
-    89      786 IF EXIST      28     302  ..c:\Local\REMix\remix_nz\process\225b\set_sourcesink_techs.csv
-    90      796 IF EXIST      28     312  ..c:\Local\REMix\remix_nz\process\225b\set_degradation_states.csv
-    91      798 IF EXIST      28     314  ..c:\Local\REMix\remix_nz\process\225b\set_degradation_states.csv
-    92      807 IF EXIST      28     323  ..c:\Local\REMix\remix_nz\process\225b\set_soc.csv
-    93      809 IF EXIST      28     325  ..c:\Local\REMix\remix_nz\process\225b\set_soc.csv
-    94      825 IF EXIST      28     341  ..c:\Local\REMix\remix_nz\process\225b\transfer_linkstartend.csv
-    95      825 INCLUDE       28     341  ...c:\Local\REMix\remix_nz\process\225b\transfer_linkstartend.csv
-    96      852 IF EXIST      28     343  ..c:\Local\REMix\remix_nz\process\225b\transfer_linkstartend.csv
+    29      160 IF EXIST      28      20  ..c:\Local\REMix\remix_nz\process\225a\map_aggregatetimemodel.csv
+    30      211 IF EXIST      28      97  ..c:\Local\REMix\remix_nz\process\225a\set_nodesmodel.csv
+    31      211 INCLUDE       28      97  ...c:\Local\REMix\remix_nz\process\225a\set_nodesmodel.csv
+    32      224 IF EXIST      28      99  ..c:\Local\REMix\remix_nz\process\225a\set_nodesmodel.csv
+    33      231 IF EXIST      28     106  ..c:\Local\REMix\remix_nz\process\225a\set_nodesdata.csv
+    34      231 INCLUDE       28     106  ...c:\Local\REMix\remix_nz\process\225a\set_nodesdata.csv
+    35      244 IF EXIST      28     108  ..c:\Local\REMix\remix_nz\process\225a\set_nodesdata.csv
+    36      250 IF EXIST      28     114  ..c:\Local\REMix\remix_nz\process\225a\set_nodesmodelsel.csv
+    37      250 INCLUDE       28     114  ...c:\Local\REMix\remix_nz\process\225a\set_nodesmodelsel.csv
+    38      263 IF EXIST      28     116  ..c:\Local\REMix\remix_nz\process\225a\set_nodesmodelsel.csv
+    39      265 IF EXIST      28     118  ..c:\Local\REMix\remix_nz\process\225a\set_nodesmodelsel.csv
+    40      278 IF EXIST      28     131  ..c:\Local\REMix\remix_nz\process\225a\map_aggregatenodesmodel.csv
+    41      278 INCLUDE       28     131  ...c:\Local\REMix\remix_nz\process\225a\map_aggregatenodesmodel.csv
+    42      291 IF EXIST      28     133  ..c:\Local\REMix\remix_nz\process\225a\map_aggregatenodesmodel.csv
+    43      294 IF EXIST      28     136  ..c:\Local\REMix\remix_nz\process\225a\map_aggregatenodesmodel.csv
+    44      317 IF EXIST      28     159  ..c:\Local\REMix\remix_nz\process\225a\set_years.csv
+    45      317 INCLUDE       28     159  ...c:\Local\REMix\remix_nz\process\225a\set_years.csv
+    46      439 IF EXIST      28     161  ..c:\Local\REMix\remix_nz\process\225a\set_years.csv
+    47      448 IF EXIST      28     170  ..c:\Local\REMix\remix_nz\process\225a\set_years.csv
+    48      448 INCLUDE       28     170  ...c:\Local\REMix\remix_nz\process\225a\set_years.csv
+    49      570 IF EXIST      28     172  ..c:\Local\REMix\remix_nz\process\225a\set_years.csv
+    50      576 IF EXIST      28     178  ..c:\Local\REMix\remix_nz\process\225a\set_yearssel.csv
+    51      576 INCLUDE       28     178  ...c:\Local\REMix\remix_nz\process\225a\set_yearssel.csv
+    52      580 IF EXIST      28     180  ..c:\Local\REMix\remix_nz\process\225a\set_yearssel.csv
+    53      598 IF EXIST      28     198  ..c:\Local\REMix\remix_nz\process\225a\set_activities.csv
+    54      598 INCLUDE       28     198  ...c:\Local\REMix\remix_nz\process\225a\set_activities.csv
+    55      607 IF EXIST      28     200  ..c:\Local\REMix\remix_nz\process\225a\set_activities.csv
+    56      615 IF EXIST      28     208  ..c:\Local\REMix\remix_nz\process\225a\set_gridsegments.csv
+    57      617 IF EXIST      28     210  ..c:\Local\REMix\remix_nz\process\225a\set_gridsegments.csv
+    58      625 IF EXIST      28     218  ..c:\Local\REMix\remix_nz\process\225a\set_linksdata.csv
+    59      625 INCLUDE       28     218  ...c:\Local\REMix\remix_nz\process\225a\set_linksdata.csv
+    60      639 IF EXIST      28     220  ..c:\Local\REMix\remix_nz\process\225a\set_linksdata.csv
+    61      657 IF EXIST      28     238  ..c:\Local\REMix\remix_nz\process\225a\set_link_types.csv
+    62      657 INCLUDE       28     238  ...c:\Local\REMix\remix_nz\process\225a\set_link_types.csv
+    63      661 IF EXIST      28     240  ..c:\Local\REMix\remix_nz\process\225a\set_link_types.csv
+    64      670 IF EXIST      28     249  ..c:\Local\REMix\remix_nz\process\225a\set_commodities.csv
+    65      670 INCLUDE       28     249  ...c:\Local\REMix\remix_nz\process\225a\set_commodities.csv
+    66      678 IF EXIST      28     251  ..c:\Local\REMix\remix_nz\process\225a\set_commodities.csv
+    67      687 IF EXIST      28     260  ..c:\Local\REMix\remix_nz\process\225a\set_indicators.csv
+    68      687 INCLUDE       28     260  ...c:\Local\REMix\remix_nz\process\225a\set_indicators.csv
+    69      696 IF EXIST      28     262  ..c:\Local\REMix\remix_nz\process\225a\set_indicators.csv
+    70      705 IF EXIST      28     271  ..c:\Local\REMix\remix_nz\process\225a\set_converter_techs.csv
+    71      705 INCLUDE       28     271  ...c:\Local\REMix\remix_nz\process\225a\set_converter_techs.csv
+    72      725 IF EXIST      28     274  ..c:\Local\REMix\remix_nz\process\225a\set_storage_techs.csv
+    73      725 INCLUDE       28     274  ...c:\Local\REMix\remix_nz\process\225a\set_storage_techs.csv
+    74      730 IF EXIST      28     277  ..c:\Local\REMix\remix_nz\process\225a\set_transfer_techs.csv
+    75      730 INCLUDE       28     277  ...c:\Local\REMix\remix_nz\process\225a\set_transfer_techs.csv
+    76      734 IF EXIST      28     280  ..c:\Local\REMix\remix_nz\process\225a\set_sourcesink_techs.csv
+    77      734 INCLUDE       28     280  ...c:\Local\REMix\remix_nz\process\225a\set_sourcesink_techs.csv
+    78      744 IF EXIST      28     285  ..c:\Local\REMix\remix_nz\process\225a\set_converter_techs.csv
+    79      744 INCLUDE       28     285  ...c:\Local\REMix\remix_nz\process\225a\set_converter_techs.csv
+    80      762 IF EXIST      28     286  ..c:\Local\REMix\remix_nz\process\225a\set_converter_techs.csv
+    81      766 IF EXIST      28     290  ..c:\Local\REMix\remix_nz\process\225a\set_storage_techs.csv
+    82      766 INCLUDE       28     290  ...c:\Local\REMix\remix_nz\process\225a\set_storage_techs.csv
+    83      769 IF EXIST      28     291  ..c:\Local\REMix\remix_nz\process\225a\set_storage_techs.csv
+    84      774 IF EXIST      28     296  ..c:\Local\REMix\remix_nz\process\225a\set_transfer_techs.csv
+    85      774 INCLUDE       28     296  ...c:\Local\REMix\remix_nz\process\225a\set_transfer_techs.csv
+    86      776 IF EXIST      28     297  ..c:\Local\REMix\remix_nz\process\225a\set_transfer_techs.csv
+    87      780 IF EXIST      28     301  ..c:\Local\REMix\remix_nz\process\225a\set_sourcesink_techs.csv
+    88      780 INCLUDE       28     301  ...c:\Local\REMix\remix_nz\process\225a\set_sourcesink_techs.csv
+    89      786 IF EXIST      28     302  ..c:\Local\REMix\remix_nz\process\225a\set_sourcesink_techs.csv
+    90      796 IF EXIST      28     312  ..c:\Local\REMix\remix_nz\process\225a\set_degradation_states.csv
+    91      798 IF EXIST      28     314  ..c:\Local\REMix\remix_nz\process\225a\set_degradation_states.csv
+    92      807 IF EXIST      28     323  ..c:\Local\REMix\remix_nz\process\225a\set_soc.csv
+    93      809 IF EXIST      28     325  ..c:\Local\REMix\remix_nz\process\225a\set_soc.csv
+    94      825 IF EXIST      28     341  ..c:\Local\REMix\remix_nz\process\225a\transfer_linkstartend.csv
+    95      825 INCLUDE       28     341  ...c:\Local\REMix\remix_nz\process\225a\transfer_linkstartend.csv
+    96      852 IF EXIST      28     343  ..c:\Local\REMix\remix_nz\process\225a\transfer_linkstartend.csv
     97      866 BATINCLUDE    28     357  ...C:\Local\REMix\framework\remix\framework\model\source\battools\aggregateNodes.gms
-    98      975 IF EXIST      28     464  ..c:\Local\REMix\remix_nz\process\225b\set_accnodes.csv
-    99      977 IF EXIST      28     466  ..c:\Local\REMix\remix_nz\process\225b\set_accnodes.csv
-   100     1042 IF EXIST      28     531  ..c:\Local\REMix\remix_nz\process\225b\map_accnodes.csv
-   101     1044 IF EXIST      28     533  ..c:\Local\REMix\remix_nz\process\225b\map_accnodes.csv
+    98      975 IF EXIST      28     464  ..c:\Local\REMix\remix_nz\process\225a\set_accnodes.csv
+    99      977 IF EXIST      28     466  ..c:\Local\REMix\remix_nz\process\225a\set_accnodes.csv
+   100     1042 IF EXIST      28     531  ..c:\Local\REMix\remix_nz\process\225a\map_accnodes.csv
+   101     1044 IF EXIST      28     533  ..c:\Local\REMix\remix_nz\process\225a\map_accnodes.csv
    102     1098 INCLUDE       27      22  ..C:\Local\REMix\framework\remix\framework\model\source\accounting\input.gms
-   103     1130 IF EXIST     102      32  ..c:\Local\REMix\remix_nz\process\225b\accounting_converterunits.csv
-   104     1130 INCLUDE      102      32  ...c:\Local\REMix\remix_nz\process\225b\accounting_converterunits.csv
-   105     1235 IF EXIST     102      34  ..c:\Local\REMix\remix_nz\process\225b\accounting_converterunits.csv
-   106     1249 IF EXIST     102      48  ..c:\Local\REMix\remix_nz\process\225b\accounting_converteractivity.csv
-   107     1249 INCLUDE      102      48  ...c:\Local\REMix\remix_nz\process\225b\accounting_converteractivity.csv
-   108     1276 IF EXIST     102      50  ..c:\Local\REMix\remix_nz\process\225b\accounting_converteractivity.csv
-   109     1293 IF EXIST     102      67  ..c:\Local\REMix\remix_nz\process\225b\accounting_converterstartup.csv
-   110     1295 IF EXIST     102      69  ..c:\Local\REMix\remix_nz\process\225b\accounting_converterstartup.csv
-   111     1314 IF EXIST     102      88  ..c:\Local\REMix\remix_nz\process\225b\accounting_storageunits.csv
-   112     1314 INCLUDE      102      88  ...c:\Local\REMix\remix_nz\process\225b\accounting_storageunits.csv
-   113     1335 IF EXIST     102      90  ..c:\Local\REMix\remix_nz\process\225b\accounting_storageunits.csv
-   114     1357 IF EXIST     102     112  ..c:\Local\REMix\remix_nz\process\225b\accounting_transferlinks.csv
-   115     1357 INCLUDE      102     112  ...c:\Local\REMix\remix_nz\process\225b\accounting_transferlinks.csv
-   116     1364 IF EXIST     102     114  ..c:\Local\REMix\remix_nz\process\225b\accounting_transferlinks.csv
-   117     1386 IF EXIST     102     136  ..c:\Local\REMix\remix_nz\process\225b\accounting_transferperlength.csv
-   118     1386 INCLUDE      102     136  ...c:\Local\REMix\remix_nz\process\225b\accounting_transferperlength.csv
-   119     1397 IF EXIST     102     138  ..c:\Local\REMix\remix_nz\process\225b\accounting_transferperlength.csv
-   120     1412 IF EXIST     102     153  ..c:\Local\REMix\remix_nz\process\225b\accounting_sourcesinkflow.csv
-   121     1412 INCLUDE      102     153  ...c:\Local\REMix\remix_nz\process\225b\accounting_sourcesinkflow.csv
-   122     1422 IF EXIST     102     155  ..c:\Local\REMix\remix_nz\process\225b\accounting_sourcesinkflow.csv
-   123     1436 IF EXIST     102     169  ..c:\Local\REMix\remix_nz\process\225b\accounting_perindicator.csv
-   124     1436 INCLUDE      102     169  ...c:\Local\REMix\remix_nz\process\225b\accounting_perindicator.csv
-   125     1444 IF EXIST     102     171  ..c:\Local\REMix\remix_nz\process\225b\accounting_perindicator.csv
-   126     1470 IF EXIST     102     197  ..c:\Local\REMix\remix_nz\process\225b\accounting_indicatorbounds.csv
-   127     1470 INCLUDE      102     197  ...c:\Local\REMix\remix_nz\process\225b\accounting_indicatorbounds.csv
-   128     1474 IF EXIST     102     199  ..c:\Local\REMix\remix_nz\process\225b\accounting_indicatorbounds.csv
-   129     1493 IF EXIST     102     218  ..c:\Local\REMix\remix_nz\process\225b\accounting_indicatorbounds_links.csv
-   130     1495 IF EXIST     102     220  ..c:\Local\REMix\remix_nz\process\225b\accounting_indicatorbounds_links.csv
+   103     1130 IF EXIST     102      32  ..c:\Local\REMix\remix_nz\process\225a\accounting_converterunits.csv
+   104     1130 INCLUDE      102      32  ...c:\Local\REMix\remix_nz\process\225a\accounting_converterunits.csv
+   105     1235 IF EXIST     102      34  ..c:\Local\REMix\remix_nz\process\225a\accounting_converterunits.csv
+   106     1249 IF EXIST     102      48  ..c:\Local\REMix\remix_nz\process\225a\accounting_converteractivity.csv
+   107     1249 INCLUDE      102      48  ...c:\Local\REMix\remix_nz\process\225a\accounting_converteractivity.csv
+   108     1276 IF EXIST     102      50  ..c:\Local\REMix\remix_nz\process\225a\accounting_converteractivity.csv
+   109     1293 IF EXIST     102      67  ..c:\Local\REMix\remix_nz\process\225a\accounting_converterstartup.csv
+   110     1295 IF EXIST     102      69  ..c:\Local\REMix\remix_nz\process\225a\accounting_converterstartup.csv
+   111     1314 IF EXIST     102      88  ..c:\Local\REMix\remix_nz\process\225a\accounting_storageunits.csv
+   112     1314 INCLUDE      102      88  ...c:\Local\REMix\remix_nz\process\225a\accounting_storageunits.csv
+   113     1335 IF EXIST     102      90  ..c:\Local\REMix\remix_nz\process\225a\accounting_storageunits.csv
+   114     1357 IF EXIST     102     112  ..c:\Local\REMix\remix_nz\process\225a\accounting_transferlinks.csv
+   115     1357 INCLUDE      102     112  ...c:\Local\REMix\remix_nz\process\225a\accounting_transferlinks.csv
+   116     1364 IF EXIST     102     114  ..c:\Local\REMix\remix_nz\process\225a\accounting_transferlinks.csv
+   117     1386 IF EXIST     102     136  ..c:\Local\REMix\remix_nz\process\225a\accounting_transferperlength.csv
+   118     1386 INCLUDE      102     136  ...c:\Local\REMix\remix_nz\process\225a\accounting_transferperlength.csv
+   119     1397 IF EXIST     102     138  ..c:\Local\REMix\remix_nz\process\225a\accounting_transferperlength.csv
+   120     1412 IF EXIST     102     153  ..c:\Local\REMix\remix_nz\process\225a\accounting_sourcesinkflow.csv
+   121     1412 INCLUDE      102     153  ...c:\Local\REMix\remix_nz\process\225a\accounting_sourcesinkflow.csv
+   122     1422 IF EXIST     102     155  ..c:\Local\REMix\remix_nz\process\225a\accounting_sourcesinkflow.csv
+   123     1436 IF EXIST     102     169  ..c:\Local\REMix\remix_nz\process\225a\accounting_perindicator.csv
+   124     1436 INCLUDE      102     169  ...c:\Local\REMix\remix_nz\process\225a\accounting_perindicator.csv
+   125     1444 IF EXIST     102     171  ..c:\Local\REMix\remix_nz\process\225a\accounting_perindicator.csv
+   126     1470 IF EXIST     102     197  ..c:\Local\REMix\remix_nz\process\225a\accounting_indicatorbounds.csv
+   127     1470 INCLUDE      102     197  ...c:\Local\REMix\remix_nz\process\225a\accounting_indicatorbounds.csv
+   128     1474 IF EXIST     102     199  ..c:\Local\REMix\remix_nz\process\225a\accounting_indicatorbounds.csv
+   129     1493 IF EXIST     102     218  ..c:\Local\REMix\remix_nz\process\225a\accounting_indicatorbounds_links.csv
+   130     1495 IF EXIST     102     220  ..c:\Local\REMix\remix_nz\process\225a\accounting_indicatorbounds_links.csv
    131     1501 BATINCLUDE   102     226  ...C:\Local\REMix\framework\remix\framework\model\source\battools\aggregateAccountingMean.gms
    132     1560 BATINCLUDE   102     227  ...C:\Local\REMix\framework\remix\framework\model\source\battools\aggregateAccountingMean.gms
    133     1603 BATINCLUDE   102     228  ...C:\Local\REMix\framework\remix\framework\model\source\battools\aggregateAccountingMean.gms
@@ -5399,86 +5399,86 @@ Include File Summary
    139     2304 INCLUDE       27      25  ..C:\Local\REMix\framework\remix\framework\model\source\methods\mga_pre.gms
    140     2310 INCLUDE       27      26  ..C:\Local\REMix\framework\remix\framework\model\source\methods\pareto_pre.gms
    141     2316 INCLUDE       27      27  ..C:\Local\REMix\framework\remix\framework\model\source\postcalc\declaration.gms
-   142     2333 IF DEXIST    141      17  ..C:\Local\REMix\remix_nz\output\nz-h2_2020-2050\result\
+   142     2333 IF DEXIST    141      17  ..C:\Local\REMix\remix_nz\output\nz-h2-noexp_2020-2050\result\
    143     2534 INCLUDE       27      28  ..C:\Local\REMix\framework\remix\framework\model\source\loadgdx.gms
    144     2543 INCLUDE       27      30  ..C:\Local\REMix\framework\remix\framework\model\source\core\converter.gms
-   145     2646 IF EXIST     144     103  ..c:\Local\REMix\remix_nz\process\225b\converter_capacityparam.csv
-   146     2646 INCLUDE      144     103  ...c:\Local\REMix\remix_nz\process\225b\converter_capacityparam.csv
-   147     7905 IF EXIST     144     105  ..c:\Local\REMix\remix_nz\process\225b\converter_capacityparam.csv
+   145     2646 IF EXIST     144     103  ..c:\Local\REMix\remix_nz\process\225a\converter_capacityparam.csv
+   146     2646 INCLUDE      144     103  ...c:\Local\REMix\remix_nz\process\225a\converter_capacityparam.csv
+   147     7905 IF EXIST     144     105  ..c:\Local\REMix\remix_nz\process\225a\converter_capacityparam.csv
    148     7913 BATINCLUDE   144     113  ...C:\Local\REMix\framework\remix\framework\model\source\battools\aggregateNodes.gms
    149     7924 BATINCLUDE   144     114  ...C:\Local\REMix\framework\remix\framework\model\source\battools\aggregateNodes.gms
-   150     7957 IF EXIST     144     137  ..c:\Local\REMix\remix_nz\process\225b\converter_techparam.csv
-   151     7957 INCLUDE      144     137  ...c:\Local\REMix\remix_nz\process\225b\converter_techparam.csv
-   152     8011 IF EXIST     144     139  ..c:\Local\REMix\remix_nz\process\225b\converter_techparam.csv
-   153     8033 IF EXIST     144     161  ..c:\Local\REMix\remix_nz\process\225b\converter_activityprofile.csv
-   154     8033 INCLUDE      144     161  ...c:\Local\REMix\remix_nz\process\225b\converter_activityprofile.csv
-   155     8311 IF EXIST     144     162  ..c:\Local\REMix\remix_nz\process\225b\converter_activityprofile.csv
-   156     8313 IF EXIST     144     164  ..c:\Local\REMix\remix_nz\process\225b\converter_activityprofile.csv
-   157     8333 IF EXIST     144     184  ..c:\Local\REMix\remix_nz\process\225b\converter_coefficient.csv
-   158     8333 INCLUDE      144     184  ...c:\Local\REMix\remix_nz\process\225b\converter_coefficient.csv
-   159     8499 IF EXIST     144     185  ..c:\Local\REMix\remix_nz\process\225b\converter_coefficient.csv
-   160     8500 IF EXIST     144     186  ..c:\Local\REMix\remix_nz\process\225b\converter_coefficient.csv
-   161     8502 IF EXIST     144     188  ..c:\Local\REMix\remix_nz\process\225b\converter_coefficient.csv
-   162     8514 IF EXIST     144     200  ..c:\Local\REMix\remix_nz\process\225b\converter_coefficientprofile.csv
-   163     8515 IF EXIST     144     201  ..c:\Local\REMix\remix_nz\process\225b\converter_coefficientprofile.csv
-   164     8517 IF EXIST     144     203  ..c:\Local\REMix\remix_nz\process\225b\converter_coefficientprofile.csv
+   150     7957 IF EXIST     144     137  ..c:\Local\REMix\remix_nz\process\225a\converter_techparam.csv
+   151     7957 INCLUDE      144     137  ...c:\Local\REMix\remix_nz\process\225a\converter_techparam.csv
+   152     8011 IF EXIST     144     139  ..c:\Local\REMix\remix_nz\process\225a\converter_techparam.csv
+   153     8033 IF EXIST     144     161  ..c:\Local\REMix\remix_nz\process\225a\converter_activityprofile.csv
+   154     8033 INCLUDE      144     161  ...c:\Local\REMix\remix_nz\process\225a\converter_activityprofile.csv
+   155     8311 IF EXIST     144     162  ..c:\Local\REMix\remix_nz\process\225a\converter_activityprofile.csv
+   156     8313 IF EXIST     144     164  ..c:\Local\REMix\remix_nz\process\225a\converter_activityprofile.csv
+   157     8333 IF EXIST     144     184  ..c:\Local\REMix\remix_nz\process\225a\converter_coefficient.csv
+   158     8333 INCLUDE      144     184  ...c:\Local\REMix\remix_nz\process\225a\converter_coefficient.csv
+   159     8499 IF EXIST     144     185  ..c:\Local\REMix\remix_nz\process\225a\converter_coefficient.csv
+   160     8500 IF EXIST     144     186  ..c:\Local\REMix\remix_nz\process\225a\converter_coefficient.csv
+   161     8502 IF EXIST     144     188  ..c:\Local\REMix\remix_nz\process\225a\converter_coefficient.csv
+   162     8514 IF EXIST     144     200  ..c:\Local\REMix\remix_nz\process\225a\converter_coefficientprofile.csv
+   163     8515 IF EXIST     144     201  ..c:\Local\REMix\remix_nz\process\225a\converter_coefficientprofile.csv
+   164     8517 IF EXIST     144     203  ..c:\Local\REMix\remix_nz\process\225a\converter_coefficientprofile.csv
    165     9450 INCLUDE       27      31  ..C:\Local\REMix\framework\remix\framework\model\source\core\storage.gms
-   166     9541 IF EXIST     165      91  ..c:\Local\REMix\remix_nz\process\225b\storage_reservoirparam.csv
-   167     9541 INCLUDE      165      91  ...c:\Local\REMix\remix_nz\process\225b\storage_reservoirparam.csv
-   168     9677 IF EXIST     165      93  ..c:\Local\REMix\remix_nz\process\225b\storage_reservoirparam.csv
+   166     9541 IF EXIST     165      91  ..c:\Local\REMix\remix_nz\process\225a\storage_reservoirparam.csv
+   167     9541 INCLUDE      165      91  ...c:\Local\REMix\remix_nz\process\225a\storage_reservoirparam.csv
+   168     9677 IF EXIST     165      93  ..c:\Local\REMix\remix_nz\process\225a\storage_reservoirparam.csv
    169     9681 BATINCLUDE   165      97  ...C:\Local\REMix\framework\remix\framework\model\source\battools\aggregateNodes.gms
    170     9692 BATINCLUDE   165      98  ...C:\Local\REMix\framework\remix\framework\model\source\battools\aggregateNodes.gms
-   171     9728 IF EXIST     165     124  ..c:\Local\REMix\remix_nz\process\225b\storage_techparam.csv
-   172     9728 INCLUDE      165     124  ...c:\Local\REMix\remix_nz\process\225b\storage_techparam.csv
-   173     9740 IF EXIST     165     126  ..c:\Local\REMix\remix_nz\process\225b\storage_techparam.csv
-   174     9761 IF EXIST     165     147  ..c:\Local\REMix\remix_nz\process\225b\storage_sizeparam.csv
-   175     9761 INCLUDE      165     147  ...c:\Local\REMix\remix_nz\process\225b\storage_sizeparam.csv
-   176     9773 IF EXIST     165     149  ..c:\Local\REMix\remix_nz\process\225b\storage_sizeparam.csv
-   177     9790 IF EXIST     165     166  ..c:\Local\REMix\remix_nz\process\225b\storage_socparam.csv
-   178     9792 IF EXIST     165     168  ..c:\Local\REMix\remix_nz\process\225b\storage_socparam.csv
-   179     9811 IF EXIST     165     187  ..c:\Local\REMix\remix_nz\process\225b\storage_degradationparam.csv
-   180     9813 IF EXIST     165     189  ..c:\Local\REMix\remix_nz\process\225b\storage_degradationparam.csv
-   181     9842 IF EXIST     165     218  ..c:\Local\REMix\remix_nz\process\225b\storage_levelprofile.csv
-   182     9843 IF EXIST     165     219  ..c:\Local\REMix\remix_nz\process\225b\storage_levelprofile.csv
-   183     9845 IF EXIST     165     221  ..c:\Local\REMix\remix_nz\process\225b\storage_levelprofile.csv
+   171     9728 IF EXIST     165     124  ..c:\Local\REMix\remix_nz\process\225a\storage_techparam.csv
+   172     9728 INCLUDE      165     124  ...c:\Local\REMix\remix_nz\process\225a\storage_techparam.csv
+   173     9740 IF EXIST     165     126  ..c:\Local\REMix\remix_nz\process\225a\storage_techparam.csv
+   174     9761 IF EXIST     165     147  ..c:\Local\REMix\remix_nz\process\225a\storage_sizeparam.csv
+   175     9761 INCLUDE      165     147  ...c:\Local\REMix\remix_nz\process\225a\storage_sizeparam.csv
+   176     9773 IF EXIST     165     149  ..c:\Local\REMix\remix_nz\process\225a\storage_sizeparam.csv
+   177     9790 IF EXIST     165     166  ..c:\Local\REMix\remix_nz\process\225a\storage_socparam.csv
+   178     9792 IF EXIST     165     168  ..c:\Local\REMix\remix_nz\process\225a\storage_socparam.csv
+   179     9811 IF EXIST     165     187  ..c:\Local\REMix\remix_nz\process\225a\storage_degradationparam.csv
+   180     9813 IF EXIST     165     189  ..c:\Local\REMix\remix_nz\process\225a\storage_degradationparam.csv
+   181     9842 IF EXIST     165     218  ..c:\Local\REMix\remix_nz\process\225a\storage_levelprofile.csv
+   182     9843 IF EXIST     165     219  ..c:\Local\REMix\remix_nz\process\225a\storage_levelprofile.csv
+   183     9845 IF EXIST     165     221  ..c:\Local\REMix\remix_nz\process\225a\storage_levelprofile.csv
    184    10665 INCLUDE       27      32  ..C:\Local\REMix\framework\remix\framework\model\source\core\transfer.gms
-   185    10732 IF EXIST     184      73  ..c:\Local\REMix\remix_nz\process\225b\transfer_linksparam.csv
-   186    10732 INCLUDE      184      73  ...c:\Local\REMix\remix_nz\process\225b\transfer_linksparam.csv
-   187    10759 IF EXIST     184      75  ..c:\Local\REMix\remix_nz\process\225b\transfer_linksparam.csv
-   188    10775 IF EXIST     184      91  ..c:\Local\REMix\remix_nz\process\225b\transfer_flowprofile.csv
-   189    10777 IF EXIST     184      93  ..c:\Local\REMix\remix_nz\process\225b\transfer_flowprofile.csv
-   190    10797 IF EXIST     184     113  ..c:\Local\REMix\remix_nz\process\225b\transfer_techparam.csv
-   191    10797 INCLUDE      184     113  ...c:\Local\REMix\remix_nz\process\225b\transfer_techparam.csv
-   192    10802 IF EXIST     184     115  ..c:\Local\REMix\remix_nz\process\225b\transfer_techparam.csv
-   193    10816 IF EXIST     184     129  ..c:\Local\REMix\remix_nz\process\225b\transfer_coefficient.csv
-   194    10816 INCLUDE      184     129  ...c:\Local\REMix\remix_nz\process\225b\transfer_coefficient.csv
-   195    10821 IF EXIST     184     131  ..c:\Local\REMix\remix_nz\process\225b\transfer_coefficient.csv
-   196    10835 IF EXIST     184     145  ..c:\Local\REMix\remix_nz\process\225b\transfer_coefperflow.csv
-   197    10835 INCLUDE      184     145  ...c:\Local\REMix\remix_nz\process\225b\transfer_coefperflow.csv
-   198    10840 IF EXIST     184     147  ..c:\Local\REMix\remix_nz\process\225b\transfer_coefperflow.csv
-   199    10854 IF EXIST     184     161  ..c:\Local\REMix\remix_nz\process\225b\transfer_coefperlength.csv
-   200    10854 INCLUDE      184     161  ...c:\Local\REMix\remix_nz\process\225b\transfer_coefperlength.csv
-   201    10861 IF EXIST     184     163  ..c:\Local\REMix\remix_nz\process\225b\transfer_coefperlength.csv
-   202    10875 IF EXIST     184     177  ..c:\Local\REMix\remix_nz\process\225b\transfer_reactperlength.csv
-   203    10877 IF EXIST     184     179  ..c:\Local\REMix\remix_nz\process\225b\transfer_reactperlength.csv
-   204    10891 IF EXIST     184     193  ..c:\Local\REMix\remix_nz\process\225b\transfer_lengthparam.csv
-   205    10891 INCLUDE      184     193  ...c:\Local\REMix\remix_nz\process\225b\transfer_lengthparam.csv
-   206    10918 IF EXIST     184     195  ..c:\Local\REMix\remix_nz\process\225b\transfer_lengthparam.csv
-   207    10932 IF EXIST     184     209  ..c:\Local\REMix\remix_nz\process\225b\transfer_gridsegments.csv
-   208    10934 IF EXIST     184     211  ..c:\Local\REMix\remix_nz\process\225b\transfer_gridsegments.csv
+   185    10732 IF EXIST     184      73  ..c:\Local\REMix\remix_nz\process\225a\transfer_linksparam.csv
+   186    10732 INCLUDE      184      73  ...c:\Local\REMix\remix_nz\process\225a\transfer_linksparam.csv
+   187    10759 IF EXIST     184      75  ..c:\Local\REMix\remix_nz\process\225a\transfer_linksparam.csv
+   188    10775 IF EXIST     184      91  ..c:\Local\REMix\remix_nz\process\225a\transfer_flowprofile.csv
+   189    10777 IF EXIST     184      93  ..c:\Local\REMix\remix_nz\process\225a\transfer_flowprofile.csv
+   190    10797 IF EXIST     184     113  ..c:\Local\REMix\remix_nz\process\225a\transfer_techparam.csv
+   191    10797 INCLUDE      184     113  ...c:\Local\REMix\remix_nz\process\225a\transfer_techparam.csv
+   192    10802 IF EXIST     184     115  ..c:\Local\REMix\remix_nz\process\225a\transfer_techparam.csv
+   193    10816 IF EXIST     184     129  ..c:\Local\REMix\remix_nz\process\225a\transfer_coefficient.csv
+   194    10816 INCLUDE      184     129  ...c:\Local\REMix\remix_nz\process\225a\transfer_coefficient.csv
+   195    10821 IF EXIST     184     131  ..c:\Local\REMix\remix_nz\process\225a\transfer_coefficient.csv
+   196    10835 IF EXIST     184     145  ..c:\Local\REMix\remix_nz\process\225a\transfer_coefperflow.csv
+   197    10835 INCLUDE      184     145  ...c:\Local\REMix\remix_nz\process\225a\transfer_coefperflow.csv
+   198    10840 IF EXIST     184     147  ..c:\Local\REMix\remix_nz\process\225a\transfer_coefperflow.csv
+   199    10854 IF EXIST     184     161  ..c:\Local\REMix\remix_nz\process\225a\transfer_coefperlength.csv
+   200    10854 INCLUDE      184     161  ...c:\Local\REMix\remix_nz\process\225a\transfer_coefperlength.csv
+   201    10861 IF EXIST     184     163  ..c:\Local\REMix\remix_nz\process\225a\transfer_coefperlength.csv
+   202    10875 IF EXIST     184     177  ..c:\Local\REMix\remix_nz\process\225a\transfer_reactperlength.csv
+   203    10877 IF EXIST     184     179  ..c:\Local\REMix\remix_nz\process\225a\transfer_reactperlength.csv
+   204    10891 IF EXIST     184     193  ..c:\Local\REMix\remix_nz\process\225a\transfer_lengthparam.csv
+   205    10891 INCLUDE      184     193  ...c:\Local\REMix\remix_nz\process\225a\transfer_lengthparam.csv
+   206    10918 IF EXIST     184     195  ..c:\Local\REMix\remix_nz\process\225a\transfer_lengthparam.csv
+   207    10932 IF EXIST     184     209  ..c:\Local\REMix\remix_nz\process\225a\transfer_gridsegments.csv
+   208    10934 IF EXIST     184     211  ..c:\Local\REMix\remix_nz\process\225a\transfer_gridsegments.csv
    209    11516 INCLUDE       27      33  ..C:\Local\REMix\framework\remix\framework\model\source\core\sourcesink.gms
-   210    11554 IF EXIST     209      38  ..c:\Local\REMix\remix_nz\process\225b\sourcesink_config.csv
-   211    11554 INCLUDE      209      38  ...c:\Local\REMix\remix_nz\process\225b\sourcesink_config.csv
-   212    11751 IF EXIST     209      40  ..c:\Local\REMix\remix_nz\process\225b\sourcesink_config.csv
+   210    11554 IF EXIST     209      38  ..c:\Local\REMix\remix_nz\process\225a\sourcesink_config.csv
+   211    11554 INCLUDE      209      38  ...c:\Local\REMix\remix_nz\process\225a\sourcesink_config.csv
+   212    11751 IF EXIST     209      40  ..c:\Local\REMix\remix_nz\process\225a\sourcesink_config.csv
    213    11755 BATINCLUDE   209      44  ...C:\Local\REMix\framework\remix\framework\model\source\battools\aggregateNodes.gms
-   214    11783 IF EXIST     209      62  ..c:\Local\REMix\remix_nz\process\225b\sourcesink_profile.csv
-   215    11783 INCLUDE      209      62  ...c:\Local\REMix\remix_nz\process\225b\sourcesink_profile.csv
-   216    11836 IF EXIST     209      63  ..c:\Local\REMix\remix_nz\process\225b\sourcesink_profile.csv
-   217    11837 IF EXIST     209      64  ..c:\Local\REMix\remix_nz\process\225b\sourcesink_profile.csv
-   218    11839 IF EXIST     209      66  ..c:\Local\REMix\remix_nz\process\225b\sourcesink_profile.csv
-   219    11859 IF EXIST     209      86  ..c:\Local\REMix\remix_nz\process\225b\sourcesink_annualsum.csv
-   220    11859 INCLUDE      209      86  ...c:\Local\REMix\remix_nz\process\225b\sourcesink_annualsum.csv
-   221    11983 IF EXIST     209      88  ..c:\Local\REMix\remix_nz\process\225b\sourcesink_annualsum.csv
+   214    11783 IF EXIST     209      62  ..c:\Local\REMix\remix_nz\process\225a\sourcesink_profile.csv
+   215    11783 INCLUDE      209      62  ...c:\Local\REMix\remix_nz\process\225a\sourcesink_profile.csv
+   216    11836 IF EXIST     209      63  ..c:\Local\REMix\remix_nz\process\225a\sourcesink_profile.csv
+   217    11837 IF EXIST     209      64  ..c:\Local\REMix\remix_nz\process\225a\sourcesink_profile.csv
+   218    11839 IF EXIST     209      66  ..c:\Local\REMix\remix_nz\process\225a\sourcesink_profile.csv
+   219    11859 IF EXIST     209      86  ..c:\Local\REMix\remix_nz\process\225a\sourcesink_annualsum.csv
+   220    11859 INCLUDE      209      86  ...c:\Local\REMix\remix_nz\process\225a\sourcesink_annualsum.csv
+   221    11983 IF EXIST     209      88  ..c:\Local\REMix\remix_nz\process\225a\sourcesink_annualsum.csv
    222    11986 BATINCLUDE   209      91  ...C:\Local\REMix\framework\remix\framework\model\source\battools\aggregateNodes.gms
    223    12166 INCLUDE       27      34  ..C:\Local\REMix\framework\remix\framework\model\source\core\balance.gms
    224    12302 INCLUDE       27      36  ..C:\Local\REMix\framework\remix\framework\model\source\accounting\equations.gms
@@ -5493,8 +5493,8 @@ Include File Summary
    233    13800 INCLUDE       27      90  ..C:\Local\REMix\framework\remix\framework\model\source\postcalc\writegdx.gms
 
 
-COMPILATION TIME     =       13.812 SECONDS     78 MB  40.4.0 d540b52e WEX-WEI
-GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 01/30/24 10:50:31 Page 3
+COMPILATION TIME     =       13.797 SECONDS     78 MB  40.4.0 d540b52e WEX-WEI
+GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 02/26/24 18:21:15 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Range Statistics    SOLVE remix Using MIP From line 12976
 
@@ -5505,7 +5505,7 @@ RHS       [min, max] : [ 2.000E-06, 7.079E+04] - Zero values observed as well
 Bound     [min, max] : [ 1.000E-01, 1.000E-01] - Zero values observed as well
 Matrix    [min, max] : [ 1.000E-02, 3.611E+02]
 
-GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 01/30/24 10:50:31 Page 4
+GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 02/26/24 18:21:15 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE remix Using MIP From line 12976
 
@@ -5516,17 +5516,17 @@ LOOPS                           optiframeToCalc   of1
 MODEL STATISTICS
 
 BLOCKS OF EQUATIONS          75     SINGLE EQUATIONS    5,904,808
-BLOCKS OF VARIABLES          38     SINGLE VARIABLES    6,089,029
-NON ZERO ELEMENTS    17,544,089
+BLOCKS OF VARIABLES          38     SINGLE VARIABLES    6,089,022
+NON ZERO ELEMENTS    17,544,075
 
 
-GENERATION TIME      =      135.593 SECONDS  6,066 MB  40.4.0 d540b52e WEX-WEI
+GENERATION TIME      =      134.140 SECONDS  6,067 MB  40.4.0 d540b52e WEX-WEI
 
 
-EXECUTION TIME       =      201.609 SECONDS  6,066 MB  40.4.0 d540b52e WEX-WEI
+EXECUTION TIME       =      199.250 SECONDS  6,067 MB  40.4.0 d540b52e WEX-WEI
                L O O P S         optiframeToCalc of1
 
-GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 01/30/24 10:50:31 Page 5
+GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 02/26/24 18:21:15 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE remix Using MIP From line 12976
 
@@ -5539,10 +5539,10 @@ Solution Report     SOLVE remix Using MIP From line 12976
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
-**** OBJECTIVE VALUE             6011.4815
+**** OBJECTIVE VALUE             6782.2893
 
- RESOURCE USAGE, LIMIT        562.313    604800.000
- ITERATION COUNT, LIMIT       233    2147483647
+ RESOURCE USAGE, LIMIT        507.579    604800.000
+ ITERATION COUNT, LIMIT       243    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 
 Reading parameter(s) from "c:\Local\REMix\remix_nz\process\cplex.opt"
@@ -5566,33 +5566,33 @@ Reading parameter(s) from "c:\Local\REMix\remix_nz\process\cplex.opt"
 Finished reading from "c:\Local\REMix\remix_nz\process\cplex.opt"
 
 --- GMO setup time: 0.00s
---- Space for names approximately 745.28 Mb
+--- Space for names approximately 745.27 Mb
 --- Use option 'names no' to turn use of names off
 --- GMO memory 2176.79 Mb (peak 2223.24 Mb)
 --- Dictionary memory 0.00 Mb
---- Cplex 22.1.0.0 link memory 183.71 Mb (peak 1251.54 Mb)
+--- Cplex 22.1.0.0 link memory 183.71 Mb (peak 1251.53 Mb)
 --- Starting Cplex
 
 
 --- LP status (1): optimal.
---- Cplex Time: 552.27sec (det. 465402.43 ticks)
+--- Cplex Time: 497.73sec (det. 451248.79 ticks)
 
 
 Optimal solution found
-Objective:         6011.481488
+Objective:         6782.289320
 
 Solution Quality Statistics:
                                    unscaled                scaled
                                max         sum         max         sum
-primal infeasibility        1.252e-03   1.154e-01   1.252e-03   1.154e-01
+primal infeasibility        2.902e-03   2.270e-02   2.902e-03   2.270e-02
 dual infeasibility          0.000e+00   0.000e+00   0.000e+00   0.000e+00
-primal residual             1.510e-10   2.539e-10   1.510e-10   2.539e-10
-dual residual               1.200e-05   1.160e-04   1.200e-05   1.160e-04
-primal solution vector      6.011e+03   2.640e+06   6.011e+03   2.640e+06
-dual solution vector        2.243e+03   2.091e+05   2.243e+03   2.091e+05
-slacks                      7.079e+04   1.591e+06   7.079e+04   1.591e+06
-reduced costs               3.611e+02   5.202e+06   3.611e+02   5.202e+06
-comp. slackness viol.       4.887e-05   2.493e-02
+primal residual             1.273e-11   1.165e-10   1.273e-11   1.165e-10
+dual residual               6.518e-04   1.394e-03   6.518e-04   1.394e-03
+primal solution vector      6.782e+03   2.618e+06   6.782e+03   2.618e+06
+dual solution vector        2.941e+03   2.508e+05   2.941e+03   2.508e+05
+slacks                      7.079e+04   1.603e+06   7.079e+04   1.603e+06
+reduced costs               1.262e+03   7.186e+06   1.262e+03   7.186e+06
+comp. slackness viol.       4.071e-05   2.313e-02
 
 
 
@@ -5600,7 +5600,7 @@ comp. slackness viol.       4.887e-05   2.493e-02
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 01/30/24 10:50:31 Page 6
+GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 02/26/24 18:21:15 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -5610,7 +5610,7 @@ E x e c u t i o n
 opt c:\Local\REMix\remix_nz\process\cplex.opt
 
 
-EXECUTION TIME       =       73.031 SECONDS  5,677 MB  40.4.0 d540b52e WEX-WEI
+EXECUTION TIME       =       72.703 SECONDS  5,654 MB  40.4.0 d540b52e WEX-WEI
 
 
 USER: Medium MUD - 10 User License                   S220920|0002AO-GEN
