@@ -1,4 +1,8 @@
 storage_techs,vintage,lifeTime,levelUpperLimit
+Battery,2020,20,1.0
+Battery,2030,20,1.0
+Battery,2040,20,1.0
+Battery,2050,20,1.0
 H2_storage,2020,40,1.0
 H2_storage,2030,40,1.0
 H2_storage,2040,40,1.0

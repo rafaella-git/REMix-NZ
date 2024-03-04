@@ -1,6 +1,10 @@
 converter_techs,vintage,lifeTime,activityUpperLimit
 BIO,2000,30,1.0
 BIO,2030,30,1.0
+Battery,2020,20,1.0
+Battery,2030,20,1.0
+Battery,2040,20,1.0
+Battery,2050,20,1.0
 CCGT,2000,30,1.0
 CCGT,2030,30,1.0
 COAL,2000,30,1.0
