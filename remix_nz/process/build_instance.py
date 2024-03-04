@@ -25,8 +25,8 @@ idx = pd.IndexSlice
 nodes_lst=["NIS","AKL","WTO","TRN","BOP","HBY","CEN","WEL","NEL","CAN","OTG" ]
 fixsingleyear=2050
 yrs2run= [2020,2050] # years to be optimised [2020,2030,2040,2050] #
+h2_annualdemand=0 # if it is one it takes the annual demand
 indx=0
-
 
 
 yrs_str='-'.join([str(item) for item in yrs2run])
@@ -35,9 +35,7 @@ yrs_mentioned= [2000, 2020, 2025, 2030, 2035, 2040, 2045, 2050] # must include a
 # Demand files available for different scenarios
 # files_lst=["nz_profile_11nodes","medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] 
 # files_493=["medpop_evs_base","low_pop_out_base","med_pop_out_base","high_pop_out_base"] #493 as in the course 493, this is for Liv and Sam
-files_lst=["nz-h2-noexp","nz-h2-v2","nz-h2", "nz-hydro","nz-elec","medpop_evs","low_pop_out","med_pop_out","high_pop_out"] 
-
-
+files_lst=["nz-h2-stor","nz-h2-noexp","nz-h2-v2","nz-h2", "nz-hydro","nz-elec","medpop_evs","low_pop_out","med_pop_out","high_pop_out"] 
 
 # %% [markdown]
 # ### Customise the dataset changing these
@@ -146,7 +144,7 @@ def add_demand(m):
     m.parameter.add(slack_cost, "accounting_sourcesinkflow")
 
 
-
+  
     # # Hydrogen
     # # "sourcesink_annualSum"
     h2_nodes =  m.set.nodesdata
@@ -154,40 +152,38 @@ def add_demand(m):
         index=pd.MultiIndex.from_product([h2_nodes, yrs_demand, ["Demand"], ["H2"]])
     )
     display(h2_annual)
-  
-    # 
-    h2_2050 = {
-        'NIS': 1038.15623,
-        'AKL': 70793.7597,
-        'WTO': 11663.81169,
-        'BOP': 11700.05017,
-        'HBY': 13060.32836,
-        'TRN': 62016.13938,
-        'CEN': 11842.51657,
-        'WEL': 34654.12968,
-        'NEL': 9158.885102,
-        'CAN': 39314.18837,
-        'OTG': 18806.67305
-    }
+
+
 
     # Adding the new column "upper" to the DataFrame and setting values for the year 2050
     h2_annual["upper"] = 0 # Initializing with  0
-    for node, value in h2_2050.items():
-        h2_annual.loc[(node, 2050, "Demand", "H2"), "upper"] = value
+    
+    if h2_annualdemand==1:
+        h2_2050 = {
+            'NIS': 1038.15623,
+            'AKL': 70793.7597,
+            'WTO': 11663.81169,
+            'BOP': 11700.05017,
+            'HBY': 13060.32836,
+            'TRN': 62016.13938,
+            'CEN': 11842.51657,
+            'WEL': 34654.12968,
+            'NEL': 9158.885102,
+            'CAN': 39314.18837,
+            'OTG': 18806.67305
+            }
+        for node, value in h2_2050.items():
+            h2_annual.loc[(node, 2050, "Demand", "H2"), "upper"] = value
     m.parameter.add(h2_annual, "sourcesink_annualsum")
 
     h2_cfg = pd.DataFrame(
         index=pd.MultiIndex.from_product([h2_nodes, yrs_demand, ["Demand"], ["H2"]])
     )
     h2_cfg["usesUpperSum"] = 1
+    h2_cfg["usesUpperProfile"] = 1
    
     # h2_cfg["usesLowerProfile"] = 1
-    m.parameter.add(h2_cfg, "sourcesink_config")
-
-
-
-   
-
+    m.parameter.add(h2_cfg, "sourcesink_config")   
 
     # Derive region and time scope
     m.set.add(list(ts_ffe.index.get_level_values(0)), "nodesdata")
@@ -272,6 +268,8 @@ def add_renewables(m):
     re_caps.loc[idx["TRN", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.1333 # GW_el	
     re_caps.loc[idx["WEL", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.22295 # GW_el	
     re_caps.loc[idx["WTO", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.0644 # GW_el	
+    # do not expand capacities for 2020
+    re_caps.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean
     # regions = ["CEN", "NEL", "OTG", "TRN", "WEL", "WTO"]
     # upper_limits = [0.52165, 0.00241, 0.11115, 0.1333, 0.22295, 0.0644]
 
@@ -604,17 +602,13 @@ def add_geothermal(m):
     
     # new capacities limits - regions years techs
     #geoth_cap.loc[idx[:, :, geoth_techs], "unitsUpperLimit"] = 280  # GW_el, limit data from: https://www.nsenergybusiness.com/projects/tauhara-geothermal-power-project/
-    geoth_cap.loc[idx["BOP", :, geoth_techs], "unitsUpperLimit"] = 0.175  # GW_el
-    geoth_cap.loc[idx["NIS", :, geoth_techs], "unitsUpperLimit"] = 0.025  # GW_el
-    geoth_cap.loc[idx["WTO", :, geoth_techs], "unitsUpperLimit"] = 0.836  # GW_el
-    
+    # geoth_cap.loc[idx["BOP", :, geoth_techs], "unitsUpperLimit"] = 0.175  # GW_el
+    # geoth_cap.loc[idx["NIS", :, geoth_techs], "unitsUpperLimit"] = 0.025  # GW_el
+    # geoth_cap.loc[idx["WTO", :, geoth_techs], "unitsUpperLimit"] = 0.836  # GW_el
+    geoth_cap.loc[idx[:, :, :], "noExpansion"] = 1  # boolean
 
     
-    # model existing capacities based on this example  
-    # geoth_cap.loc[idx[["AKL"], [2020], "CCGT"], "unitsBuild"] = 5  # GW_el
-    
     df = geoth_inst_csv
-    
     filtered_df = df[df['Type'] == 'Geothermal']
     #geoth_df = filtered_df.groupby(['Node', 'Year_built', 'Techs']).agg({'Capacity_MW': 'sum', 'Avg_Ann_Gen_GWh': 'sum'}).reset_index()            
     grouped_df = filtered_df.groupby(['Node', 'Year_built', 'Techs'])['Capacity_MW'].sum().reset_index()
@@ -746,23 +740,17 @@ def add_hydro(m):
         )
     )
     
-		# limiting max capacity to not build anymore in the bracket the order is [model regions years techs]
+	# limiting max capacity to not build anymore in the bracket the order is [model regions years techs]
+    conv_cap.loc[idx[:, :, :], "noExpansion"] = 1  # boolean
     # limiting that existing capacities are the max posible
-    #conv_cap.loc[idx[:, :, hydro_techs], "unitsUpperLimit"] = 1.82683000001  # GW_el
-    conv_cap.loc[idx[["BOP"], :, "Hydro"], "unitsUpperLimit"] = 0.17095  # GW_el
-    conv_cap.loc[idx[["CAN"], :, "Hydro"], "unitsUpperLimit"] = 1.82683 # GW_el
-    conv_cap.loc[idx[["CEN"], :, "Hydro"], "unitsUpperLimit"] = 0.399  # GW_el
-    conv_cap.loc[idx[["HBY"], :, "Hydro"], "unitsUpperLimit"] = 0.1422 # GW_el
-    conv_cap.loc[idx[["NEL"], :, "Hydro"], "unitsUpperLimit"] = 0.0453  # GW_el
-    conv_cap.loc[idx[["OTG"], :, "Hydro"], "unitsUpperLimit"] = 1.664 # GW_el
-    conv_cap.loc[idx[["WTO"], :, "Hydro"], "unitsUpperLimit"] = 1.0873 # GW_el
-    # hydro_cap.loc[idx[["BOP"], :, "Hydro"], "unitsUpperLimit"] = 0.17095000001  # GW_el
-    # hydro_cap.loc[idx[["CAN"], :, "Hydro"], "unitsUpperLimit"] = 1.82683000001  # GW_el
-    # hydro_cap.loc[idx[["CEN"], :, "Hydro"], "unitsUpperLimit"] = 0.399000001  # GW_el
-    # hydro_cap.loc[idx[["HBY"], :, "Hydro"], "unitsUpperLimit"] = 0.1422000001 # GW_el
-    # hydro_cap.loc[idx[["NEL"], :, "Hydro"], "unitsUpperLimit"] = 0.0453000001  # GW_el
-    # hydro_cap.loc[idx[["OTG"], :, "Hydro"], "unitsUpperLimit"] = 1.664000001  # GW_el
-    # hydro_cap.loc[idx[["WTO"], :, "Hydro"], "unitsUpperLimit"] = 1.0873000001  # GW_el
+    # #conv_cap.loc[idx[:, :, hydro_techs], "unitsUpperLimit"] = 1.82683000001  # GW_el
+    # conv_cap.loc[idx[["BOP"], :, "Hydro"], "unitsUpperLimit"] = 0.17095  # GW_el
+    # conv_cap.loc[idx[["CAN"], :, "Hydro"], "unitsUpperLimit"] = 1.82683 # GW_el
+    # conv_cap.loc[idx[["CEN"], :, "Hydro"], "unitsUpperLimit"] = 0.399  # GW_el
+    # conv_cap.loc[idx[["HBY"], :, "Hydro"], "unitsUpperLimit"] = 0.1422 # GW_el
+    # conv_cap.loc[idx[["NEL"], :, "Hydro"], "unitsUpperLimit"] = 0.0453  # GW_el
+    # conv_cap.loc[idx[["OTG"], :, "Hydro"], "unitsUpperLimit"] = 1.664 # GW_el
+    # conv_cap.loc[idx[["WTO"], :, "Hydro"], "unitsUpperLimit"] = 1.0873 # GW_el
     # existing capacities: fixz to make it automatic
     conv_cap.loc[idx[["BOP"], [2000], "Hydro"], "unitsBuild"] = 0.17095  # GW_el
     conv_cap.loc[idx[["CAN"], [2000], "Hydro"], "unitsBuild"] = 1.82683  # GW_el
@@ -771,6 +759,7 @@ def add_hydro(m):
     conv_cap.loc[idx[["NEL"], [2000], "Hydro"], "unitsBuild"] = 0.0453  # GW_el
     conv_cap.loc[idx[["OTG"], [2000], "Hydro"], "unitsBuild"] = 1.664  # GW_el
     conv_cap.loc[idx[["WTO"], [2000], "Hydro"], "unitsBuild"] = 1.0873  # GW_el
+
     m.parameter.add(conv_cap, "converter_capacityparam")
 
 
@@ -978,42 +967,42 @@ def add_thermal(m):
         )
     )
     
-    #model regions years techs
-    the_cap.loc[idx[:, :, the_techs], "unitsUpperLimit"] = 100  # GW_el
-    the_cap.loc[idx["AKL", [2020], "BIO"], "unitsUpperLimit"] = 0.007 # GW_el
-    the_cap.loc[idx["BOP", [2020], "BIO"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["CAN", [2020], "BIO"], "unitsUpperLimit"] = 0.0032 # GW_el
-    the_cap.loc[idx["CEN", [2020], "BIO"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["HBY", [2020], "BIO"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["NEL", [2020], "BIO"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["NIS", [2020], "BIO"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["OTG", [2020], "BIO"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["TRN", [2020], "BIO"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["WEL", [2020], "BIO"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["WTO", [2020], "BIO"], "unitsUpperLimit"] = 0.0459 # GW_el
-    the_cap.loc[idx["AKL", [2020], "COAL"], "unitsUpperLimit"] = 0.112 # GW_el
-    the_cap.loc[idx["BOP", [2020], "COAL"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["CAN", [2020], "COAL"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["CEN", [2020], "COAL"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["HBY", [2020], "COAL"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["NEL", [2020], "COAL"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["NIS", [2020], "COAL"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["OTG", [2020], "COAL"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["TRN", [2020], "COAL"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["WEL", [2020], "COAL"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["WTO", [2020], "COAL"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["AKL", [2020], "DIE"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["BOP", [2020], "DIE"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["CAN", [2020], "DIE"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["CEN", [2020], "DIE"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["HBY", [2020], "DIE"], "unitsUpperLimit"] = 0.155 # GW_el
-    the_cap.loc[idx["NEL", [2020], "DIE"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["NIS", [2020], "DIE"], "unitsUpperLimit"] = 0.018 # GW_el
-    the_cap.loc[idx["OTG", [2020], "DIE"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["TRN", [2020], "DIE"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["WEL", [2020], "DIE"], "unitsUpperLimit"] = 0
-    the_cap.loc[idx["WTO", [2020], "DIE"], "unitsUpperLimit"] = 0
-
+    # #model regions years techs
+    # the_cap.loc[idx[:, :, the_techs], "unitsUpperLimit"] = 100  # GW_el
+    # the_cap.loc[idx["AKL", [2020], "BIO"], "unitsUpperLimit"] = 0.007 # GW_el
+    # the_cap.loc[idx["BOP", [2020], "BIO"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["CAN", [2020], "BIO"], "unitsUpperLimit"] = 0.0032 # GW_el
+    # the_cap.loc[idx["CEN", [2020], "BIO"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["HBY", [2020], "BIO"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["NEL", [2020], "BIO"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["NIS", [2020], "BIO"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["OTG", [2020], "BIO"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["TRN", [2020], "BIO"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["WEL", [2020], "BIO"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["WTO", [2020], "BIO"], "unitsUpperLimit"] = 0.0459 # GW_el
+    # the_cap.loc[idx["AKL", [2020], "COAL"], "unitsUpperLimit"] = 0.112 # GW_el
+    # the_cap.loc[idx["BOP", [2020], "COAL"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["CAN", [2020], "COAL"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["CEN", [2020], "COAL"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["HBY", [2020], "COAL"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["NEL", [2020], "COAL"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["NIS", [2020], "COAL"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["OTG", [2020], "COAL"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["TRN", [2020], "COAL"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["WEL", [2020], "COAL"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["WTO", [2020], "COAL"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["AKL", [2020], "DIE"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["BOP", [2020], "DIE"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["CAN", [2020], "DIE"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["CEN", [2020], "DIE"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["HBY", [2020], "DIE"], "unitsUpperLimit"] = 0.155 # GW_el
+    # the_cap.loc[idx["NEL", [2020], "DIE"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["NIS", [2020], "DIE"], "unitsUpperLimit"] = 0.018 # GW_el
+    # the_cap.loc[idx["OTG", [2020], "DIE"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["TRN", [2020], "DIE"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["WEL", [2020], "DIE"], "unitsUpperLimit"] = 0
+    # the_cap.loc[idx["WTO", [2020], "DIE"], "unitsUpperLimit"] = 0
+    the_cap.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean
 
 
     # fixed capactities     
@@ -1074,67 +1063,6 @@ def add_thermal(m):
     the_emission.loc[idx["FuelCost", :, "DIE", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3)* 0.2016 # kt_CO2
     m.parameter.add(the_emission, "accounting_converteractivity")
 
-def add_gas_turbines(m):
-    gt_vintage = [2000, 2030]
-    gt_techs = ["GT", "CCGT", "GT_H2", "CCGT_H2"]
-    gt_nodes = [n for n in m.set.nodesdata if not n.startswith("LNG")]
-    gt_activities = ["Powergen"]
-
-    gt_tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product([gt_techs, gt_vintage])
-    )
-    gt_tech.loc[idx[:, :], "lifeTime"] = 30
-    gt_tech.loc[idx[:, :], "activityUpperLimit"] = 1
-    m.parameter.add(gt_tech, "converter_techparam")
-
-    #fix: m.alltheyears or smth for the list - not years calculate
-    gt_cap = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [gt_nodes, [2020, 2025, 2030, 2035, 2040, 2045, 2050], gt_techs]
-        )
-    )
-    #model regions years techs
-    gt_cap.loc[idx[:, :, gt_techs], "unitsUpperLimit"] = 100  # GW_el
-    # FIX: update this for brownfield
-    #gt_cap.loc[idx[["AKL"], [2020], "CCGT"], "unitsBuild"] = 5  # GW_el
-    m.parameter.add(gt_cap, "converter_capacityparam")
-
-    gt_coef = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [gt_techs, gt_vintage, gt_activities, ["CH4", "H2", "Elec"]]
-        )
-    )
-
-    gt_coef.loc[idx[:, :, :, "Elec"], "coefficient"] = 1 # GW_el
-    gt_coef.loc[idx["GT", :, :, "CH4"], "coefficient"] = np.round(-1 / np.array([0.41, 0.43]), 3) # GW_el #-1/efficiency=coef, rounded to 3, line above output of 1 GW
-    gt_coef.loc[idx["CCGT", :, :, "CH4"], "coefficient"] = np.round(-1 / np.array([0.58, 0.61]), 3) # GW_el
-    gt_coef.loc[idx["GT_H2", :, :, "H2"], "coefficient"] = np.round(-1 / np.array([0.41, 0.43]), 3) # GW_elel
-    gt_coef.loc[idx["CCGT_H2", :, :, "H2"], "coefficient"] = np.round(-1 / np.array([0.58, 0.61]), 3) # GW_el
-    m.parameter.add(gt_coef, "converter_coefficient")
-
-    gt_acc = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], gt_techs, gt_vintage]
-        )
-    )
-    gt_acc.loc[idx["Invest", :, "GT", :], "perUnitBuild"] = [900, 830]  # million EUR / unit
-    gt_acc.loc[idx["Invest", :, "CCGT", :], "perUnitBuild"] = [600, 560]  # million EUR / unit
-    gt_acc.loc[idx["Invest", :, "GT_H2", :], "perUnitBuild"] = [900, 830]  # million EUR / unit
-    gt_acc.loc[idx["Invest", :, "CCGT_H2", :], "perUnitBuild"] = [600, 560]  # million EUR / unit
-    gt_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    gt_acc.loc[idx["Invest", :, :, :], "amorTime"] = 30  # years
-    gt_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    gt_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        gt_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.033
-    )  # Mio EUR per unit
-    m.parameter.add(gt_acc, "accounting_converterunits")
-
-    # Emit carbon from combustion
-    gt_emission = pd.DataFrame(index=pd.MultiIndex.from_product([["CO2_emission"], ["global"], ["GT", "CCGT"], gt_vintage, gt_activities]))
-    gt_emission.loc[idx[:, :, "GT", :, :], "perActivity"] = np.round(-1 / np.array([0.41, 0.43]), 3) * 0.2016 # kt_CO2
-    gt_emission.loc[idx[:, :, "CCGT", :, :], "perActivity"] = np.round(-1 / np.array([0.58, 0.61]), 3) * 0.2016 # kt_CO2
-    m.parameter.add(gt_emission, "accounting_converteractivity")
-
 def add_gas_turbines(m):    
     gt_inst_csv = pd.read_csv(Path(path_brownfield).joinpath("power-plant-nz-database.csv"))
 
@@ -1161,39 +1089,40 @@ def add_gas_turbines(m):
 
     # model regions years techs
     gt_cap.loc[idx[:, :, gt_techs], "unitsUpperLimit"] = 100  # GW_el
-    gt_cap.loc[idx["AKL", [2020], "CCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["BOP", [2020], "CCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["CAN", [2020], "CCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["CEN", [2020], "CCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["HBY", [2020], "CCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["NEL", [2020], "CCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["NIS", [2020], "CCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["OTG", [2020], "CCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["TRN", [2020], "CCGT"], "unitsUpperLimit"] = 0.377 # GW_el
-    gt_cap.loc[idx["WEL", [2020], "CCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["WTO", [2020], "CCGT"], "unitsUpperLimit"] = 0.385 # GW_el
-    gt_cap.loc[idx["AKL", [2020], "GT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["BOP", [2020], "GT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["CAN", [2020], "GT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["CEN", [2020], "GT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["HBY", [2020], "GT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["NEL", [2020], "GT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["NIS", [2020], "GT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["OTG", [2020], "GT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["TRN", [2020], "GT"], "unitsUpperLimit"] = 0.0786 # GW_el
-    gt_cap.loc[idx["WEL", [2020], "GT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["WTO", [2020], "GT"], "unitsUpperLimit"] = 0.75 # GW_el
-    gt_cap.loc[idx["AKL", [2020], "OCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["BOP", [2020], "OCGT"], "unitsUpperLimit"] = 0.01 # GW_el
-    gt_cap.loc[idx["CAN", [2020], "OCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["CEN", [2020], "OCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["HBY", [2020], "OCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["NEL", [2020], "OCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["NIS", [2020], "OCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["OTG", [2020], "OCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["TRN", [2020], "OCGT"], "unitsUpperLimit"] = 0.435 # GW_el
-    gt_cap.loc[idx["WEL", [2020], "OCGT"], "unitsUpperLimit"] = 0
-    gt_cap.loc[idx["WTO", [2020], "OCGT"], "unitsUpperLimit"] = 0.092 # GW_el
+    # gt_cap.loc[idx["AKL", [2020], "CCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["BOP", [2020], "CCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["CAN", [2020], "CCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["CEN", [2020], "CCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["HBY", [2020], "CCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["NEL", [2020], "CCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["NIS", [2020], "CCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["OTG", [2020], "CCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["TRN", [2020], "CCGT"], "unitsUpperLimit"] = 0.377 # GW_el
+    # gt_cap.loc[idx["WEL", [2020], "CCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["WTO", [2020], "CCGT"], "unitsUpperLimit"] = 0.385 # GW_el
+    # gt_cap.loc[idx["AKL", [2020], "GT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["BOP", [2020], "GT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["CAN", [2020], "GT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["CEN", [2020], "GT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["HBY", [2020], "GT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["NEL", [2020], "GT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["NIS", [2020], "GT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["OTG", [2020], "GT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["TRN", [2020], "GT"], "unitsUpperLimit"] = 0.0786 # GW_el
+    # gt_cap.loc[idx["WEL", [2020], "GT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["WTO", [2020], "GT"], "unitsUpperLimit"] = 0.75 # GW_el
+    # gt_cap.loc[idx["AKL", [2020], "OCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["BOP", [2020], "OCGT"], "unitsUpperLimit"] = 0.01 # GW_el
+    # gt_cap.loc[idx["CAN", [2020], "OCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["CEN", [2020], "OCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["HBY", [2020], "OCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["NEL", [2020], "OCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["NIS", [2020], "OCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["OTG", [2020], "OCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["TRN", [2020], "OCGT"], "unitsUpperLimit"] = 0.435 # GW_el
+    # gt_cap.loc[idx["WEL", [2020], "OCGT"], "unitsUpperLimit"] = 0
+    # gt_cap.loc[idx["WTO", [2020], "OCGT"], "unitsUpperLimit"] = 0.092 # GW_el
+    gt_cap.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean
 
     # model existing capacities based on this example  
     # gt_cap.loc[idx[["AKL"], [2020], "CCGT"], "unitsBuild"] = 5  # GW_el
@@ -1591,6 +1520,7 @@ def add_lithium_batteries(m):
         index=pd.MultiIndex.from_product([battery_nodes, [2020, 2025, 2030, 2035, 2040, 2045, 2050], battery_techs])
     )
     stor_res.loc[idx[:, :, :], "unitsUpperLimit"] = 30  # units
+    stor_res.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean
     m.parameter.add(stor_res, "storage_reservoirparam")
 
     stor_acc = pd.DataFrame(
@@ -1606,6 +1536,95 @@ def add_lithium_batteries(m):
         stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.014
     )  # Mio EUR per unit
     m.parameter.add(stor_acc, "accounting_storageunits")
+    
+def add_h2_storage(m):
+    storage_vintage = [2020, 2030, 2040, 2050]
+    storage_techs = ["H2_storage"]
+    storage_nodes = [n for n in m.set.nodesdata if not n.startswith("LNG")]
+
+    conv_tech = pd.DataFrame(
+        index=pd.MultiIndex.from_product([storage_techs, storage_vintage])
+    )
+    conv_tech.loc[idx[:, :], "lifeTime"] = [40, 40, 40, 40]
+    conv_tech.loc[idx[:, :], "activityUpperLimit"] = 1
+    m.parameter.add(conv_tech, "converter_techparam")
+
+    conv_cap = pd.DataFrame(
+        index=pd.MultiIndex.from_product(
+            [storage_nodes, [2020, 2025, 2030, 2035, 2040, 2045, 2050], storage_techs]
+        )
+    )
+    conv_cap.loc[idx[:, :, storage_techs], "unitsUpperLimit"] = 50 # GW_el
+    m.parameter.add(conv_cap, "converter_capacityparam")
+
+
+    conv_coef = pd.DataFrame(
+        index=pd.MultiIndex.from_product(
+            [storage_techs, storage_vintage, ["Charge", "Discharge"], ["H2", "H2_stored"]]
+        )
+    )
+    conv_coef.loc[idx[:, :, "Charge", "H2"], "coefficient"] = -0.15 # GW_h2
+    conv_coef.loc[idx[:, :, "Charge", "H2_stored"], "coefficient"] = 0.15 # GW_h2
+    conv_coef.loc[idx[:, :, "Discharge", "H2"], "coefficient"] = 0.15 # GW_h2
+    conv_coef.loc[idx[:, :, "Discharge", "H2_stored"], "coefficient"] = -0.15 # GW_h2
+    m.parameter.add(conv_coef, "converter_coefficient")
+
+    conv_acc = pd.DataFrame(
+        index=pd.MultiIndex.from_product(
+            [["Invest", "OMFix"], ["global"], storage_techs, storage_vintage]
+        )
+    )
+    #
+    conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = [5.14, 5.14, 5.14, 5.14]  # million EUR / unit
+    conv_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
+    conv_acc.loc[idx["Invest", :, :, :], "amorTime"] = 40  # years
+    conv_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
+    conv_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
+        conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.04
+    )  # Mio EUR per unit
+    m.parameter.add(conv_acc, "accounting_converterunits")
+
+
+    stor_tech = pd.DataFrame(
+        index=pd.MultiIndex.from_product([storage_techs, storage_vintage])
+    )
+    stor_tech.loc[idx[:, :], "lifeTime"] = 40
+    stor_tech.loc[idx[:, :], "levelUpperLimit"] = 1
+
+    m.parameter.add(stor_tech, "storage_techparam")
+    stor_tech
+
+
+    stor_size = pd.DataFrame(
+        index=pd.MultiIndex.from_product([storage_techs, storage_vintage, ["H2_stored"]])
+    )
+    stor_size.loc[idx["H2_storage", :, "H2_stored"], "size"] = 6.9993  # GWh / unit
+    m.parameter.add(stor_size, "storage_sizeparam")
+
+
+    stor_res = pd.DataFrame(
+        index=pd.MultiIndex.from_product([storage_nodes, [2020, 2025, 2030, 2035, 2040, 2045, 2050], storage_techs])
+    )
+    stor_res.loc[idx[:, :, :], "unitsUpperLimit"] = 50  # units 
+    #stor_res.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean
+    m.parameter.add(stor_res, "storage_reservoirparam")
+
+    stor_acc = pd.DataFrame(
+        index=pd.MultiIndex.from_product(
+            [["Invest", "OMFix"], ["global"], storage_techs, storage_vintage]
+        )
+    )
+   
+     #CAPEX (628.14 EUR / kgH2 * 210000 kgH2/unit ) /1M = 131.91 M EUR / unit
+    stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = [131.91, 131.91, 131.91, 131.91]  # million EUR / unit
+    stor_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
+    stor_acc.loc[idx["Invest", :, :, :], "amorTime"] = 40  # years 
+    stor_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
+    stor_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
+        stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.03
+    )  # Mio EUR per unit
+    m.parameter.add(stor_acc, "accounting_storageunits")
+
 
 # others
     
@@ -1889,6 +1908,7 @@ if __name__ == "__main__":
 
     # hydrogen
     add_electrolyser(m)
+    add_h2_storage(m)
     #add_methanizer(m)
     #add_methanol_syn(m)
     #add_ftropsch_syn(m)

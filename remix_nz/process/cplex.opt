@@ -1,7 +1,7 @@
 rerun no
 iis 1
 lpmethod 4
-barorder 0
+barorder 3 /;
 preind 1
 scaind 0
 predual -1
