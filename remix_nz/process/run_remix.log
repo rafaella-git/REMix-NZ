@@ -1,4 +1,4 @@
---- Job run_remix.gms Start 03/08/24 21:43:22 40.4.0 d540b52e WEX-WEI x86 64bit/MS Windows
+--- Job run_remix.gms Start 03/08/24 23:09:20 40.4.0 d540b52e WEX-WEI x86 64bit/MS Windows
 --- Applying:
     C:\GAMS\40\gmsprmNT.txt
     \\file\Usersr$\rca139\Home\My Documents\GAMS\gamsconfig.yaml
@@ -38,7 +38,7 @@ Using instance directory c:\Local\REMix\remix_nz\process\225a\
 --- . metadata.gms(10) 2 Mb
 --- call printf "gams_version \"40.4.0\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(11) 2 Mb
---- call printf "timestamp \"03/08/24 21:43:22\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+--- call printf "timestamp \"03/08/24 23:09:20\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(13) 2 Mb
 --- call printf "framework_path " >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(15) 2 Mb
@@ -94,9 +94,9 @@ Using instance directory c:\Local\REMix\remix_nz\process\225a\
 --- .. sets.gms(131) 6 Mb
 --- ... map_aggregatenodesmodel.csv(11) 6 Mb
 --- .. sets.gms(159) 6 Mb
---- ... set_years.csv(120) 6 Mb
+--- ... set_years.csv(70) 6 Mb
 --- .. sets.gms(170) 6 Mb
---- ... set_years.csv(120) 6 Mb
+--- ... set_years.csv(70) 6 Mb
 --- .. sets.gms(178) 6 Mb
 --- ... set_yearssel.csv(3) 6 Mb
 --- .. sets.gms(198) 6 Mb
@@ -113,7 +113,7 @@ Using instance directory c:\Local\REMix\remix_nz\process\225a\
 --- .. sets.gms(271) 6 Mb
 --- ... set_converter_techs.csv(18) 6 Mb
 --- .. sets.gms(274) 6 Mb
---- ... set_storage_techs.csv(3) 6 Mb
+--- ... set_storage_techs.csv(5) 6 Mb
 --- .. sets.gms(277) 6 Mb
 --- ... set_transfer_techs.csv(1) 6 Mb
 --- .. sets.gms(280) 6 Mb
@@ -121,7 +121,7 @@ Using instance directory c:\Local\REMix\remix_nz\process\225a\
 --- .. sets.gms(285) 6 Mb
 --- ... set_converter_techs.csv(18) 6 Mb
 --- .. sets.gms(290) 6 Mb
---- ... set_storage_techs.csv(3) 6 Mb
+--- ... set_storage_techs.csv(5) 6 Mb
 --- .. sets.gms(296) 6 Mb
 --- ... set_transfer_techs.csv(1) 6 Mb
 --- .. sets.gms(301) 6 Mb
@@ -142,7 +142,7 @@ Using instance directory c:\Local\REMix\remix_nz\process\225a\
 --- ... accounting_converteractivity.csv(25) 6 Mb
 "No accounting for converter startups included"
 --- .. input.gms(88) 6 Mb
---- ... accounting_storageunits.csv(27) 6 Mb
+--- ... accounting_storageunits.csv(37) 6 Mb
 --- .. input.gms(112) 6 Mb
 --- ... accounting_transferlinks.csv(7) 6 Mb
 --- .. input.gms(136) 6 Mb
@@ -181,7 +181,7 @@ Using instance directory c:\Local\REMix\remix_nz\process\225a\
 --- .. loadgdx.gms(7) 7 Mb
 --- . remix.gms(31) 7 Mb
 --- .. converter.gms(103) 7 Mb
---- ... converter_capacityparam.csv(5334) 7 Mb
+--- ... converter_capacityparam.csv(4980) 7 Mb
 --- .. converter.gms(113) 7 Mb
 --- ... aggregateNodes.gms(10) 7 Mb
 --- .. converter.gms(114) 7 Mb
@@ -197,7 +197,7 @@ Using instance directory c:\Local\REMix\remix_nz\process\225a\
 --- .. converter.gms(1174) 50 Mb
 --- . remix.gms(32) 50 Mb
 --- .. storage.gms(91) 50 Mb
---- ... storage_reservoirparam.csv(211) 50 Mb
+--- ... storage_reservoirparam.csv(267) 50 Mb
 --- .. storage.gms(97) 50 Mb
 --- ... aggregateNodes.gms(10) 50 Mb
 --- .. storage.gms(98) 50 Mb
@@ -205,7 +205,7 @@ Using instance directory c:\Local\REMix\remix_nz\process\225a\
 --- .. storage.gms(124) 50 Mb
 --- ... storage_techparam.csv(14) 50 Mb
 --- .. storage.gms(147) 50 Mb
---- ... storage_sizeparam.csv(14) 50 Mb
+--- ... storage_sizeparam.csv(19) 50 Mb
 "No reservoir state of charge dependent information included"
 "No reservoir degradation states included"
 "No profile for storage level limits included"
@@ -265,14 +265,6 @@ Transfer: Using voltage angle-based DC optimal power flow (for AC links)
 --- .. writegdx.gms(83) 72 Mb
 --- . remix.gms(91) 72 Mb
 --- run_remix.gms(29) 72 Mb
---- Starting execution: elapsed 0:00:17.538
---- run_remix.gms(13029) 5355 Mb
+--- Starting execution: elapsed 0:00:16.535
+--- run_remix.gms(12650) 3612 Mb
 --- Generating MIP model remix
---- run_remix.gms(13121) 13771 Mb
---- LOOPS optiframeToCalc = of1
----   18,485,088 rows  19,335,667 columns  55,904,513 non-zeroes
---- Range statistics (absolute non-zero finite values)
---- RHS       [min, max] : [ 6.000E-04, 2.517E+03] - Zero values observed as well
---- Bound     [min, max] : [ 9.000E-04, 1.550E-01] - Zero values observed as well
---- Matrix    [min, max] : [ 1.000E-02, 3.988E+02]
---- Executing CPLEX (Solvelink=0): elapsed 0:10:15.969
