@@ -1,4 +1,4 @@
-GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 03/08/24 20:08:10 Page 1
+GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 03/08/24 21:43:22 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -21,16 +21,16 @@ INCLUDE    C:\Local\REMix\framework\remix\framework\model\source\metadata.gms
 INCLUDE    c:\Local\REMix\remix_nz\process\225a\metadata
   63  remix_version "0.9.7"
   64  gams_version "40.4.0"
-  65  timestamp "03/08/24 20:08:10"
+  65  timestamp "03/08/24 21:43:22"
   66  framework_path "C:\Local\REMix\framework\remix\framework\model\source"
   67   
-  68  framework_hash 9d4a169686204284fc3108d6f50da76f2650ac60
+  68  framework_hash 827c9673d754c2ad5b5cca2792c09103b490e01b
   69   
   70  framework_branch "main"
   71   
   72  project_path "C:\Local\REMix\remix_nz\output\will\02-battery-overnight_2020-2035-2050\data"
   73   
-  74  project_hash "9d4a169686204284fc3108d6f50da76f2650ac60"
+  74  project_hash "827c9673d754c2ad5b5cca2792c09103b490e01b"
   75   
   76  project_branch "main"
   77   
@@ -5283,7 +5283,7 @@ INCLUDE    C:\Local\REMix\framework\remix\framework\model\source\postcalc\writeg
 14010      marginals_indicator_bounds
 14011   
 14013      ;
-GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 03/08/24 20:08:10 Page 2
+GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 03/08/24 21:43:22 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Include File Summary
 
@@ -5295,7 +5295,7 @@ Include File Summary
      3       16 INCLUDE        1      16  .C:\Local\REMix\framework\remix\framework\model\source\metadata.gms
      4       25 CALL           3       9  .printf "remix_version \"0.9.7\"\n" > c:\Local\REMix\remix_nz\process\225a\\metadata
      5       26 CALL           3      10  .printf "gams_version \"40.4.0\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
-     6       27 CALL           3      11  .printf "timestamp \"03/08/24 20:08:10\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+     6       27 CALL           3      11  .printf "timestamp \"03/08/24 21:43:22\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
      7       29 CALL           3      13  .printf "framework_path " >> c:\Local\REMix\remix_nz\process\225a\\metadata
      8       31 CALL           3      15  .cd C:\Local\REMix\framework\remix\framework\model\source && cd| sed "s/^/\"/;s/$/\"/" >> c:\Local\REMix\remix_nz\process\225a\\metadata
      9       33 CALL           3      19  .printf "\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
@@ -5519,4 +5519,40 @@ Include File Summary
    227    12915 INCLUDE       27      75  ..C:\Local\REMix\framework\remix\framework\model\source\methods\pips.gms
    228    12924 INCLUDE       27      78  ..C:\Local\REMix\framework\remix\framework\model\source\methods\solve.gms
    229    13136 INCLUDE       27      81  ..C:\Local\REMix\framework\remix\framework\model\source\methods\pareto.gms
-   230    13145 INC
+   230    13145 INCLUDE       27      84  ..C:\Local\REMix\framework\remix\framework\model\source\methods\mga.gms
+   231    13154 INCLUDE       27      87  ..C:\Local\REMix\framework\remix\framework\model\source\methods\iternodes.gms
+   232    13163 INCLUDE       27      90  ..C:\Local\REMix\framework\remix\framework\model\source\postcalc\definition.gms
+   233    13955 INCLUDE       27      91  ..C:\Local\REMix\framework\remix\framework\model\source\postcalc\writegdx.gms
+
+
+COMPILATION TIME     =       17.484 SECONDS     72 MB  40.4.0 d540b52e WEX-WEI
+GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 03/08/24 21:43:22 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE remix Using MIP From line 13121
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 6.000E-04, 2.517E+03] - Zero values observed as well
+Bound     [min, max] : [ 9.000E-04, 1.550E-01] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E-02, 3.988E+02]
+
+GAMS 40.4.0  d540b52e Oct 3, 2022           WEX-WEI x86 64bit/MS Windows - 03/08/24 21:43:22 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE remix Using MIP From line 13121
+
+
+LOOPS                           optiframeToCalc   of1
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          75     SINGLE EQUATIONS   18,485,088
+BLOCKS OF VARIABLES          38     SINGLE VARIABLES   19,335,667
+NON ZERO ELEMENTS    55,904,513
+
+
+GENERATION TIME      =      459.188 SECONDS 13,771 MB  40.4.0 d540b52e WEX-WEI
+
+
+EXECUTION TIME       =      598.438 SECONDS 13,771 MB  40.4.0 d540b52e WEX-WEI

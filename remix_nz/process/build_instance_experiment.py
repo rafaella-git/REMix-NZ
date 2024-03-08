@@ -8,13 +8,13 @@ import warnings
 # %% [markdown]
 # Define useful lists
 
-yrs2run= [2020,2035,2050] # years to be optimised [2020,2030,2040,2050] #
+yrs2run=[2020,2035,2050] # years to be optimised [2020,2030,2040,2050] #
 h2_annualdemand=0 # if it is one it takes the annual demand
 yrs_demand= yrs2run
 yrs_mentioned= [2000, 2020, 2025, 2030, 2035, 2040, 2045, 2050] # must include all years that data is provided for in the model
 # Demand files available for different scenarios
 files_lst=["01-battery-distributed","01-h2-distributed", "02-battery-overnight", "02-h2-overnight", "03-battery-recharging", "03-h2-recharging", "04-battery-solar", "04-h2-solar"]
-files_lst=["01-battery-distributed"]
+files_lst=["02-battery-overnight"]
 
 # Path definition
 path_base = "C:/Local/REMix" #"C:/Local/REMix/projects/remix_nz" 
@@ -140,10 +140,11 @@ run_list()
 # %% [markdown]
 # Export results to non GAMS/python users
 
-def results_to_csv():
+def results_to_csv(demand_file=files_lst[0]):
+    case_name=f"{demand_file}_{yrs_str}"
     # read in the output `*.gdx` file from the optimization in GAMS
     path_result=f"{path_output}/{case_name}/result"
-    path_csv=f"{path_result}/csv" #Path(f"{path_result}/csv").mkdir(parents=True, exist_ok=True)
+    path_csv=f"{path_result}/csv_{case_name}" #Path(f"{path_result}/csv").mkdir(parents=True, exist_ok=True)
     results = GDXEval(f"{path_result}/{case_name}.gdx")
 
     # Converter capacities
@@ -174,3 +175,6 @@ def results_to_csv():
     # Accounting indicators
     indicator_accounting = results["indicator_accounting"]   # convert  to a Pandas DataFrame
     indicator_accounting.to_csv(f"{path_csv}/{case_name}_indicator_accounting.csv")
+
+results_to_csv()
+# %%
