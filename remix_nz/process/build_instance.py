@@ -1927,7 +1927,7 @@ if __name__ == "__main__":
 
     # Create data
     s2 = int(time.perf_counter())
-    m.write(output_path=f"../output/{case_name}/data", fileformat="csv")
+    m.write(output_path=f"{path_output}/{case_name}/data", fileformat="csv")
     e2 = time.perf_counter()
     d2=time.strftime("%Hh %Mm %Ss", time.gmtime(e2-s2))
     print(f"Writing dataset took {d2}.")
