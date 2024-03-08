@@ -1,4 +1,4 @@
---- Job run_remix.gms Start 03/08/24 20:08:10 40.4.0 d540b52e WEX-WEI x86 64bit/MS Windows
+--- Job run_remix.gms Start 03/08/24 21:43:22 40.4.0 d540b52e WEX-WEI x86 64bit/MS Windows
 --- Applying:
     C:\GAMS\40\gmsprmNT.txt
     \\file\Usersr$\rca139\Home\My Documents\GAMS\gamsconfig.yaml
@@ -38,7 +38,7 @@ Using instance directory c:\Local\REMix\remix_nz\process\225a\
 --- . metadata.gms(10) 2 Mb
 --- call printf "gams_version \"40.4.0\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(11) 2 Mb
---- call printf "timestamp \"03/08/24 20:08:10\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
+--- call printf "timestamp \"03/08/24 21:43:22\"\n" >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(13) 2 Mb
 --- call printf "framework_path " >> c:\Local\REMix\remix_nz\process\225a\\metadata
 --- . metadata.gms(15) 2 Mb
@@ -265,4 +265,14 @@ Transfer: Using voltage angle-based DC optimal power flow (for AC links)
 --- .. writegdx.gms(83) 72 Mb
 --- . remix.gms(91) 72 Mb
 --- run_remix.gms(29) 72 Mb
---- Starting execution: elapsed 0:00:22.471
+--- Starting execution: elapsed 0:00:17.538
+--- run_remix.gms(13029) 5355 Mb
+--- Generating MIP model remix
+--- run_remix.gms(13121) 13771 Mb
+--- LOOPS optiframeToCalc = of1
+---   18,485,088 rows  19,335,667 columns  55,904,513 non-zeroes
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 6.000E-04, 2.517E+03] - Zero values observed as well
+--- Bound     [min, max] : [ 9.000E-04, 1.550E-01] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E-02, 3.988E+02]
+--- Executing CPLEX (Solvelink=0): elapsed 0:10:15.969

@@ -1,3 +1,5 @@
 Battery
 H2_storage
-Hydro
+Hydro_reservoir
+levelUpperLimit
+lifeTime
