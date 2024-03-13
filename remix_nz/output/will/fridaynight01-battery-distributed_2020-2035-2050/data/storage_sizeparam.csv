@@ -1,0 +1,15 @@
+storage_techs,vintage,commodity,size,selfdischarge
+Battery,2020,Elec_battery,4.0,0.0
+Battery,2030,Elec_battery,4.0,0.0
+Battery,2040,Elec_battery,4.0,0.0
+Battery,2050,Elec_battery,4.0,0.0
+levelUpperLimit,2000,Water_in,1.0,0.0
+levelUpperLimit,2020,Water_in,1.0,0.0
+levelUpperLimit,2030,Water_in,1.0,0.0
+levelUpperLimit,2040,Water_in,1.0,0.0
+levelUpperLimit,2050,Water_in,1.0,0.0
+lifeTime,2000,Water_in,1.0,0.0
+lifeTime,2020,Water_in,1.0,0.0
+lifeTime,2030,Water_in,1.0,0.0
+lifeTime,2040,Water_in,1.0,0.0
+lifeTime,2050,Water_in,1.0,0.0

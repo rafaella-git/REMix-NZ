@@ -11,16 +11,8 @@ COAL,2000,30,1.0
 COAL,2030,30,1.0
 DIE,2000,30,1.0
 DIE,2030,30,1.0
-Electrolyser,2020,25,1.0
-Electrolyser,2030,30,1.0
-Electrolyser,2040,32,1.0
-Electrolyser,2050,35,1.0
 GT,2000,30,1.0
 GT,2030,30,1.0
-H2_storage,2020,40,1.0
-H2_storage,2030,40,1.0
-H2_storage,2040,40,1.0
-H2_storage,2050,40,1.0
 Hydro,2000,100,1.0
 Hydro,2020,100,1.0
 Hydro,2030,100,1.0
@@ -28,8 +20,8 @@ Hydro,2040,100,1.0
 Hydro,2050,100,1.0
 OCGT,2000,30,1.0
 OCGT,2030,30,1.0
-geoth,2000,150,1.0
-geoth,2050,150,1.0
+geoth,2000,100,1.0
+geoth,2050,100,1.0
 pv_central_fixed,2020,35,0.0
 pv_central_fixed,2030,40,0.0
 pv_central_fixed,2040,40,0.0
