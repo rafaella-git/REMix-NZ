@@ -3,10 +3,6 @@ Battery,2020,20,1.0
 Battery,2030,20,1.0
 Battery,2040,20,1.0
 Battery,2050,20,1.0
-H2_storage,2020,40,1.0
-H2_storage,2030,40,1.0
-H2_storage,2040,40,1.0
-H2_storage,2050,40,1.0
 Hydro_reservoir,2000,100,1.0
 Hydro_reservoir,2020,100,1.0
 Hydro_reservoir,2030,100,1.0

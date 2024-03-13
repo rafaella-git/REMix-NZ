@@ -15,7 +15,7 @@ Invest,global,GT,2000,900.0,1,30,0.06
 Invest,global,GT,2030,830.0,1,30,0.06
 Invest,global,Hydro,2000,2560.0,1,20,0.06
 Invest,global,Hydro,2020,2560.0,1,20,0.06
-Invest,global,Hydro,2030,2560.0,1,20,0.06
+Invest,global,Hydro,2035,2560.0,1,20,0.06
 Invest,global,Hydro,2040,2560.0,1,20,0.06
 Invest,global,Hydro,2050,2560.0,1,20,0.06
 Invest,global,OCGT,2000,475.0,1,30,0.06
@@ -62,7 +62,7 @@ OMFix,global,GT,2000,0.0,0,0,0.0
 OMFix,global,GT,2030,0.0,0,0,0.0
 OMFix,global,Hydro,2000,0.0,0,0,0.0
 OMFix,global,Hydro,2020,0.0,0,0,0.0
-OMFix,global,Hydro,2030,0.0,0,0,0.0
+OMFix,global,Hydro,2035,0.0,0,0,0.0
 OMFix,global,Hydro,2040,0.0,0,0,0.0
 OMFix,global,Hydro,2050,0.0,0,0,0.0
 OMFix,global,OCGT,2000,0.0,0,0,0.0
