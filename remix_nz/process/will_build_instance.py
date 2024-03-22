@@ -55,7 +55,7 @@ path_brownfield = f"{path_input}/brownfield"
 # output
 data_dir = Path(f"{path_output}/{case_name}/data").mkdir(parents=True, exist_ok=True)
 results_dir = Path(f"{path_output}/{case_name}/result").mkdir(parents=True, exist_ok=True)
-print(f"----------Creating data for {case_name}")
+#print(f"----------Creating data for {case_name}")
 
 
 
@@ -221,7 +221,10 @@ def load_feedin_csv(year, aggregate=False, norm=True):
     ts[ts > 1] = 1
     return ts.round(3)
 
-def add_renewablesold(m):
+
+
+def add_renewables(m):
+    
     re_inst_csv = pd.read_csv(Path(path_profiles).joinpath("region_statistics_2012.csv"), index_col=[0, 1])
     re_nodes = [n for n in m.set.nodesdata if not n.startswith("LNG")]
 
@@ -232,123 +235,14 @@ def add_renewablesold(m):
         #2012: 2030,
         2012: 2035,
         #2014: 2040,
-        #2015: 2045,
-        2012: 2050 
-    }
-
-    re_techs = list(set(re_inst_csv.index.get_level_values(1)))
-    pv_techs = [i for i in re_techs if i.startswith("pv")]
-    csp_techs = []#[i for i in re_techs if i.startswith("csp")]
-    wind_techs = [i for i in re_techs if i.startswith("wind")]
-
-    re_tech = pd.DataFrame(index=pd.MultiIndex.from_product([re_techs, re_vintage]))
-    re_tech.loc[idx[:, :], "activityUpperLimit"] = 0 # so it is overwritten by the availabity from the timeseriesfiles
-    re_tech.loc[idx[pv_techs, [2020]], "lifeTime"] = 35  # years
-    re_tech.loc[idx[pv_techs, [2030, 2040, 2050]], "lifeTime"] = 40  # years
-    re_tech.loc[idx[csp_techs + wind_techs, [2020]], "lifeTime"] = 27  # years
-    re_tech.loc[idx[csp_techs + wind_techs, [2030, 2040, 2050]], "lifeTime"] = 30  # years
-    m.parameter.add(re_tech, "converter_techparam")
-
-    # capacities
-    re_caps = pd.DataFrame(index=pd.MultiIndex.from_product([re_nodes, [2020, 2025, 2030, 2035, 2040, 2045, 2050], re_techs]))
-    re_caps.index.names = ["region", "years", "technology"]
-    re_upper = pd.DataFrame(re_inst_csv.div(1e3)["installable_per_region"])
-    re_upper = re_upper.rename(columns={"installable_per_region": "unitsUpperLimit"})
-    
-    re_caps = re_caps.join(re_upper, on=["region", "technology"], how="outer")
-    re_caps = re_caps[re_caps > 0.1].dropna()
-    re_caps.loc[idx[:, [2020], re_techs], "unitsUpperLimit"] = 0  # GW_el - its zero according to brownfield
-    re_caps.loc[idx["CAN", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.0006 # GW_el	
-    re_caps.loc[idx["CEN", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.52165 # GW_el	
-    re_caps.loc[idx["NEL", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.00241 # GW_el	
-    re_caps.loc[idx["OTG", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.11115 # GW_el	
-    re_caps.loc[idx["TRN", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.1333 # GW_el	
-    re_caps.loc[idx["WEL", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.22295 # GW_el	
-    re_caps.loc[idx["WTO", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.0644 # GW_el	
-    # do not expand capacities for 2020
-    re_caps.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean
-    m.parameter.add(re_caps, "converter_capacityparam")
-
-    # activity
-    re_feedin = pd.concat([load_feedin_csv(y) for y in year_mapping])
-    re_feedin = re_feedin.unstack("t_model").swaplevel(1, 2)
-    re_feedin["type"] = "upper"
-    re_feedin = re_feedin.set_index("type", append=True)
-    re_feedin = re_feedin[re_feedin >= 0.01].dropna(how="all").fillna(0)
-    re_feedin = re_feedin.iloc[:, 0:8760]
-    re_feedin.columns = [f"t{str(t+1).zfill(4)}" for t in range(8760)]
-    re_feedin = re_feedin.sort_index(level=["region", "technology", "year"])
-    m.profile.add(re_feedin, "converter_activityprofile")
-
-    # coefficients
-    re_coef = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [
-                re_techs,
-                re_vintage,
-                ["Powergen", "Heatgen"],
-                ["Elec", "Heat_CSP"],
-            ]
-        )
-    )
-    re_coef.loc[idx[wind_techs + pv_techs, :, "Powergen", "Elec"], "coefficient"] = 1
-    re_coef.loc[idx[csp_techs, :, "Heatgen", "Heat_CSP"], "coefficient"] = 1
-    m.parameter.add(re_coef, "converter_coefficient")
-
-    re_acc = pd.DataFrame(
-        index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], re_techs, re_vintage])
-    ).sort_index()
-
-    # TODO: Update costs for renewable technologies
-    # CSP own assumptions based on: https://aip.scitation.org/doi/pdf/10.1063/5.0028883, https://elib.dlr.de/186998/1/SolarPACES_2021_Paper_Dersch_R1.pdf
-    #re_acc.loc[idx["Invest", :, "csp_parabolic_trough", :], "perUnitBuild"] = [344.5, 274.7, 230.2, 196.0]  # Child 2019 - Mio EUR per unit
-    #re_acc.loc[idx["Invest", :, "csp_solar_tower", :], "perUnitBuild"] = [482, 372, 310, 264]  # Mio EUR per unit
-
-    re_acc.loc[idx["Invest", :, "pv_decentral", :], "perUnitBuild"] = [870, 570, 460, 410]  # DEA2022 PV comm&indust - Mio EUR per unit
-    re_acc.loc[idx["Invest", :, "pv_central_fixed", :], "perUnitBuild"] = [560, 380, 320, 290]  # DEA2022 utility scale - Mio EUR per unit
-    re_acc.loc[idx["Invest", :, "pv_central_track_azimuth", :], "perUnitBuild"] = [650, 450, 380, 350]  # DEA2022 utility scale (tracking) - Mio EUR per unit
-
-    re_acc.loc[idx["Invest", :, "wind_onshore", :], "perUnitBuild"] = [1330, 1040, 980, 960]  # DEA2022 onshore - Mio EUR per unit
-    re_acc.loc[idx["Invest", :, "wind_offshore_foundation", :], "perUnitBuild"] = [2120, 2287, 2168, 2130] # DEA2022 offshore - Mio EUR per unit
-    re_acc.loc[idx["Invest", :, "wind_offshore_floating", :], "perUnitBuild"] = 1.2 * np.array([2120, 2287, 2168, 2130])  # DEA2022 offshore + 20% assumption - Mio EUR per unit
-
-    re_acc.loc[idx["Invest", :, pv_techs, [2020]], "amorTime"] = 35  # years
-    re_acc.loc[idx["Invest", :, pv_techs, [2030, 2040, 2050]], "amorTime"] = 40  # years
-    re_acc.loc[idx["Invest", :, csp_techs + wind_techs, [2020]], "amorTime"] = 27  # years
-    re_acc.loc[idx["Invest", :, csp_techs + wind_techs, [2030, 2040, 2050]], "amorTime"] = 30  # years
-
-    re_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    re_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    re_acc.loc[idx["OMFix", :, pv_techs + wind_techs, :], "perUnitTotal"] = (
-        re_acc.loc[idx["Invest", :, pv_techs + wind_techs, :], "perUnitBuild"] * 0.02
-    )  # Mio EUR per unit
-    re_acc.loc[idx["OMFix", :, csp_techs, :], "perUnitTotal"] = (
-        re_acc.loc[idx["Invest", :, csp_techs, :], "perUnitBuild"] * 0.015
-    )  # Mio EUR per unit
-
-    m.parameter.add(re_acc, "accounting_converterunits")
-
-
-def add_renewables(m):
-    re_inst_csv = pd.read_csv(Path(path_profiles).joinpath("region_statistics_2012.csv"), index_col=[0, 1])
-    re_nodes = [n for n in m.set.nodesdata if not n.startswith("LNG")]
-
-    re_vintage = [2020, 2030, 2040, 2050]
-    year_mapping = {
-        #2009: 2020,
-        #2011: 2025,
-        #2012: 2030,
-        #2013: 2035,
-        #2014: 2040,
         #2016: 2045,
-        2012: 2050 #fix
+        2012: 2050 #this mapping is only used with different weather years
     }
-
     re_techs = list(set(re_inst_csv.index.get_level_values(1)))
     pv_techs = [i for i in re_techs if i.startswith("pv")]
     csp_techs = []#[i for i in re_techs if i.startswith("csp")]
     wind_techs = [i for i in re_techs if i.startswith("wind")]
-
+    
     re_tech = pd.DataFrame(index=pd.MultiIndex.from_product([re_techs, re_vintage]))
     re_tech.loc[idx[:, :], "activityUpperLimit"] = 0 # so it is overwritten by the availabity from the timeseriesfiles
     re_tech.loc[idx[pv_techs, [2020]], "lifeTime"] = 35  # years
@@ -356,27 +250,56 @@ def add_renewables(m):
     re_tech.loc[idx[csp_techs + wind_techs, [2020]], "lifeTime"] = 27  # years
     re_tech.loc[idx[csp_techs + wind_techs, [2030, 2040, 2050]], "lifeTime"] = 30  # years
     m.parameter.add(re_tech, "converter_techparam")
-
+    
     # capacities
-    re_caps = pd.DataFrame(index=pd.MultiIndex.from_product([re_nodes, [2020, 2025, 2030, 2035, 2040, 2045, 2050], re_techs]))
+    years_used = list(range(1992, 2021)) #brownfield
+    years_used.extend(yrs_mentioned)
+
+
+    re_caps = pd.DataFrame(index=pd.MultiIndex.from_product([re_nodes, years_used, re_techs]))
     re_caps.index.names = ["region", "years", "technology"]
     re_upper = pd.DataFrame(re_inst_csv.div(1e3)["installable_per_region"])
     re_upper = re_upper.rename(columns={"installable_per_region": "unitsUpperLimit"})
     
     re_caps = re_caps.join(re_upper, on=["region", "technology"], how="outer")
     re_caps = re_caps[re_caps > 0.1].dropna()
-    re_caps.loc[idx[:, [2020], re_techs], "unitsUpperLimit"] = 0  # GW_el - its zero according to brownfield
-    re_caps.loc[idx["CAN", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.0006 # GW_el	
-    re_caps.loc[idx["CEN", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.52165 # GW_el	
-    re_caps.loc[idx["NEL", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.00241 # GW_el	
-    re_caps.loc[idx["OTG", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.11115 # GW_el	
-    re_caps.loc[idx["TRN", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.1333 # GW_el	
-    re_caps.loc[idx["WEL", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.22295 # GW_el	
-    re_caps.loc[idx["WTO", [2020], "wind_onshore"], "unitsUpperLimit"] = 0.0644 # GW_el	
+    
+
+
+
+    re_caps.loc[idx["CAN", [2003], "wind_onshore"], "unitsBuild"] = 0.0005 # GW_el
+    re_caps.loc[idx["CAN", [2005], "wind_onshore"], "unitsBuild"] = 0.0001 # GW_el
+
+    re_caps.loc[idx["CEN", [1999], "wind_onshore"], "unitsBuild"] = 31.7  /1000 # GW_el	
+    re_caps.loc[idx["CEN", [2004], "wind_onshore"], "unitsBuild"] = 127.05 /1000 # GW_el	
+    re_caps.loc[idx["CEN", [2007], "wind_onshore"], "unitsBuild"] = 93 /1000 # GW_el
+    re_caps.loc[idx["CEN", [2011], "wind_onshore"], "unitsBuild"] = 48.5 /1000 # GW_el
+    re_caps.loc[idx["CEN", [2020], "wind_onshore"], "unitsBuild"] = 221.4 /1000 # GW_el	
+
+    re_caps.loc[idx["OTG", [2007], "wind_onshore"], "unitsBuild"] = 58/1000 # GW_el	
+    re_caps.loc[idx["OTG", [2009], "wind_onshore"], "unitsBuild"] = 2.25/1000 # GW_el	
+    re_caps.loc[idx["OTG", [2010], "wind_onshore"], "unitsBuild"] = 0.45/1000 # GW_el	
+    re_caps.loc[idx["OTG", [2011], "wind_onshore"], "unitsBuild"] = 43.65/1000 # GW_el	
+    re_caps.loc[idx["OTG", [2015], "wind_onshore"], "unitsBuild"] = 6.8 /1000 # GW_el
+    
+    
+    re_caps.loc[idx["NEL", [2010], "wind_onshore"], "unitsBuild"] = 0.75/1000 # GW_el
+    re_caps.loc[idx["NEL", [2011], "wind_onshore"], "unitsBuild"] = 1/1000 # GW_el
+    re_caps.loc[idx["NEL", [2014], "wind_onshore"], "unitsBuild"] = 0.66/1000 # GW_el
+
+
+    re_caps.loc[idx["TRN", [2020], "wind_onshore"], "unitsBuild"] = 0.1333 # GW_el
+    re_caps.loc[idx["WEL", [1993], "wind_onshore"], "unitsBuild"] = 8.45 /1000# GW_el
+    re_caps.loc[idx["WEL", [1996], "wind_onshore"], "unitsBuild"] = 8.45 /1000# GW_el
+    re_caps.loc[idx["WEL", [2009], "wind_onshore"], "unitsBuild"] = 143 /1000# GW_el
+    re_caps.loc[idx["WEL", [2014], "wind_onshore"], "unitsBuild"] = 71.3 /1000# GW_el	
+    re_caps.loc[idx["WTO", [2011], "wind_onshore"], "unitsBuild"] = 64.4/1000 # GW_el
     # do not expand capacities for 2020
     re_caps.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean
     m.parameter.add(re_caps, "converter_capacityparam")
 
+
+   
     # activity
     # FIX THIS (PART 1): it is ok while we only have 1 weather year
     re_feedin = load_feedin_csv(2012)  # Load data for the year 2012
@@ -398,6 +321,8 @@ def add_renewables(m):
     re_feedin = re_feedin.sort_index(level=["region", "technology", "year"])
     m.profile.add(re_feedin, "converter_activityprofile")
 
+    
+    
     # coefficients
     re_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
@@ -445,6 +370,8 @@ def add_renewables(m):
     )  # Mio EUR per unit
 
     m.parameter.add(re_acc, "accounting_converterunits")
+
+
 
 def add_csp_system(m):
     sf_units = m.parameter.converter_capacityparam.loc[idx[:,:,"csp_solar_tower"], "unitsUpperLimit"]
@@ -545,7 +472,7 @@ def add_csp_system(m):
     m.parameter.add(stor_acc, "accounting_storageunits")
 
 
-# brownfield used by Rafa
+
 def add_geothermal(m):
     geoth_inst_csv = pd.read_csv(Path(path_brownfield).joinpath("power-plant-nz-database.csv"))
     
@@ -557,48 +484,31 @@ def add_geothermal(m):
     geoth_activities = ["Powergen"]
 
     # techparam 
-    geoth_tech = pd.DataFrame(index=pd.MultiIndex.from_product([geoth_techs, geoth_vintage]))
+    geoth_tech = pd.DataFrame(index=pd.MultiIndex.from_product([geoth_techs, yrs_mentioned]))
     geoth_tech.loc[idx[:, :], "activityUpperLimit"] = 1 # 0 for renewables 
     geoth_tech.loc[idx[:, :], "lifeTime"] = 100  # years, data from: "Financial_Technical assumptions" Ashish 2023 
     m.parameter.add(geoth_tech, "converter_techparam")
-
-    # capacities
-    geoth_cap = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [geoth_nodes, [2020, 2025, 2030, 2035, 2040, 2045, 2050], geoth_techs]
-        )
-    )
-    
-    # new capacities limits - regions years techs
-    #geoth_cap.loc[idx[:, :, geoth_techs], "unitsUpperLimit"] = 280  # GW_el, limit data from: https://www.nsenergybusiness.com/projects/tauhara-geothermal-power-project/
-    geoth_cap.loc[idx["BOP", :, geoth_techs], "unitsUpperLimit"] = 0.175  # GW_el
-    geoth_cap.loc[idx["NIS", :, geoth_techs], "unitsUpperLimit"] = 0.025  # GW_el
-    geoth_cap.loc[idx["WTO", :, geoth_techs], "unitsUpperLimit"] = 0.836  # GW_el
-    
-
-    
-    # model existing capacities based on this example  
-    # geoth_cap.loc[idx[["AKL"], [2020], "CCGT"], "unitsBuild"] = 5  # GW_el
     
     df = geoth_inst_csv
-    
     filtered_df = df[df['Type'] == 'Geothermal']
     #geoth_df = filtered_df.groupby(['Node', 'Year_built', 'Techs']).agg({'Capacity_MW': 'sum', 'Avg_Ann_Gen_GWh': 'sum'}).reset_index()            
     grouped_df = filtered_df.groupby(['Node', 'Year_built', 'Techs'])['Capacity_MW'].sum().reset_index()
-    grouped_df['Year_built'] = grouped_df['Year_built'].astype(int) 
+    grouped_df['Year_built'] = grouped_df['Year_built'].astype(int)
+    years_used = grouped_df['Year_built'].unique().tolist() 
+    years_used.extend(yrs_mentioned)
 
+    # capacities
+    geoth_cap = pd.DataFrame(index=pd.MultiIndex.from_product([geoth_nodes, years_used, geoth_techs]))
     for _, row in grouped_df.iterrows():
         node = row['Node']
-        #year_built = row['Year_built']
-        year_built = 2020
+        year_built = row['Year_built']
         techs = row['Techs']
         capacity = row['Capacity_MW'] / 1000
-        if year_built >= 1900:
-            code = f'geoth_cap.loc[idx[["{node}"], [{year_built}], "{techs}"], "unitsBuild"] = {capacity}'
-            #print(f'Executing code: {code}') 
-            exec(code)
+        code = f'geoth_cap.loc[idx["{node}", [{year_built}], "{techs}"], "unitsBuild"] = {capacity}'
+        #print(f'Executing code: {code}') 
+        exec(code)
 
-    
+    geoth_cap.loc[idx[:, :, :], "noExpansion"] = 1  # boolean
     m.parameter.add(geoth_cap, "converter_capacityparam")
     
     # activity data
@@ -651,7 +561,7 @@ def add_geothermal(m):
     # coefficients    
     geoth_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [geoth_techs, geoth_vintage, geoth_activities, ["Elec"]]
+            [geoth_techs, yrs_mentioned, geoth_activities, ["Elec"]]
         )
     )
 
@@ -681,129 +591,6 @@ def add_geothermal(m):
 
 
 def add_hydro(m):
-    
-    hydro_vintage = [2000, 2020, 2030, 2040, 2050]
-    gen_techs = ["Hydro_gen"]
-    hydro_nodes = ["BOP", "CAN", "CEN", "HBY", "NEL", "OTG", "WTO"] 
-    hydro_activities = ["Power_gen","Spill"] 
-
-    # "sourcesink_config" (import configuration)
-    sourcesink_config = pd.DataFrame(index=pd.MultiIndex.from_product([m.set.nodesdata, m.set.yearssel, ["Ocean"], ["Water_out"]]))
-    # fix: negative profile for minimum flow, upper profile of 0
-    sourcesink_config.loc[idx[m.set.nodesdata, :, :, :], "usesUpperProfile"] = 1 #we need negative values to get water out of the system
-    sourcesink_config.dropna(inplace=True)
-    m.parameter.add(sourcesink_config, "sourcesink_config")
-
-
-
-	# Converter (turbine)
-    conv_tech = pd.DataFrame(index=pd.MultiIndex.from_product([gen_techs, hydro_vintage]))
-    conv_tech.loc[idx[:, :], "lifeTime"] = [100, 100, 100, 100, 100]
-    conv_tech.loc[idx[:, :], "activityUpperLimit"] = 1
-    m.parameter.add(conv_tech, "converter_techparam")
-
-    conv_cap = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [hydro_nodes, [2000, 2020, 2025, 2030, 2035, 2040, 2045, 2050], gen_techs]
-        )
-    )
-    
-	# limiting max capacity to not build anymore in the bracket the order is [model regions years techs]
-    conv_cap.loc[idx[:, :, :], "noExpansion"] = 1  # boolean
-    # limiting that existing capacities are the max posible
-    # #conv_cap.loc[idx[:, :, gen_techs], "unitsUpperLimit"] = 1.82683000001  # GW_el
-    # conv_cap.loc[idx[["BOP"], :, "Hydro"], "unitsUpperLimit"] = 0.17095  # GW_el
-    # conv_cap.loc[idx[["CAN"], :, "Hydro"], "unitsUpperLimit"] = 1.82683 # GW_el
-    # conv_cap.loc[idx[["CEN"], :, "Hydro"], "unitsUpperLimit"] = 0.399  # GW_el
-    # conv_cap.loc[idx[["HBY"], :, "Hydro"], "unitsUpperLimit"] = 0.1422 # GW_el
-    # conv_cap.loc[idx[["NEL"], :, "Hydro"], "unitsUpperLimit"] = 0.0453  # GW_el
-    # conv_cap.loc[idx[["OTG"], :, "Hydro"], "unitsUpperLimit"] = 1.664 # GW_el
-    # conv_cap.loc[idx[["WTO"], :, "Hydro"], "unitsUpperLimit"] = 1.0873 # GW_el
-    # existing capacities: fixz to make it automatic
-    conv_cap.loc[idx[["BOP"], [2000], "Hydro"], "unitsBuild"] = 0.17095  # GW_el
-    conv_cap.loc[idx[["CAN"], [2000], "Hydro"], "unitsBuild"] = 1.82683  # GW_el
-    conv_cap.loc[idx[["CEN"], [2000], "Hydro"], "unitsBuild"] = 0.399  # GW_el
-    conv_cap.loc[idx[["HBY"], [2000], "Hydro"], "unitsBuild"] = 0.1422  # GW_el
-    conv_cap.loc[idx[["NEL"], [2000], "Hydro"], "unitsBuild"] = 0.0453  # GW_el
-    conv_cap.loc[idx[["OTG"], [2000], "Hydro"], "unitsBuild"] = 1.664  # GW_el
-    conv_cap.loc[idx[["WTO"], [2000], "Hydro"], "unitsBuild"] = 1.0873  # GW_el
-
-    m.parameter.add(conv_cap, "converter_capacityparam")
-
-
-    conv_coef = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [gen_techs, hydro_vintage, hydro_activities, ["Water_in", "Water_out", "Elec"]]
-        )
-    )
-    conv_coef.loc[idx[:, :, "Power_gen", "Elec"], "coefficient"] = 1 # GW_el 
-    conv_coef.loc[idx[:, :, "Power_gen", "Water_in"], "coefficient"] = -1 # GW_el
-    conv_coef.loc[idx[:, :, "Power_gen", "Water_out"], "coefficient"] = 1 # GW_el
-    #spill is not limited by the capacity of the turbine
-    conv_coef.loc[idx[:, :, "Spill", "Water_in"], "coefficient"] = -100 # GW_el
-    conv_coef.loc[idx[:, :, "Spill", "Water_out"], "coefficient"] = 100 # GW_el
-    # we dont need this bc its just zero: conv_coef.loc[idx[:, :, "Spill", "Elec"], "coefficient"] = 0 # GW_el
-    m.parameter.add(conv_coef, "converter_coefficient")
-
-    conv_acc = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], gen_techs, hydro_vintage]
-        )
-    )
-    conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = [2560, 2560, 2560, 2560, 2560] # million EUR / unit
-    conv_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    conv_acc.loc[idx["Invest", :, :, :], "amorTime"] = 20  # years
-    conv_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    conv_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] *0.0300
-    )  # Mio EUR per unit
-    m.parameter.add(conv_acc, "accounting_converterunits")
-
-
-
-    hydro_stor_vintage = [2000, 2020, 2030, 2040, 2050]
-    hydro_stor_techs = ["Hydro_reservoir"]
-
-    stor_tech = pd.DataFrame(index=pd.MultiIndex.from_product([hydro_stor_techs, hydro_stor_vintage]))
-    stor_tech.loc[idx[:, :, :], "lifeTime"] = 100
-    stor_tech.loc[idx[:, :, :], "levelUpperLimit"] = 1
-    m.parameter.add(stor_tech, "storage_techparam")
-
-
-    stor_size = pd.DataFrame(
-        index=pd.MultiIndex.from_product([hydro_stor_techs, hydro_stor_vintage, ["Water_in"]]))
-    stor_size.loc[idx[:, :, "Water_in"], "size"] = 1 # GWh_ch / unit #      HERE WAS THE ERROR I WAS DOING "HYDRO" AN NOT ":"
-    stor_size.loc[idx[:, :, "Water_in"], "selfdischarge"] = 0  # GWh_ch / unit - 0.031 %/h (https://www.nrel.gov/docs/fy10osti/45833.pdf)
-    m.parameter.add(stor_size, "storage_sizeparam")
-
-    stor_res = pd.DataFrame(
-        index=pd.MultiIndex.from_product([hydro_nodes, [2000, 2020, 2025, 2030, 2035, 2040, 2045, 2050], hydro_stor_techs]))
-
-    # storage reservoir capacity 
-    stor_res.loc[idx[:, :, :], "unitsUpperLimit"] = 3000  # units
-    stor_res.loc[idx[["CAN"], [2000], "Hydro_reservoir"], "unitsBuild"] = 2517.2429 # GWh_el
-    stor_res.loc[idx[["HBY"], [2000], "Hydro_reservoir"], "unitsBuild"] = 154.2635  # GWh_el
-    stor_res.loc[idx[["OTG"], [2000], "Hydro_reservoir"], "unitsBuild"] = 729.5595 # GWh_el
-    stor_res.loc[idx[["WTO"], [2000], "Hydro_reservoir"], "unitsBuild"] = 587.1371 # GWh_el
-
-    stor_res.loc[idx[:, :, :], "noExpansion"] = 1
-    m.parameter.add(stor_res, "storage_reservoirparam")
-
-    stor_acc = pd.DataFrame(index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], hydro_stor_techs, hydro_stor_vintage]))
-    stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = [1650, 1650, 1650, 1650, 1650]  # million EUR / unit
-    stor_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    stor_acc.loc[idx["Invest", :, :, :], "amorTime"] = 20  # years
-    stor_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    stor_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.03
-    )  # Mio EUR per unit
-    m.parameter.add(stor_acc, "accounting_storageunits")
-
-
-
-
-#previois
-def add_hydro(m):
 
     # "sourcesink_config" (import configuration)
     sourcesink_config = pd.DataFrame(
@@ -826,10 +613,10 @@ def add_hydro(m):
 
 	# Converter (turbine)
     conv_tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product([hydro_techs, hydro_vintage])
+        index=pd.MultiIndex.from_product([hydro_techs, yrs_mentioned])
     )
-    conv_tech.loc[idx[:, :], "lifeTime"] = [100, 100, 100, 100, 100]
-    conv_tech.loc[idx[:, :], "activityUpperLimit"] = 1
+    conv_tech.loc[idx[:, :], ["lifeTime"]] = 100
+    conv_tech.loc[idx[:, :], ["activityUpperLimit"]] = 1
     m.parameter.add(conv_tech, "converter_techparam")
 
     conv_cap = pd.DataFrame(
@@ -838,10 +625,8 @@ def add_hydro(m):
         )
     )
     
-	# limiting max capacity to not build anymore in the bracket the order is [model regions years techs]
-    conv_cap.loc[idx[:, :, :], "noExpansion"] = 1  # boolean
-    # limiting that existing capacities are the max posible
-    # #conv_cap.loc[idx[:, :, hydro_techs], "unitsUpperLimit"] = 1.82683000001  # GW_el
+
+    
     # conv_cap.loc[idx[["BOP"], :, "Hydro"], "unitsUpperLimit"] = 0.17095  # GW_el
     # conv_cap.loc[idx[["CAN"], :, "Hydro"], "unitsUpperLimit"] = 1.82683 # GW_el
     # conv_cap.loc[idx[["CEN"], :, "Hydro"], "unitsUpperLimit"] = 0.399  # GW_el
@@ -849,7 +634,7 @@ def add_hydro(m):
     # conv_cap.loc[idx[["NEL"], :, "Hydro"], "unitsUpperLimit"] = 0.0453  # GW_el
     # conv_cap.loc[idx[["OTG"], :, "Hydro"], "unitsUpperLimit"] = 1.664 # GW_el
     # conv_cap.loc[idx[["WTO"], :, "Hydro"], "unitsUpperLimit"] = 1.0873 # GW_el
-    # existing capacities: fixz to make it automatic
+    # existing capacities: fix to make it automatic
     conv_cap.loc[idx[["BOP"], [2000], "Hydro"], "unitsBuild"] = 0.17095  # GW_el
     conv_cap.loc[idx[["CAN"], [2000], "Hydro"], "unitsBuild"] = 1.82683  # GW_el
     conv_cap.loc[idx[["CEN"], [2000], "Hydro"], "unitsBuild"] = 0.399  # GW_el
@@ -858,17 +643,22 @@ def add_hydro(m):
     conv_cap.loc[idx[["OTG"], [2000], "Hydro"], "unitsBuild"] = 1.664  # GW_el
     conv_cap.loc[idx[["WTO"], [2000], "Hydro"], "unitsBuild"] = 1.0873  # GW_el
 
+    # limiting that existing capacities are the max posible
+    conv_cap.loc[idx[:, :, "Hydro"], "unitsUpperLimit"] = 5.33558  # GW_el
+
+	# limiting max capacity to not build anymore in the bracket the order is [model regions years techs]
+    conv_cap.loc[idx[:, :, :], "noExpansion"] = 1  # boolean
     m.parameter.add(conv_cap, "converter_capacityparam")
 
 
     conv_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [hydro_techs, hydro_vintage, hydro_activities, ["Water_in", "Water_out", "Elec"]]
+            [hydro_techs, yrs_mentioned, hydro_activities, ["Water_in", "Water_out", "Elec"]]
         )
     )
-    conv_coef.loc[idx[:, :, "Power_gen", "Elec"], "coefficient"] = 1 # GW_el 
-    conv_coef.loc[idx[:, :, "Power_gen", "Water_in"], "coefficient"] = -1 # GW_el
-    conv_coef.loc[idx[:, :, "Power_gen", "Water_out"], "coefficient"] = 1 # GW_el
+    conv_coef.loc[idx[:, :, "Power_gen", "Elec"], "coefficient"] = 1 # GW_el #DIRTY hack TO MATCH 2024 TO REAL DATA MBIE
+    conv_coef.loc[idx[:, :, "Power_gen", "Water_in"], "coefficient"] = -1.1313 # GW_el
+    conv_coef.loc[idx[:, :, "Power_gen", "Water_out"], "coefficient"] = 1.1313 # GW_el
     #spill is not limited by the capacity of the turbine
     conv_coef.loc[idx[:, :, "Spill", "Water_in"], "coefficient"] = -100 # GW_el
     conv_coef.loc[idx[:, :, "Spill", "Water_out"], "coefficient"] = 100 # GW_el
@@ -877,7 +667,7 @@ def add_hydro(m):
 
     conv_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], hydro_techs, hydro_vintage]
+            [["Invest", "OMFix"], ["global"], hydro_techs, yrs_mentioned]
         )
     )
     conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 2560 # million EUR / unit
@@ -893,7 +683,7 @@ def add_hydro(m):
     stor_techs = ["Hydro_reservoir"]
 
     stor_tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product([stor_techs, hydro_vintage])
+        index=pd.MultiIndex.from_product([stor_techs, yrs_mentioned])
     )
     stor_tech.loc[idx[:, :], "lifeTime"] = 100
     stor_tech.loc[idx[:, :], "levelUpperLimit"] = 1
@@ -903,7 +693,7 @@ def add_hydro(m):
 
 	#test nodes
     stor_size = pd.DataFrame(
-        index=pd.MultiIndex.from_product([stor_techs, hydro_vintage, ["Water_in"]])
+        index=pd.MultiIndex.from_product([stor_techs, yrs_mentioned, ["Water_in"]])
     )
 	# question about the units
     stor_size.loc[idx["Hydro_reservoir", :, "Water_in"], "size"] = 1  # GWh_ch / unit  
@@ -930,7 +720,7 @@ def add_hydro(m):
 
     stor_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], stor_techs, hydro_vintage]
+            [["Invest", "OMFix"], ["global"], stor_techs, yrs_mentioned]
         )
     )
     stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 1650  # million EUR / unit
@@ -942,7 +732,7 @@ def add_hydro(m):
     )  # Mio EUR per unit
     m.parameter.add(stor_acc, "accounting_storageunits")
 
-#
+
 # conventional
     
 def add_lng_terminals(m):
@@ -1057,7 +847,7 @@ def add_thermal(m):
     the_activities = ["Powergen"]
 
     the_tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product([the_techs, the_vintage])
+        index=pd.MultiIndex.from_product([the_techs, yrs_mentioned])
     )
     the_tech.loc[idx[:, :], "lifeTime"] = 30                               # lifeTIME same as gas turbines
     the_tech.loc[idx[:, :], "activityUpperLimit"] = 1                      # UpperLimit same as gas turbines 
@@ -1132,7 +922,7 @@ def add_thermal(m):
     # MAAM: thermal generation can only convert primary fuel to electricity
     the_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [the_techs, the_vintage, the_activities, ["Elec"]]
+            [the_techs, yrs_mentioned, the_activities, ["Elec"]]
         )
     )
 
@@ -1177,7 +967,7 @@ def add_gas_turbines(m):
     gt_activities = ["Powergen"]
 
     gt_tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product([gt_techs, gt_vintage])
+        index=pd.MultiIndex.from_product([gt_techs, yrs_mentioned])
     )
     gt_tech.loc[idx[:, :], "lifeTime"] = 30
     gt_tech.loc[idx[:, :], "activityUpperLimit"] = 1
@@ -1254,7 +1044,7 @@ def add_gas_turbines(m):
     # coefficients  
     gt_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [gt_techs, gt_vintage, gt_activities, ["Elec"]]
+            [gt_techs, yrs_mentioned, gt_activities, ["Elec"]]
         )
     )
 
@@ -1561,15 +1351,15 @@ def add_lithium_batteries(m):
     battery_nodes = [n for n in m.set.nodesdata if not n.startswith("LNG")]
 
     conv_tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product([battery_techs, battery_vintage])
+        index=pd.MultiIndex.from_product([battery_techs, yrs_mentioned])
     )
-    conv_tech.loc[idx[:, :], "lifeTime"] = [20, 20, 20, 20]
+    conv_tech.loc[idx[:, :], "lifeTime"] = 20
     conv_tech.loc[idx[:, :], "activityUpperLimit"] = 1
     m.parameter.add(conv_tech, "converter_techparam")
 
     conv_cap = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [battery_nodes, [2020, 2025, 2030, 2035, 2040, 2045, 2050], battery_techs]
+            [battery_nodes, yrs_mentioned, battery_techs]
         )
     )
     conv_cap.loc[idx[:, :, battery_techs], "unitsUpperLimit"] = 50  # GW_el
@@ -1578,7 +1368,7 @@ def add_lithium_batteries(m):
 
     conv_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [battery_techs, battery_vintage, ["Charge", "Discharge"], ["Elec", "Elec_battery"]]
+            [battery_techs, yrs_mentioned, ["Charge", "Discharge"], ["Elec", "Elec_battery"]]
         )
     )
     conv_coef.loc[idx[:, :, "Charge", "Elec"], "coefficient"] = -1 # GW_el
@@ -1603,7 +1393,7 @@ def add_lithium_batteries(m):
 
 
     stor_tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product([battery_techs, battery_vintage])
+        index=pd.MultiIndex.from_product([battery_techs, yrs_mentioned])
     )
     stor_tech.loc[idx[:, :], "lifeTime"] = 20
     stor_tech.loc[idx[:, :], "levelUpperLimit"] = 1
@@ -1613,14 +1403,14 @@ def add_lithium_batteries(m):
 
 
     stor_size = pd.DataFrame(
-        index=pd.MultiIndex.from_product([battery_techs, battery_vintage, ["Elec_battery"]])
+        index=pd.MultiIndex.from_product([battery_techs, yrs_mentioned, ["Elec_battery"]])
     )
     stor_size.loc[idx["Battery", :, "Elec_battery"], "size"] = 4  # GWh_ch / unit
     m.parameter.add(stor_size, "storage_sizeparam")
 
 
     stor_res = pd.DataFrame(
-        index=pd.MultiIndex.from_product([battery_nodes, [2020, 2025, 2030, 2035, 2040, 2045, 2050], battery_techs])
+        index=pd.MultiIndex.from_product([battery_nodes, yrs_mentioned, battery_techs])
     )
     stor_res.loc[idx[:, :, :], "unitsUpperLimit"] = 30  # units
     stor_res.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean
@@ -1646,15 +1436,15 @@ def add_h2_storagev1(m):
     storage_nodes = [n for n in m.set.nodesdata if not n.startswith("LNG")]
 
     conv_tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product([storage_techs, storage_vintage])
+        index=pd.MultiIndex.from_product([storage_techs, yrs_mentioned])
     )
-    conv_tech.loc[idx[:, :], "lifeTime"] = [40, 40, 40, 40]
+    conv_tech.loc[idx[:, :], "lifeTime"] = 40
     conv_tech.loc[idx[:, :], "activityUpperLimit"] = 1
     m.parameter.add(conv_tech, "converter_techparam")
 
     conv_cap = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [storage_nodes, [2020, 2025, 2030, 2035, 2040, 2045, 2050], storage_techs]
+            [storage_nodes, yrs_mentioned, storage_techs]
         )
     )
     conv_cap.loc[idx[:, :, storage_techs], "unitsUpperLimit"] = 50 # GW_el
@@ -1663,7 +1453,7 @@ def add_h2_storagev1(m):
 
     conv_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [storage_techs, storage_vintage, ["Charge", "Discharge"], ["H2", "H2_stored"]]
+            [storage_techs, yrs_mentioned, ["Charge", "Discharge"], ["H2", "H2_stored"]]
         )
     )
     # electrolyzer_coef.loc[idx[:, :, :, "Elec"], "coefficient"] = -1
@@ -1690,7 +1480,7 @@ def add_h2_storagev1(m):
 
 
     stor_tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product([storage_techs, storage_vintage])
+        index=pd.MultiIndex.from_product([storage_techs, yrs_mentioned])
     )
     stor_tech.loc[idx[:, :], "lifeTime"] = 40
     stor_tech.loc[idx[:, :], "levelUpperLimit"] = 1
@@ -1700,7 +1490,7 @@ def add_h2_storagev1(m):
 
 
     stor_size = pd.DataFrame(
-        index=pd.MultiIndex.from_product([storage_techs, storage_vintage, ["H2_stored"]])
+        index=pd.MultiIndex.from_product([storage_techs, yrs_mentioned, ["H2_stored"]])
     )
     stor_size.loc[idx["H2_storage", :, "H2_stored"], "size"] = 6.9993  # GWh / unit
     m.parameter.add(stor_size, "storage_sizeparam")
@@ -1738,9 +1528,9 @@ def add_h2_storage(m):
     h2_stor_nodes = [n for n in m.set.nodesdata]
 
     conv_tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product([h2_stor_techs, h2_stor_vintage])
+        index=pd.MultiIndex.from_product([h2_stor_techs, yrs_mentioned])
     )
-    conv_tech.loc[idx[:, :], "lifeTime"] = [40, 40, 40, 40]
+    conv_tech.loc[idx[:, :], "lifeTime"] = 40
     conv_tech.loc[idx[:, :], "activityUpperLimit"] = 1
     m.parameter.add(conv_tech, "converter_techparam")
 
@@ -1755,12 +1545,12 @@ def add_h2_storage(m):
 
     conv_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [h2_stor_techs, h2_stor_vintage, ["Charge", "Discharge"], ["H2", "H2_stored"]]
+            [h2_stor_techs,  [2020, 2025, 2030, 2035, 2040, 2045, 2050], ["Charge", "Discharge"], ["H2", "H2_stored","Elec"]]
         )
     )
     # electrolyzer_coef.loc[idx[:, :, :, "Elec"], "coefficient"] = -1
-    conv_coef.loc[idx[:, :, "Charge", "Elec"], "coefficient"] = [-0.043346085, -0.035470537, -0.035470537, -0.031529343]
-    # 2020, 2025, 030, 2035, 2040, 2045, 2040... 0.043346085	0.043346085	0.035470537	0.035470537	0.035470537	0.031529343	0.031529343
+    conv_coef.loc[idx[:, :, "Charge", "Elec"], "coefficient"] = [ -0.043346085,	-0.043346085, -0.035470537,	-0.035470537, -0.035470537, -0.031529343, -0.031529343]
+    # 2020, 2025, 030, 2035, 2040, 2045, 2040...
     conv_coef.loc[idx[:, :, "Charge", "H2"], "coefficient"] = -0.15  # GW_h2
     conv_coef.loc[idx[:, :, "Charge", "H2_stored"], "coefficient"] = 0.15  * 0.89 # GW_h2
     conv_coef.loc[idx[:, :, "Discharge", "H2"], "coefficient"] = 0.15  # GW_h2
@@ -1769,11 +1559,11 @@ def add_h2_storage(m):
 
     conv_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], h2_stor_techs, h2_stor_vintage]
+            [["Invest", "OMFix"], ["global"], h2_stor_techs, yrs_mentioned]
         )
     )
     #
-    conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = [5.14, 5.14, 5.14, 5.14]  # million EUR / unit
+    conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 5.14  # million EUR / unit
     conv_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
     conv_acc.loc[idx["Invest", :, :, :], "amorTime"] = 40  # years
     conv_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
@@ -1784,7 +1574,7 @@ def add_h2_storage(m):
 
 
     stor_tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product([h2_stor_techs, h2_stor_vintage])
+        index=pd.MultiIndex.from_product([h2_stor_techs, yrs_mentioned])
     )
     stor_tech.loc[idx[:, :], "lifeTime"] = 40
     stor_tech.loc[idx[:, :], "levelUpperLimit"] = 1
@@ -1794,14 +1584,14 @@ def add_h2_storage(m):
 
 
     stor_size = pd.DataFrame(
-        index=pd.MultiIndex.from_product([h2_stor_techs, h2_stor_vintage, ["H2_stored"]])
+        index=pd.MultiIndex.from_product([h2_stor_techs, yrs_mentioned, ["H2_stored"]])
     )
     stor_size.loc[idx["H2_storage", :, "H2_stored"], "size"] = 6.9993  # GWh / unit
     m.parameter.add(stor_size, "storage_sizeparam")
 
 
     stor_res = pd.DataFrame(
-        index=pd.MultiIndex.from_product([h2_stor_nodes, [2020, 2025, 2030, 2035, 2040, 2045, 2050], h2_stor_techs])
+        index=pd.MultiIndex.from_product([h2_stor_nodes, yrs_mentioned, h2_stor_techs])
     )
     stor_res.loc[idx[:, :, :], "unitsUpperLimit"] = 50  # units 
     stor_res.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean
@@ -1923,8 +1713,6 @@ def add_network(m):
     
 
     m.parameter.add(link_caps, "transfer_linksparam")
-    link_caps
-  
     tech_params = pd.DataFrame(
         index=pd.MultiIndex.from_product([transport_techs, m.set.yearssel])
     )
@@ -1932,7 +1720,6 @@ def add_network(m):
     tech_params.loc[:, "flowUpperLimit"] = 1
 
     m.parameter.add(tech_params, "transfer_techparam")
-    print(tech_params)
 
     # Define the commodity and rated capacity of the network technology
     # "transfer_coefficient"
@@ -2081,51 +1868,54 @@ def load_beniver():
     # print(bnvr.index.get_level_values(1).str.extractall("(\w+)_(\w+)"))
     print(nonenergy)
 
-
+# #%%
 # if __name__ == "__main__":
-    # Create instance
-    s1 = time.perf_counter()
-    m = Instance()
+#     # Create instance
+#     s1 = time.perf_counter()
+#     m = Instance()
 
-    add_nodes(m)
-    add_demand(m)
-    add_scope(m)
+#     add_nodes(m)
+#     add_demand(m)
+#     add_scope(m)
 
-    # renewables
-    add_renewables(m)
-    add_geothermal(m)
-    add_hydro(m)
+#     # renewables
+#     add_renewables(m)
+#     add_geothermal(m)
+#     add_hydro(m)
 
-    # batteries
-    add_lithium_batteries(m)
+#     # batteries
+#     add_lithium_batteries(m)
 
-    # conventional
-    add_thermal(m)
-    add_gas_turbines(m)
+#     # conventional
+#     add_thermal(m)
+#     add_gas_turbines(m)
 
-    # hydrogen
-    #add_electrolyser(m)
-    #add_h2_storage(m)
+#     # hydrogen
+#     add_electrolyser(m)
+#     add_h2_storage(m)
 
-    #add_methanizer(m)
-    #add_methanol_syn(m)
-    #add_ftropsch_syn(m)
+#     #add_methanizer(m)
+#     #add_methanol_syn(m)
+#     #add_ftropsch_syn(m)
 
-    #carbon capture
-    #add_dac(m)
+#     #carbon capture
+#     #add_dac(m)
 
-    #others
-    add_network(m)
-    add_accounting(m)
-    validate_scope(m)
+#     #others
+#     add_network(m)
+#     add_accounting(m)
+#     validate_scope(m)
 
-    e1 = time.perf_counter()
-    d1=time.strftime("%Hh %Mm %Ss", time.gmtime(e1-s1))
-    print(f"Dataframe management took {d1}.")
+#     e1 = time.perf_counter()
+#     d1=time.strftime("%Hh %Mm %Ss", time.gmtime(e1-s1))
+#     print(f"Dataframe management took {d1}.")
 
-    # Create data
-    s2 = int(time.perf_counter())
-    m.write(output_path=f"{path_output}/{case_name}/data", fileformat="csv")
-    e2 = time.perf_counter()
-    d2=time.strftime("%Hh %Mm %Ss", time.gmtime(e2-s2))
-    print(f"Writing dataset took {d2}.")
+#     # Create data
+#     s2 = int(time.perf_counter())
+#     m.write(output_path=f"{path_output}/{case_name}/data", fileformat="csv")
+#     e2 = time.perf_counter()
+#     d2=time.strftime("%Hh %Mm %Ss", time.gmtime(e2-s2))
+#     print(f"Writing dataset took {d2}.")
+# # %%
+
+# %%

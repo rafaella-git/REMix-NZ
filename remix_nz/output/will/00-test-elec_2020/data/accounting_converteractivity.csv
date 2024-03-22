@@ -1,0 +1,13 @@
+indicator,accNodesData,converter_techs,vintage,activity,perActivity
+CO2_emission,global,BIO,1950,Powergen,0.49170240000000004
+CO2_emission,global,CCGT,1950,Powergen,0.3475584
+CO2_emission,global,COAL,1950,Powergen,0.3475584
+CO2_emission,global,DIE,1950,Powergen,0.49170240000000004
+CO2_emission,global,GT,1950,Powergen,0.49170240000000004
+CO2_emission,global,OCGT,1950,Powergen,0.42940799999999996
+FuelCost,global,BIO,1950,Powergen,0.49170240000000004
+FuelCost,global,CCGT,1950,Powergen,0.3475584
+FuelCost,global,COAL,1950,Powergen,0.3475584
+FuelCost,global,DIE,1950,Powergen,0.49170240000000004
+FuelCost,global,GT,1950,Powergen,0.49170240000000004
+FuelCost,global,OCGT,1950,Powergen,0.42940799999999996
