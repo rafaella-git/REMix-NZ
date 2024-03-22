@@ -1,0 +1,7 @@
+storage_techs,vintage,lifeTime,levelUpperLimit
+Battery,2020,20,1.0
+Hydro_reservoir,1950,100,1.0
+Hydro_reservoir,2000,100,1.0
+Hydro_reservoir,2020,100,1.0
+Hydro_reservoir,2035,100,1.0
+Hydro_reservoir,2050,100,1.0

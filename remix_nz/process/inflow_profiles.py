@@ -250,6 +250,7 @@ def repeat_columns_and_add_average(df, target_columns=8760):
 # %% [markdown]
 # Ultimate dataframe depending on year selected
 def yearly_inflow_df(year_sel):
+    doc_name=f"inflow{year_sel}"
     # Get the weekly inflow where "Year" is year_sel}
     historic_df=group_weighted_catchments()
     df= historic_df[(historic_df["Year"] == year_sel)] 
@@ -262,9 +263,10 @@ def yearly_inflow_df(year_sel):
     hourly_inflow.insert(1, 'sector', 'Inflow')
     hourly_inflow.insert(2, 'carrier', 'Water_in')
     display(hourly_inflow)
+    hourly_inflow.to_csv(f"{file_path}/hydro/inflow_profile/{doc_name}.csv", index=True)
     return hourly_inflow
 
-yearly_inflow_df(2022)
+yearly_inflow_df(2020)
 
 
 # %% [markdown]
@@ -298,7 +300,6 @@ def inflow_csv(years):
     return concatenated_df
 
 inflow_csv(driest_years)
-
 inflow_csv(average_years)
 
 
