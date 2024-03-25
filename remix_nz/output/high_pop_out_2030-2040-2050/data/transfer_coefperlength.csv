@@ -1,7 +1,0 @@
-transfer_techs,vintage,commodity,link_types,coefPerLength
-HV,2030,Elec,land,-4e-05
-HV,2030,Elec,sea,-3e-05
-HV,2040,Elec,land,-4e-05
-HV,2040,Elec,sea,-3e-05
-HV,2050,Elec,land,-4e-05
-HV,2050,Elec,sea,-3e-05
