@@ -18,13 +18,13 @@ def set_up(name):
     # Demand files available for different scenarios
     will_lst = ["01-battery-distributed", "01-h2-distributed", "02-battery-overnight", "02-h2-overnight",
                 "03-battery-recharging", "03-h2-recharging", "04-battery-solar", "04-h2-solar"]
-    will_elec_lst = ["01-battery-distributed", "02-battery-overnight", "03-battery-recharging", "04-battery-solar"]
-    will_h2_lst = ["01-h2-distributed", "02-h2-overnight", "03-h2-recharging", "04-h2-solar"]
+    will_elec = ["01-battery-distributed", "02-battery-overnight", "03-battery-recharging", "04-battery-solar"]
+    will_h2 = ["01-h2-distributed", "02-h2-overnight", "03-h2-recharging", "04-h2-solar"]
     test_lst=["00-test-elec"]
     sdewes_lst = ["base", "highpop", "lowpop", "medpop", "base_ev", "medpop_ev"]
 
     scenario_dict = {
-        "will": [will_lst, [2020, 2035, 2050]],
+        "will": [will_elec, [2020, 2035, 2050]],
         "sdewes-ap": [sdewes_lst, [2020, 2030, 2040, 2050]]
     }
 
@@ -78,10 +78,9 @@ def build_data(demand_file):
         s1 = time.perf_counter()
         m = Instance()
 
-        add_nodes(m)
-        add_demand(m)
-        add_scope(m)
 
+        add_scope(m)
+        add_demand(m)
         # renewables
         add_renewables(m)
         add_geothermal(m)
@@ -139,11 +138,12 @@ def case_run(demand_file):
     result_dir = Path(f"{output_dir}/result")
     if not data_dir.exists():
         raise IOError("You need to build the data!")
-    m = Instance.from_path(data_dir)
+
     s1 = time.perf_counter()
     # running GAMS from Python script
-    m.run(
-        resultdir = result_dir,
+    m_run = Instance.from_path(data_dir)
+    m_run.run(
+        resultdir=results_dir,
         resultfile=case_name,
         lo=4,
         timeres=1,
@@ -152,8 +152,10 @@ def case_run(demand_file):
         iis=1,
         profile=1,
         gdx="default",
+        pathopt="myopic"
     )
     print(os. getcwd())
+
     e1 = time.perf_counter()
     d1=time.strftime("%Hh %Mm %Ss", time.gmtime(e1-s1))
     print(f"------------- Running {demand_file} took {d1}.")
