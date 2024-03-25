@@ -14,24 +14,27 @@ import seaborn as sns
 from remix.framework.api.instance import Instance
 from remix.framework.tools.plots import plot_network, plot_choropleth
 import networkx as nx
+import gamstransfer as gt
 from IPython.display import display
 idx = pd.IndexSlice
 
 # %% [markdown]
 # ### Define the years to run the optimisation and the demand file
 # The demand file and the years run determine the name of the case and its results
+will_elec = ["01-battery-distributed", "02-battery-overnight", "03-battery-recharging", "04-battery-solar"]
+will_h2 = ["01-h2-distributed", "02-h2-overnight", "03-h2-recharging", "04-h2-solar"]
+sdewes_ap = ["base", "highpop", "lowpop", "medpop", "base_ev", "medpop_ev"]
+    
 scenario_dict = {       
-    "will": [["00-test-elec"], [2020, 2035, 2050]],
-    #"will": [will_lst, [2020, 2035, 2050]],
-    #"sdewes-ap": [sdewes_lst, [2020, 2030, 2040, 2050]]
+    "will": [will_elec, [2020, 2035, 2050]],
+    "sdewes-ap": [sdewes_ap, [2020, 2030, 2040, 2050]]
 }
 group_name="will"
 files_lst = scenario_dict[group_name][0]
-yrs2run = scenario_dict[group_name][1] 
-yrs_str='-'.join([str(item) for item in yrs2run])
+yrs_sel = scenario_dict[group_name][1] # [2020, 2025, 2030, 2035, 2040, 2045, 2050]
+yrs_str='-'.join([str(item) for item in yrs_sel])
 yrs_to_calc = [2020, 2025, 2030, 2035, 2040, 2045, 2050]
-yrs_sel = [2020, 2035, 2050] # [2020, 2025, 2030, 2035, 2040, 2045, 2050]
-indx=0
+indx=1
 
 
 # Define paths/directories
@@ -96,6 +99,7 @@ def add_demand(m):
                         "Feedstock methanol": "CH3OH",
                         "Renewable Fuels": "REfuel",
                         }
+    
 
     # FFE extremos profiles
     # note: we added the .round(3) part because we were getting errors de
@@ -136,7 +140,7 @@ def add_demand(m):
     # # "sourcesink_annualSum"
     h2_nodes =  m.set.nodesdata
     h2_annual = pd.DataFrame(
-        index=pd.MultiIndex.from_product([h2_nodes, yrs2run, ["Demand"], ["H2"]])
+        index=pd.MultiIndex.from_product([h2_nodes, yrs_to_calc, ["Demand"], ["H2"]])
     )
 
     # Adding the new column "upper" to the DataFrame and setting values for the year 2050
@@ -161,7 +165,7 @@ def add_demand(m):
     m.parameter.add(h2_annual, "sourcesink_annualsum")
 
     h2_cfg = pd.DataFrame(
-        index=pd.MultiIndex.from_product([h2_nodes, yrs2run, ["Demand"], ["H2"]])
+        index=pd.MultiIndex.from_product([h2_nodes, yrs_to_calc, ["Demand"], ["H2"]])
     )
     h2_cfg["usesUpperSum"] = 1
     h2_cfg["usesUpperProfile"] = 1
@@ -213,7 +217,7 @@ def add_renewables(m):
     re_inst_csv = pd.read_csv(Path(path_profiles).joinpath("region_statistics_2012.csv"), index_col=[0, 1])
     re_nodes = [n for n in m.set.nodesdata]
 
-    re_vintage = [1950]#,2020,2030,2040,2050]
+    re_vintage = [1950,2030,2040,2050]
     year_mapping = {
         2012: 2020,
         # 2011: 2025,
@@ -230,10 +234,10 @@ def add_renewables(m):
     
     re_tech = pd.DataFrame(index=pd.MultiIndex.from_product([re_techs, re_vintage]))
     re_tech.loc[idx[:, :], "activityUpperLimit"] = 0 # so it is overwritten by the availabity from the timeseriesfiles
-    re_tech.loc[idx[pv_techs, :], "lifeTime"] = 35  # years
-    #re_tech.loc[idx[pv_techs, [2030, 2040, 2050]], "lifeTime"] = 40  # years
-    re_tech.loc[idx[csp_techs + wind_techs, :], "lifeTime"] = 27  # years
-    #re_tech.loc[idx[csp_techs + wind_techs, [2030, 2040, 2050]], "lifeTime"] = 30  # years
+    re_tech.loc[idx[pv_techs, [1950]], "lifeTime"] = 35  # years
+    re_tech.loc[idx[pv_techs, [2030, 2040, 2050]], "lifeTime"] = 40  # years
+    re_tech.loc[idx[csp_techs + wind_techs, [1950]], "lifeTime"] = 27  # years
+    re_tech.loc[idx[csp_techs + wind_techs, [2030, 2040, 2050]], "lifeTime"] = 30  # years
     m.parameter.add(re_tech, "converter_techparam")
     
     # capacities
@@ -291,14 +295,12 @@ def add_renewables(m):
     re_feedin = re_feedin.sort_index(level=["region", "technology", "year"])
     m.profile.add(re_feedin, "converter_activityprofile")
 
-    
-    re_operationyears= list(set(re_vintage+yrs2run))
     # coefficients
     re_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [
                 re_techs,
-                re_operationyears,
+                re_vintage,
                 ["Powergen", "Heatgen"],
                 ["Elec", "Heat_CSP"],
             ]
@@ -317,18 +319,18 @@ def add_renewables(m):
     #re_acc.loc[idx["Invest", :, "csp_parabolic_trough", :], "perUnitBuild"] = [344.5, 274.7, 230.2, 196.0]  # Child 2019 - Mio EUR per unit
     #re_acc.loc[idx["Invest", :, "csp_solar_tower", :], "perUnitBuild"] = [482, 372, 310, 264]  # Mio EUR per unit
 
-    re_acc.loc[idx["Invest", :, "pv_decentral", :], "perUnitBuild"] = 870#[870, 870, 570, 460, 410]  # DEA2022 PV comm&indust - Mio EUR per unit
-    re_acc.loc[idx["Invest", :, "pv_central_fixed", :], "perUnitBuild"] = 560#[560, 560, 380, 320, 290]  # DEA2022 utility scale - Mio EUR per unit
-    re_acc.loc[idx["Invest", :, "pv_central_track_azimuth", :], "perUnitBuild"] = 650#[650, 650, 450, 380, 350]  # DEA2022 utility scale (tracking) - Mio EUR per unit
+    re_acc.loc[idx["Invest", :, "pv_decentral", :], "perUnitBuild"] = [870, 570, 460, 410]  # DEA2022 PV comm&indust - Mio EUR per unit
+    re_acc.loc[idx["Invest", :, "pv_central_fixed", :], "perUnitBuild"] = [560, 380, 320, 290]  # DEA2022 utility scale - Mio EUR per unit
+    re_acc.loc[idx["Invest", :, "pv_central_track_azimuth", :], "perUnitBuild"] = [650, 450, 380, 350]  # DEA2022 utility scale (tracking) - Mio EUR per unit
 
-    re_acc.loc[idx["Invest", :, "wind_onshore", :], "perUnitBuild"] = 1330#[1330, 1330, 1040, 980, 960]  # DEA2022 onshore - Mio EUR per unit
-    re_acc.loc[idx["Invest", :, "wind_offshore_foundation", :], "perUnitBuild"] = 2120#[2120, 2120, 2287, 2168, 2130] # DEA2022 offshore - Mio EUR per unit
-    re_acc.loc[idx["Invest", :, "wind_offshore_floating", :], "perUnitBuild"] = 1.2 * 2120# np.array([2120, 2120, 2287, 2168, 2130])  # DEA2022 offshore + 20% assumption - Mio EUR per unit
+    re_acc.loc[idx["Invest", :, "wind_onshore", :], "perUnitBuild"] = [1330, 1040, 980, 960]  # DEA2022 onshore - Mio EUR per unit
+    re_acc.loc[idx["Invest", :, "wind_offshore_foundation", :], "perUnitBuild"] = [2120, 2287, 2168, 2130] # DEA2022 offshore - Mio EUR per unit
+    re_acc.loc[idx["Invest", :, "wind_offshore_floating", :], "perUnitBuild"] = 1.2 * np.array([2120, 2287, 2168, 2130])  # DEA2022 offshore + 20% assumption - Mio EUR per unit
 
-    re_acc.loc[idx["Invest", :, pv_techs, :], "amorTime"] = 35  # years
-    #re_acc.loc[idx["Invest", :, pv_techs, [2030, 2040, 2050]], "amorTime"] = 40  # years
-    re_acc.loc[idx["Invest", :, csp_techs + wind_techs, :], "amorTime"] = 27  # years
-    #re_acc.loc[idx["Invest", :, csp_techs + wind_techs, [2030, 2040, 2050]], "amorTime"] = 30  # years
+    re_acc.loc[idx["Invest", :, pv_techs, [1950]], "amorTime"] = 35  # years
+    re_acc.loc[idx["Invest", :, pv_techs, [2030, 2040, 2050]], "amorTime"] = 40  # years
+    re_acc.loc[idx["Invest", :, csp_techs + wind_techs, [1950]], "amorTime"] = 27  # years
+    re_acc.loc[idx["Invest", :, csp_techs + wind_techs, [2030, 2040, 2050]], "amorTime"] = 30  # years
 
     re_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
     re_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
@@ -343,9 +345,7 @@ def add_renewables(m):
 
 def add_geothermal(m):
     geoth_inst_csv = pd.read_csv(Path(path_brownfield).joinpath("power-plant-nz-database.csv"))
-    
-    #geoth_vintage = [2020, 2030, 2040, 2050] # original function with profile 
-    geoth_vintage = [1950]#, 2050]
+    geoth_vintage = [1950]
     geoth_techs = ["geoth"]
     #geoth_nodes = [n for n in m.set.nodesdata if not n.startswith("LNG")]
     geoth_nodes = ["BOP", "NIS", "WTO"]
@@ -363,21 +363,7 @@ def add_geothermal(m):
     grouped_df = filtered_df.groupby(['Node', 'Year_built', 'Techs'])['Capacity_MW'].sum().reset_index()
     grouped_df['Year_built'] = grouped_df['Year_built'].astype(int)
 
-    # years_used = grouped_df['Year_built'].unique().tolist() 
-    # years_used.extend(yrs_mentioned)
-
     # capacities
-    # geoth_cap = pd.DataFrame(index=pd.MultiIndex.from_product([geoth_nodes, years_used, geoth_techs]))
-    # for _, row in grouped_df.iterrows():
-    #     node = row['Node']
-    #     year_built = row['Year_built']
-    #     techs = row['Techs']
-    #     capacity = row['Capacity_MW'] / 1000
-    #     geoth_cap.loc[idx["{node}", [{year_built}], "{techs}"], "unitsBuild"] = {capacity}
-    #     # code = f'geoth_cap.loc[idx["{node}", [{year_built}], "{techs}"], "unitsBuild"] = {capacity}'
-    #     #print(f'Executing code: {code}') 
-    #     # exec(code)
-
     geoth_cap = (grouped_df
                  .set_index(["Node", "Year_built", "Techs"])
                  .rename(columns={"Capacity_MW": "unitsBuild"})
@@ -423,9 +409,8 @@ def add_geothermal(m):
     geoth_feedin_grouped["technology"] = "Geothermal"  
     geoth_feedin_grouped["type"] = "upper"  
 
-    years_to_generate = yrs2run
     dfs = []
-    for year in years_to_generate:
+    for year in yrs_to_calc:
         geoth_feedin_copy = geoth_feedin_grouped.copy()
         geoth_feedin_copy["year"] = year
         dfs.append(geoth_feedin_copy)
@@ -484,14 +469,14 @@ def add_hydro(m):
 
     #error from logfile Infeasibility row 'Eq_balance_commodities(tm1,HBY,2020,Water_in)':  0  = -15.39.
     hydro_vintage = [1950]
-    hydro_years= list(set(hydro_vintage+[2000]+yrs2run))
+    hydro_years= [2000]+yrs_to_calc
     hydro_techs = ["Hydro"] # unifying storage (dam) and converter (turbine) in one 
     hydro_nodes = ["BOP", "CAN", "CEN", "HBY", "NEL", "OTG", "WTO"] #[n for n in m.set.nodesdata if not n.startswith("LNG")]
     hydro_activities = ["Power_gen","Spill"] 
 
 	# Converter (turbine)
     conv_tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product([hydro_techs, hydro_years])
+        index=pd.MultiIndex.from_product([hydro_techs, hydro_vintage])
     )
     conv_tech.loc[idx[:, :], ["lifeTime"]] = 100
     conv_tech.loc[idx[:, :], ["activityUpperLimit"]] = 1
@@ -519,7 +504,7 @@ def add_hydro(m):
 
     conv_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [hydro_techs, hydro_years, hydro_activities, ["Water_in", "Water_out", "Elec"]]
+            [hydro_techs, hydro_vintage, hydro_activities, ["Water_in", "Water_out", "Elec"]]
         )
     )
     #FIXME: DIRTY hack TO MATCH 2024 TO REAL DATA MBIE
@@ -534,7 +519,7 @@ def add_hydro(m):
 
     conv_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], hydro_techs, hydro_years]
+            [["Invest", "OMFix"], ["global"], hydro_techs, hydro_vintage]
         )
     )
     conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 2560 # million EUR / unit
@@ -550,7 +535,7 @@ def add_hydro(m):
     stor_techs = ["Hydro_reservoir"]
 
     stor_tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product([stor_techs, hydro_years])
+        index=pd.MultiIndex.from_product([stor_techs, hydro_vintage])
     )
     stor_tech.loc[idx[:, :], "lifeTime"] = 100
     stor_tech.loc[idx[:, :], "levelUpperLimit"] = 1
@@ -560,7 +545,7 @@ def add_hydro(m):
 
 	#test nodes
     stor_size = pd.DataFrame(
-        index=pd.MultiIndex.from_product([stor_techs,hydro_years, ["Water_in"]])
+        index=pd.MultiIndex.from_product([stor_techs,hydro_vintage, ["Water_in"]])
     )
 	# question about the units
     stor_size.loc[idx["Hydro_reservoir", :, "Water_in"], "size"] = 1  # GWh_ch / unit  
@@ -587,7 +572,7 @@ def add_hydro(m):
 
     stor_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], stor_techs, hydro_years]
+            [["Invest", "OMFix"], ["global"], stor_techs, hydro_vintage]
         )
     )
     stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 1650  # million EUR / unit
@@ -605,9 +590,9 @@ def add_hydro(m):
 def add_thermal(m):
     the_inst_csv = pd.read_csv(Path(path_brownfield).joinpath("power-plant-nz-database.csv"))
     
-    the_vintage = [1950] # ,2030]
+    the_vintage = [1950, 2030]
     the_techs = ["BIO", "COAL", "DIE"]     
-    the_nodes = [n for n in m.set.nodesdata if not n.startswith("LNG")]    
+    the_nodes = [n for n in m.set.nodesdata]    
     the_activities = ["Powergen"]
 
     the_tech = pd.DataFrame(
@@ -659,9 +644,9 @@ def add_thermal(m):
             [["Invest", "OMFix"], ["global"], the_techs, the_vintage]
         )
     )
-    the_acc.loc[idx["Invest", :, "BIO", :], "perUnitBuild"] = [2600]#, 2300]  # million EUR / unit
-    the_acc.loc[idx["Invest", :, "COAL", :], "perUnitBuild"] = [1600]#, 1600] # million EUR / unit
-    the_acc.loc[idx["Invest", :, "DIE", :], "perUnitBuild"] = [900]#, 830]    # million EUR / unit
+    the_acc.loc[idx["Invest", :, "BIO", :], "perUnitBuild"] = [2600, 2300]  # million EUR / unit
+    the_acc.loc[idx["Invest", :, "COAL", :], "perUnitBuild"] = [1600, 1600] # million EUR / unit
+    the_acc.loc[idx["Invest", :, "DIE", :], "perUnitBuild"] = [900, 830]    # million EUR / unit
     the_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1                   # binary yes/no
     the_acc.loc[idx["Invest", :, :, :], "amorTime"] = 30                    # years
     the_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06                  # percent/100
@@ -671,22 +656,13 @@ def add_thermal(m):
     m.parameter.add(the_acc, "accounting_converterunits")
 
     # # Emit carbon from combustion
-    # the_emission = pd.DataFrame(index=pd.MultiIndex.from_product([["CO2_emission", "FuelCost"], ["global"], ["BIO", "COAL","DIE"], the_vintage, the_activities]))
-    # the_emission.loc[idx["CO2_emission", :, "BIO", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3) * 0.2016 # kt_CO2
-    # the_emission.loc[idx["CO2_emission", :, "COAL", :, :], "perActivity"] = np.round(1 / np.array([0.58, 0.61]), 3) * 0.2016 # kt_CO2
-    # the_emission.loc[idx["CO2_emission", :, "DIE", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3) * 0.2016 # kt_CO2
-    # the_emission.loc[idx["FuelCost", :, "BIO", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3)* 0.2016  # kt_CO2
-    # the_emission.loc[idx["FuelCost", :, "COAL", :, :], "perActivity"] = np.round(1 / np.array([0.58, 0.61]), 3)* 0.2016 # kt_CO2
-    # the_emission.loc[idx["FuelCost", :, "DIE", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3)* 0.2016 # kt_CO2
-
-    # Emit carbon from combustion
     the_emission = pd.DataFrame(index=pd.MultiIndex.from_product([["CO2_emission", "FuelCost"], ["global"], ["BIO", "COAL","DIE"], the_vintage, the_activities]))
-    the_emission.loc[idx["CO2_emission", :, "BIO", :, :], "perActivity"] = np.round(1 / np.array([0.41]), 3) * 0.2016 # kt_CO2
-    the_emission.loc[idx["CO2_emission", :, "COAL", :, :], "perActivity"] = np.round(1 / np.array([0.58]), 3) * 0.2016 # kt_CO2
-    the_emission.loc[idx["CO2_emission", :, "DIE", :, :], "perActivity"] = np.round(1 / np.array([0.41]), 3) * 0.2016 # kt_CO2
-    the_emission.loc[idx["FuelCost", :, "BIO", :, :], "perActivity"] = np.round(1 / np.array([0.41]), 3)* 0.2016  # kt_CO2
-    the_emission.loc[idx["FuelCost", :, "COAL", :, :], "perActivity"] = np.round(1 / np.array([0.58]), 3)* 0.2016 # kt_CO2
-    the_emission.loc[idx["FuelCost", :, "DIE", :, :], "perActivity"] = np.round(1 / np.array([0.41]), 3)* 0.2016 # kt_CO2
+    the_emission.loc[idx["CO2_emission", :, "BIO", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3) * 0.2016 # kt_CO2
+    the_emission.loc[idx["CO2_emission", :, "COAL", :, :], "perActivity"] = np.round(1 / np.array([0.58, 0.61]), 3) * 0.2016 # kt_CO2
+    the_emission.loc[idx["CO2_emission", :, "DIE", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3) * 0.2016 # kt_CO2
+    the_emission.loc[idx["FuelCost", :, "BIO", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3)* 0.2016  # kt_CO2
+    the_emission.loc[idx["FuelCost", :, "COAL", :, :], "perActivity"] = np.round(1 / np.array([0.58, 0.61]), 3)* 0.2016 # kt_CO2
+    the_emission.loc[idx["FuelCost", :, "DIE", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3)* 0.2016 # kt_CO2
     m.parameter.add(the_emission, "accounting_converteractivity")
 
 def add_gas_turbines(m):    
@@ -787,51 +763,49 @@ def add_gas_turbines(m):
 # hydrogen
 
 def add_electrolyser(m):
-    electrolyzer_vintage = [2020, 2030, 2040, 2050]
-    operationyears= [2020]#, 2035, 2040, 2050] #FIXME: change when not will
-    #operationyears =  list(set(electrolyzer_vintage+yrs2run))
-    electrolyzer_nodes = [n for n in m.set.nodesdata if not n.startswith("LNG")]
-
+    eltr_vintage = [2020, 2030, 2040, 2050]
+    eltr_nodes = [n for n in m.set.nodesdata]
     # technology
-    electrolyzer_tech = pd.DataFrame(index=pd.MultiIndex.from_product([["Electrolyser"], electrolyzer_vintage]))
-    electrolyzer_tech.loc[idx[:, :], ["lifeTime"]] = [25]#, 30, 32, 35]  # years
-    electrolyzer_tech["activityUpperLimit"] = 1  # availability of technology
-    m.parameter.add(electrolyzer_tech, "converter_techparam")
+    eltr_tech = pd.DataFrame(index=pd.MultiIndex.from_product([["Electrolyser"], eltr_vintage]))
+    eltr_tech.loc[idx[:, :], ["lifeTime"]] = [25, 30, 32, 35]  # years
+    eltr_tech["activityUpperLimit"] = 1  # availability of technology
+    m.parameter.add(eltr_tech, "converter_techparam")
 
     # capacities
-    electrolyzer_caps = pd.DataFrame(index=pd.MultiIndex.from_product([electrolyzer_nodes, yrs2run, ["Electrolyser"]]))
-    electrolyzer_caps["unitsUpperLimit"] = 100  # GW_el
-    m.parameter.add(electrolyzer_caps, "converter_capacityparam")
+    eltr_caps = pd.DataFrame(index=pd.MultiIndex.from_product([eltr_nodes, yrs_to_calc, ["Electrolyser"]]))
+    eltr_caps["unitsUpperLimit"] = 100  # GW_el
+    m.parameter.add(eltr_caps, "converter_capacityparam")
 
     # coefficients
-    electrolyzer_coef = pd.DataFrame(
+    eltr_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [
                 ["Electrolyser"],
-                operationyears,
+                eltr_vintage,
                 ["Electrolysis"],
                 ["Elec", "H2"],
             ]
         )
     )
-    electrolyzer_coef.loc[idx[:, :, :, "Elec"], "coefficient"] = -1
-    electrolyzer_coef.loc[idx[:, :, :, "H2"], "coefficient"] = [0.665]#, 0.79, 0.79, 0.85] # DEA2022 AEC 1MW comm&indust for 2020, Will for the others
-    m.parameter.add(electrolyzer_coef, "converter_coefficient")
+    eltr_coef.loc[idx[:, :, :, "Elec"], "coefficient"] = -1
+    eltr_coef.loc[idx[:, :, :, "H2"], "coefficient"] = [0.665]#, 0.79, 0.79, 0.85] # DEA2022 AEC 1MW comm&indust for 2020, Will for the others
+    m.parameter.add(eltr_coef, "converter_coefficient")
 
     # accounting
     electrolyser_acc = pd.DataFrame(
-        index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], ["Electrolyser"], electrolyzer_vintage])
-    ).sort_index()
+        index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], ["Electrolyser"], eltr_vintage])
+        ).sort_index()
 
-    electrolyser_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = [750]#, 570, 450, 350]   #  DEA2022 AEC 1MW comm&indust - Mio EUR per unit
-    electrolyser_acc.loc[idx["Invest", :, :, :], "amorTime"] = [25]#, 30, 32, 35]  # years
+    electrolyser_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = [750, 570, 450, 350]   #  DEA2022 AEC 1MW comm&indust - Mio EUR per unit
+    electrolyser_acc.loc[idx["Invest", :, :, :], "amorTime"] = [25, 30, 32, 35]  # years
     electrolyser_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
     electrolyser_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
     electrolyser_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
         electrolyser_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.014
-    )  # Mio EUR per unit
+        )  # Mio EUR per unit
 
     m.parameter.add(electrolyser_acc, "accounting_converterunits")
+
 
 def add_dac(m):
     dac_vintage = [2020, 2030, 2040, 2050]
@@ -1438,7 +1412,7 @@ def validate_scope(m):
 if __name__ == "__main__":
     # Create instance
     s1 = time.perf_counter()
-    m = Instance()
+    m = Instance(datadir=data_dir)
 
     add_scope(m)
     add_demand(m)
@@ -1456,8 +1430,9 @@ if __name__ == "__main__":
     add_gas_turbines(m)
 
     # hydrogen
-    # add_electrolyser(m)
-    # add_h2_storage(m)
+    if "h2" in demand_file:
+        add_electrolyser(m)
+        add_h2_storage(m)
 
     #add_methanizer(m)
     #add_methanol_syn(m)
@@ -1482,10 +1457,11 @@ if __name__ == "__main__":
     d2=time.strftime("%Hh %Mm %Ss", time.gmtime(e2-s2))
     print(f"Writing dataset took {d2}.")
 # %%
-    m_run = Instance.from_path(data_dir)
-    m_run.run(
+    # m_run = Instance.from_path(data_dir)
+    m.run(
         resultdir=results_dir,
         resultfile=case_name,
+        threads=12,
         lo=4,
         timeres=1,
         names=1,
