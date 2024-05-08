@@ -1,0 +1,130 @@
+accNodesModel,accYears,techs,value
+AKL,2020,Biomass,0.01
+AKL,2020,Coal,0.11
+AKL,2030,Gas,0.5
+AKL,2030,Onshore wind,0.84
+AKL,2030,PV,1.61
+AKL,2040,Gas,2.28
+AKL,2040,Onshore wind,0.84
+AKL,2040,PV,1.61
+AKL,2050,Gas,2.88
+AKL,2050,Onshore wind,0.84
+AKL,2050,PV,2.65
+BOP,2020,Geothermal,0.18
+BOP,2020,Hydro,0.17
+BOP,2030,Gas,0.08
+BOP,2030,Geothermal,0.18
+BOP,2030,Hydro,0.17
+BOP,2030,Onshore wind,0.03
+BOP,2030,PV,0.42
+BOP,2040,Gas,0.36
+BOP,2040,Geothermal,0.18
+BOP,2040,Hydro,0.17
+BOP,2040,Onshore wind,0.7
+BOP,2040,PV,0.73
+BOP,2050,Gas,0.73
+BOP,2050,Geothermal,0.18
+BOP,2050,Hydro,0.17
+BOP,2050,Onshore wind,1.37
+BOP,2050,PV,1.32
+CAN,2020,Hydro,1.83
+CAN,2030,Hydro,1.83
+CAN,2030,PV,0.16
+CAN,2040,Hydro,1.83
+CAN,2040,PV,0.16
+CAN,2050,Gas,0.27
+CAN,2050,Hydro,1.83
+CAN,2050,PV,0.16
+CEN,2020,Hydro,0.4
+CEN,2020,Onshore wind,0.52
+CEN,2030,Hydro,0.4
+CEN,2030,Onshore wind,0.49
+CEN,2040,Hydro,0.4
+CEN,2040,Onshore wind,0.22
+CEN,2050,Gas,0.27
+CEN,2050,Hydro,0.4
+CEN,2050,Onshore wind,0.22
+CEN,2050,PV,0.27
+HBY,2020,Biomass,0.01
+HBY,2020,Diesel,0.16
+HBY,2020,Hydro,0.14
+HBY,2030,Biomass,0.01
+HBY,2030,Diesel,0.16
+HBY,2030,Gas,0.02
+HBY,2030,Hydro,0.14
+HBY,2030,PV,0.31
+HBY,2040,Gas,0.35
+HBY,2040,Hydro,0.14
+HBY,2040,PV,0.31
+HBY,2050,Gas,0.51
+HBY,2050,Hydro,0.14
+HBY,2050,PV,0.31
+NEL,2020,Hydro,0.05
+NEL,2030,Gas,0.02
+NEL,2030,Hydro,0.05
+NEL,2030,PV,0.54
+NEL,2040,Gas,0.33
+NEL,2040,Hydro,0.05
+NEL,2040,PV,0.54
+NEL,2050,Gas,0.48
+NEL,2050,Hydro,0.05
+NEL,2050,PV,0.54
+NIS,2020,Diesel,0.02
+NIS,2020,Geothermal,0.02
+NIS,2030,Diesel,0.02
+NIS,2030,Gas,0.37
+NIS,2030,Geothermal,0.02
+NIS,2030,Onshore wind,1.65
+NIS,2040,Diesel,0.02
+NIS,2040,Gas,0.53
+NIS,2040,Geothermal,0.02
+NIS,2040,Onshore wind,3.65
+NIS,2040,PV,0.7
+NIS,2050,Diesel,0.02
+NIS,2050,Gas,0.68
+NIS,2050,Geothermal,0.02
+NIS,2050,Onshore wind,6.97
+NIS,2050,PV,1.36
+OTG,2020,Hydro,1.66
+OTG,2020,Onshore wind,0.11
+OTG,2030,Hydro,1.66
+OTG,2030,Offshore wind,1.28
+OTG,2030,Onshore wind,0.11
+OTG,2040,Hydro,1.66
+OTG,2040,Offshore wind,3.58
+OTG,2050,Gas,0.17
+OTG,2050,Hydro,1.66
+OTG,2050,Offshore wind,5.88
+TRN,2020,Gas,0.89
+TRN,2020,Onshore wind,0.13
+TRN,2030,Gas,0.41
+TRN,2030,Onshore wind,0.13
+TRN,2030,PV,0.46
+TRN,2040,Gas,0.41
+TRN,2040,Onshore wind,0.13
+TRN,2040,PV,0.46
+TRN,2050,Gas,0.51
+TRN,2050,Onshore wind,0.13
+TRN,2050,PV,0.7
+WEL,2020,Onshore wind,0.22
+WEL,2030,Onshore wind,2.05
+WEL,2030,PV,0.48
+WEL,2040,Gas,0.32
+WEL,2040,Onshore wind,3.03
+WEL,2040,PV,0.48
+WEL,2050,Gas,0.87
+WEL,2050,Onshore wind,5.19
+WEL,2050,PV,0.48
+WTO,2020,Biomass,0.05
+WTO,2020,Gas,0.47
+WTO,2020,Geothermal,0.84
+WTO,2020,Hydro,1.09
+WTO,2020,Onshore wind,0.06
+WTO,2030,Gas,0.44
+WTO,2030,Geothermal,0.84
+WTO,2030,Hydro,1.09
+WTO,2030,Onshore wind,0.06
+WTO,2040,Geothermal,0.84
+WTO,2040,Hydro,1.09
+WTO,2050,Geothermal,0.84
+WTO,2050,Hydro,1.09

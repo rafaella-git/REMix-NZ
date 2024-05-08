@@ -14,28 +14,29 @@ import seaborn as sns
 from remix.framework.api.instance import Instance
 from remix.framework.tools.plots import plot_network, plot_choropleth
 import networkx as nx
-import gamstransfer as gt
+import gams.transfer as gt
 from IPython.display import display
 idx = pd.IndexSlice
 
 # %% [markdown]
 # ### Define the years to run the optimisation and the demand file
 # The demand file and the years run determine the name of the case and its results
-will_elec = ["01-battery-distributed", "02-battery-overnight", "03-battery-recharging", "04-battery-solar"]
+will_elec = ["00-test-elec","01-battery-distributed", "02-battery-overnight", "03-battery-recharging", "04-battery-solar"]
 will_h2 = ["01-h2-distributed", "02-h2-overnight", "03-h2-recharging", "04-h2-solar"]
-sdewes_ap = ["base", "highpop", "lowpop", "medpop", "base_ev", "medpop_ev"]
+sdewes_ap = ["base", "high", "med", "ev-med", "low"]
+mbie=["base","h2"]
     
 scenario_dict = {       
-    "will": [will_elec, [2020, 2035, 2050]],
-    "sdewes-ap": [sdewes_ap, [2020, 2030, 2040, 2050]]
+    "will": [will_h2, [2020, 2035, 2050]],
+    "sdewes-ap": [sdewes_ap, [2020, 2030, 2040, 2050]],
+    "mbie": [mbie, [2020, 2030, 2040, 2050]]
 }
 group_name="will"
 files_lst = scenario_dict[group_name][0]
 yrs_sel = scenario_dict[group_name][1] # [2020, 2025, 2030, 2035, 2040, 2045, 2050]
 yrs_str='-'.join([str(item) for item in yrs_sel])
 yrs_to_calc = [2020, 2025, 2030, 2035, 2040, 2045, 2050]
-indx=1
-
+indx=3
 
 # Define paths/directories
 path_base = "C:/Local/REMix"
@@ -788,7 +789,7 @@ def add_electrolyser(m):
         )
     )
     eltr_coef.loc[idx[:, :, :, "Elec"], "coefficient"] = -1
-    eltr_coef.loc[idx[:, :, :, "H2"], "coefficient"] = [0.665]#, 0.79, 0.79, 0.85] # DEA2022 AEC 1MW comm&indust for 2020, Will for the others
+    eltr_coef.loc[idx[:, :, :, "H2"], "coefficient"] = [0.665, 0.79, 0.79, 0.85] # DEA2022 AEC 1MW comm&indust for 2020, Will for the others
     m.parameter.add(eltr_coef, "converter_coefficient")
 
     # accounting
@@ -1011,7 +1012,7 @@ def add_ftropsch_syn(m):
 # storage
     
 def add_lithium_batteries(m):
-    battery_vintage = [2020]#, 2035, 2040, 2050] #FIXME: 2035 was 2030, change when not running will's values
+    battery_vintage = [2020, 2030, 2040, 2050] #FIXME: 2035 was 2030, change when not running will's values
     battery_techs = ["Battery"]
     battery_nodes = [n for n in m.set.nodesdata if not n.startswith("LNG")]
 
@@ -1024,7 +1025,7 @@ def add_lithium_batteries(m):
 
     conv_cap = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [battery_nodes, battery_vintage, battery_techs]
+            [battery_nodes, yrs_sel, battery_techs]
         )
     )
     conv_cap.loc[idx[:, :, battery_techs], "unitsUpperLimit"] = 50  # GW_el
@@ -1047,7 +1048,7 @@ def add_lithium_batteries(m):
             [["Invest", "OMFix"], ["global"], battery_techs, battery_vintage]
         )
     )
-    conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = [117]#, 55, 37, 30]  # million EUR / unit
+    conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = [117, 55, 37, 30]  # million EUR / unit
     conv_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
     conv_acc.loc[idx["Invest", :, :, :], "amorTime"] = 20  # years
     conv_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
@@ -1075,7 +1076,7 @@ def add_lithium_batteries(m):
 
 
     stor_res = pd.DataFrame(
-        index=pd.MultiIndex.from_product([battery_nodes, battery_vintage, battery_techs])
+        index=pd.MultiIndex.from_product([battery_nodes,  yrs_sel, battery_techs])
     )
     stor_res.loc[idx[:, :, :], "unitsUpperLimit"] = 30  # units
     stor_res.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean
@@ -1086,7 +1087,7 @@ def add_lithium_batteries(m):
             [["Invest", "OMFix"], ["global"], battery_techs, battery_vintage]
         )
     )
-    stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 234# [i * 4 for i in [234, 110, 76, 61]]  # million EUR / unit
+    stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = [i * 4 for i in [234, 110, 76, 61]]  # million EUR / unit
     stor_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
     stor_acc.loc[idx["Invest", :, :, :], "amorTime"] = 20  # years
     stor_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
@@ -1407,11 +1408,10 @@ def validate_scope(m):
     nodes_data = set(m.set.nodesdata)
     nodes_model = set(m.set.nodesmodel)
     print(f"Not including modes nodes: {', '.join(sorted(nodes_data - nodes_model))}")
-
+s1 = time.perf_counter()
 # #%%
 if __name__ == "__main__":
     # Create instance
-    s1 = time.perf_counter()
     m = Instance(datadir=data_dir)
 
     add_scope(m)
@@ -1455,24 +1455,32 @@ if __name__ == "__main__":
     m.write(output_path=data_dir, fileformat="csv")
     e2 = time.perf_counter()
     d2=time.strftime("%Hh %Mm %Ss", time.gmtime(e2-s2))
-    print(f"Writing dataset took {d2}.")
+    print(f"Writing dataset for {case_name} took {d2}.")
 # %%
     # m_run = Instance.from_path(data_dir)
+
+    #COMMENT: YOU NEED TO  COMMENT THE LINE ABOVE SCEN IS DEFINED HERE AND THEN THE TWO LINES BELOW ARE ALSO CHANGED
+    #scen = "Wind+"
+
     m.run(
         resultdir=results_dir,
-        resultfile=case_name,
-        threads=12,
+        resultfile=f"{case_name}",
+        #resultfile=f"{case_name}_{scen.replace('/', '_')}",
+        #scendir=scen,
+        solver="gurobi",
+        threads=8,
         lo=4,
         timeres=1,
         names=1,
         roundts=1,
         iis=1,
-        profile=1,
-        gdx="default",
-        pathopt="myopic"
+        # profile=1,
+        # gdx="default",
+        pathopt="myopic",
+        barorder=1
     )
     print(os. getcwd())
 
 e1 = time.perf_counter()
 d1=time.strftime("%Hh %Mm %Ss", time.gmtime(e1-s1))
-print(f"------------- Running the model took {d1}.")
+print(f"------------- Running {case_name} took {d1}.")
