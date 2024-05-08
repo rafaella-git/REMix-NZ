@@ -1,0 +1,24 @@
+                                                    perActivity
+OMVar . global . BioPower . 2030 . Powergen               0.002
+OMVar . global . CCGT . 2030 . Powergen                   0.002
+OMVar . global . ExportToGermany . 2030 . Powergen        0.000
+OMVar . global . GT_NGas . 2030 . Powergen                0.001
+OMVar . global . HydroRunOfRiver . 2030 . Powergen        0.000
+OMVar . global . LiIonBattery . 2030 . Charge             0.000
+OMVar . global . LiIonBattery . 2030 . Discharge          0.000
+OMVar . global . LiIonBattery . 2040 . Charge             0.000
+OMVar . global . LiIonBattery . 2040 . Discharge          0.000
+OMVar . global . LiIonBattery . 2050 . Charge             0.000
+OMVar . global . LiIonBattery . 2050 . Discharge          0.000
+OMVar . global . Photovoltaic . 2030 . Powergen           0.000
+OMVar . global . PumpedStorage . 2030 . Charge            0.002
+OMVar . global . PumpedStorage . 2030 . Discharge         0.002
+OMVar . global . PumpedStorage . 2040 . Charge            0.002
+OMVar . global . PumpedStorage . 2040 . Discharge         0.002
+OMVar . global . PumpedStorage . 2050 . Charge            0.002
+OMVar . global . PumpedStorage . 2050 . Discharge         0.002
+OMVar . global . ST_Coal . 2030 . Powergen                0.002
+OMVar . global . ST_Lignite . 2030 . Powergen             0.002
+OMVar . global . ST_Nuclear . 2030 . Powergen             0.004
+OMVar . global . WindOffshore . 2030 . Powergen           0.008
+OMVar . global . WindOnshore . 2030 . Powergen            0.016

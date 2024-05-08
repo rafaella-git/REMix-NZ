@@ -1,0 +1,58 @@
+{
+  "converter_caps": {
+    "DE_CH.2020.CCGT_CH4.CO2.upperLimit": 25.6,
+    "DE_CH.2020.CCGT_CH4.Elec.upperLimit": 80.0,
+    "DE_CH.2020.GT_CH4.CO2.upperLimit": 21.4,
+    "DE_CH.2020.GT_CH4.Elec.upperLimit": 50.0,
+    "DE_CH.2020.PV.Elec.upperLimit": 48.2,
+    "DE_CH.2020.Wind_onshore.Elec.upperLimit": 53.2,
+    "FR.2020.CCGT_CH4.CO2.upperLimit": 12.8,
+    "FR.2020.CCGT_CH4.Elec.upperLimit": 40.0,
+    "FR.2020.GT_CH4.CO2.upperLimit": 10.7,
+    "FR.2020.GT_CH4.Elec.upperLimit": 25.0,
+    "FR.2020.PV.Elec.upperLimit": 9.4,
+    "FR.2020.Wind_onshore.Elec.upperLimit": 16.5,
+    "IT.2020.CCGT_CH4.CO2.upperLimit": 12.8,
+    "IT.2020.CCGT_CH4.Elec.upperLimit": 40.0,
+    "IT.2020.GT_CH4.CO2.upperLimit": 10.7,
+    "IT.2020.GT_CH4.Elec.upperLimit": 25.0,
+    "IT.2020.PV.Elec.upperLimit": 4.8,
+    "IT.2020.Wind_onshore.Elec.upperLimit": 10.2,
+    "global.2020.CCGT_CH4.CO2.upperLimit": 51.2,
+    "global.2020.CCGT_CH4.Elec.upperLimit": 160.0,
+    "global.2020.GT_CH4.CO2.upperLimit": 42.8,
+    "global.2020.GT_CH4.Elec.upperLimit": 100.0,
+    "global.2020.PV.Elec.upperLimit": 62.4,
+    "global.2020.Wind_onshore.Elec.upperLimit": 79.9
+  },
+  "transfer_caps": {
+    "DE_CH.DK.link6.2020.HVDC.Elec.lowerLimit": 5.0,
+    "DE_CH.DK.link6.2020.HVDC.Elec.upperLimit": 15.0,
+    "DE_CH.FR.link3.2020.HVDC.Elec.lowerLimit": 3.0,
+    "DE_CH.FR.link3.2020.HVDC.Elec.upperLimit": 45.0,
+    "DE_CH.IT.link1.2020.HVDC.Elec.upperLimit": 7.0
+  },
+  "storage_caps": {
+    "DE_CH.2020.LiIon.Elec_LiIon.upperLimit": 1224.0,
+    "FR.2020.LiIon.Elec_LiIon.upperLimit": 24.0,
+    "IT.2020.LiIon.Elec_LiIon.upperLimit": 24.0,
+    "global.2020.LiIon.Elec_LiIon.upperLimit": 1272.0
+  },
+  "commodity_balance_annual": {
+    "DE_CH.2020.Demand.Elec.netto": -2751.94,
+    "DE_CH.2020.Demand.Elec.brutto": 2751.94,
+    "DE_CH.2020.Demand.Elec.negative": -2751.94,
+    "DK.2020.Demand.Elec.netto": -1251.08,
+    "DK.2020.Demand.Elec.brutto": 1251.08,
+    "DK.2020.Demand.Elec.negative": -1251.08,
+    "FR.2020.Demand.Elec.netto": -2991.84,
+    "FR.2020.Demand.Elec.brutto": 2991.84,
+    "FR.2020.Demand.Elec.negative": -2991.84,
+    "IT.2020.Demand.Elec.netto": -1251.08,
+    "IT.2020.Demand.Elec.brutto": 1251.08,
+    "IT.2020.Demand.Elec.negative": -1251.08,
+    "global.2020.Demand.Elec.netto": -8245.95,
+    "global.2020.Demand.Elec.brutto": 8245.95,
+    "global.2020.Demand.Elec.negative": -8245.95
+  }
+}

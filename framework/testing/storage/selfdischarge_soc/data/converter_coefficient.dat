@@ -1,0 +1,8 @@
+                                       coefficient
+CCGT_CH4 . 2030 . Powergen . CH4            -1.587
+CCGT_CH4 . 2030 . Powergen . CO2             0.320
+CCGT_CH4 . 2030 . Powergen . Elec            1.000
+LiIon . 2030 . Charge . Elec                -1.000
+LiIon . 2030 . Charge . Elec_LiIon           0.949
+LiIon . 2030 . Discharge . Elec              1.000
+LiIon . 2030 . Discharge . Elec_LiIon       -1.054

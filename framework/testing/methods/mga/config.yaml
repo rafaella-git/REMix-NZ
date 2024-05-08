@@ -1,0 +1,6 @@
+remix_parameters:
+  method: mga
+  alternatives: 3
+  mgafactor: 1.03
+  crossover: 1
+  roundts: 1

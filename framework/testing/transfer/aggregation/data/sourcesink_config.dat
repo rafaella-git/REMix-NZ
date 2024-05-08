@@ -1,0 +1,16 @@
+                              usesFixedProfile  usesLowerProfile  usesLowerSum  usesUpperProfile  usesUpperSum
+CH . 2020 . Demand . Elec                  1.0               0.0           0.0               0.0           0.0
+CH . 2020 . Emission . CO2                 0.0               0.0           1.0               1.0           0.0
+CH . 2020 . FuelImport . CH4               0.0               1.0           0.0               0.0           1.0
+DE . 2020 . Demand . Elec                  1.0               0.0           0.0               0.0           0.0
+DE . 2020 . Emission . CO2                 0.0               0.0           1.0               1.0           0.0
+DE . 2020 . FuelImport . CH4               0.0               1.0           0.0               0.0           1.0
+DK . 2020 . Demand . Elec                  1.0               0.0           0.0               0.0           0.0
+DK . 2020 . Emission . CO2                 0.0               0.0           1.0               1.0           0.0
+DK . 2020 . FuelImport . CH4               0.0               1.0           0.0               0.0           1.0
+FR . 2020 . Demand . Elec                  1.0               0.0           0.0               0.0           0.0
+FR . 2020 . Emission . CO2                 0.0               0.0           1.0               1.0           0.0
+FR . 2020 . FuelImport . CH4               0.0               1.0           0.0               0.0           1.0
+IT . 2020 . Demand . Elec                  1.0               0.0           0.0               0.0           0.0
+IT . 2020 . Emission . CO2                 0.0               0.0           1.0               1.0           0.0
+IT . 2020 . FuelImport . CH4               0.0               1.0           0.0               0.0           1.0

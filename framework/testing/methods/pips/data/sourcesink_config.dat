@@ -1,0 +1,21 @@
+                                        usesFixedProfile  usesLowerProfile  usesUpperProfile  usesUpperSum
+GER_2617 . 2030 . FuelImport . Coal                  0.0               1.0               0.0           1.0
+GER_2618 . 2030 . FuelImport . Coal                  0.0               1.0               0.0           1.0
+GER_2619 . 2030 . FuelImport . Coal                  0.0               1.0               0.0           1.0
+GER_2620 . 2030 . Demand . Elec                      1.0               0.0               0.0           0.0
+GER_2620 . 2030 . FuelImport . Biomass               0.0               1.0               0.0           1.0
+GER_2620 . 2030 . FuelImport . Coal                  0.0               1.0               0.0           1.0
+GER_2620 . 2030 . Slack . Elec                       0.0               1.0               1.0           0.0
+GER_2621 . 2030 . Demand . Elec                      1.0               0.0               0.0           0.0
+GER_2621 . 2030 . FuelImport . Biomass               0.0               1.0               0.0           1.0
+GER_2621 . 2030 . Slack . Elec                       0.0               1.0               1.0           0.0
+GER_2622 . 2030 . Demand . Elec                      1.0               0.0               0.0           0.0
+GER_2622 . 2030 . FuelImport . Biomass               0.0               1.0               0.0           1.0
+GER_2622 . 2030 . Slack . Elec                       0.0               1.0               1.0           0.0
+GER_2624 . 2030 . FuelImport . NGas                  0.0               1.0               0.0           1.0
+GER_2625 . 2030 . FuelImport . NGas                  0.0               1.0               0.0           1.0
+GER_2628 . 2030 . Demand . Elec                      1.0               0.0               0.0           0.0
+GER_2628 . 2030 . FuelImport . Biomass               0.0               1.0               0.0           1.0
+GER_2628 . 2030 . Slack . Elec                       0.0               1.0               1.0           0.0
+GER_2632 . 2030 . Demand . Elec                      1.0               0.0               0.0           0.0
+GER_2632 . 2030 . FuelImport . Biomass               0.0               1.0               0.0           1.0

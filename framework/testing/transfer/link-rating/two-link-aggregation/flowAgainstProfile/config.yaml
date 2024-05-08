@@ -1,0 +1,12 @@
+remix_parameters:
+  crossover: 1
+  debug: 2
+  roundts: 1
+  datadir: ../../data
+  scendir: ./two-link-aggregation/flowAgainstProfile
+
+metrics:
+  runtime: <=23
+
+check_symbols:
+  - transfer_caps

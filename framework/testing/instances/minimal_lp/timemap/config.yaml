@@ -1,0 +1,12 @@
+remix_parameters:
+  crossover: 1
+  accuracy: 1e-12
+  roundts: 1
+  datadir: ../data
+  scendir: timemap
+  
+metrics:
+  runtime: <=50
+
+check_symbols:
+  - commodity_balance

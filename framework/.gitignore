@@ -1,0 +1,53 @@
+# Ignore auto-generated files and folders
+225*/
+node_modules/
+*.gdx
+*.gsp
+*.opt
+*.o99
+*.lst
+*.log
+*.~gm
+*.gpr
+*.lxi
+**/__pycache__/
+*schema.yaml
+# Ignore files from testing and gitlab CI
+*.json
+!valid.json
+metrics.txt
+
+# Ignore all folders except model, testing, license agreement docs and tutorials
+/*
+*.egg-info
+!valid.json
+!pyproject.toml
+!/.gitlab
+!/cla
+!/docs
+!.flake8
+!.editorconfig
+!.gitignore
+!.gitlab-ci.yml
+!LICENSE
+
+# Ignore the _build folder
+/docs/_build
+!/remix
+!/install
+!/testing
+!/tutorials
+/tutorials/**/data/
+!/remix/framework/schema/templates/*json
+# Ignore markdown files in technical documentation and documentation scripts
+/docs/documentation/tech-docs/remix.model/*.md
+/docs/changelog.md
+/docs/scripts/
+/docs/tutorials/*
+!/docs/tutorials/tutorials-intro.md
+!/docs/tutorials/basic.md
+!/docs/tutorials/advanced.md
+!/docs/tutorials/old
+!/docs/scripts/*.py
+!/docs/scripts/remix.json
+!MakeFile

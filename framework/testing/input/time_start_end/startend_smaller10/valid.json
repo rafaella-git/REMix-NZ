@@ -1,0 +1,14 @@
+{
+  "indicator_accounting_detailed": {
+    "FuelCost.R1_model.2030.FuelImport": -7.0
+  },
+  "timeModelToCalc": {
+    "tm2": 1.0,
+    "tm3": 1.0,
+    "tm4": 1.0,
+    "tm5": 1.0,
+    "tm6": 1.0,
+    "tm7": 1.0,
+    "tm8": 1.0
+  }
+}

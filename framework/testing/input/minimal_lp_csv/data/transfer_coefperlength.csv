@@ -1,0 +1,3 @@
+transfer_techs,vintage,commodity,link_types,coefPerLength
+HVDC,2020,Elec,land,-3e-05
+HVDC,2020,Elec,sea,-2e-05

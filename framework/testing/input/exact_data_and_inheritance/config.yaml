@@ -1,0 +1,20 @@
+remix_parameters:
+  test: inputdata
+  debug: 1
+  roundts: 0
+  scendir: sub
+
+check_symbols:
+  - largenumbers_ts
+  - zerotails_ts
+  - onlyintegers_ts
+  - onlydecimals_ts
+  - movingdecimals_ts
+  - normal_parameters
+  - testset
+
+diff_parameters:
+  eps: 0
+  
+gdx_json_parameters:
+  round: 0

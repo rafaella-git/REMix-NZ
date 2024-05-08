@@ -1,0 +1,13 @@
+                                        perUnitBuild  useAnnuity  amorTime  interest  perUnitTotal
+Invest . global . LiIonBattery . 2030          247.0         1.0      20.0      0.06         0.000
+Invest . global . LiIonBattery . 2040          247.0         1.0      20.0      0.06         0.000
+Invest . global . LiIonBattery . 2050          247.0         1.0      20.0      0.06         0.000
+Invest . global . PumpedStorage . 2030          29.0         1.0      69.0      0.06         0.000
+Invest . global . PumpedStorage . 2040          29.0         1.0      69.0      0.06         0.000
+Invest . global . PumpedStorage . 2050          29.0         1.0      69.0      0.06         0.000
+OMFix . global . LiIonBattery . 2030             0.0         0.0       0.0      0.00         3.705
+OMFix . global . LiIonBattery . 2040             0.0         0.0       0.0      0.00         3.705
+OMFix . global . LiIonBattery . 2050             0.0         0.0       0.0      0.00         3.659
+OMFix . global . PumpedStorage . 2030            0.0         0.0       0.0      0.00         0.348
+OMFix . global . PumpedStorage . 2040            0.0         0.0       0.0      0.00         0.493
+OMFix . global . PumpedStorage . 2050            0.0         0.0       0.0      0.00         0.521

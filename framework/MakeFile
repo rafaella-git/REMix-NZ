@@ -1,0 +1,40 @@
+PACKAGE := "remix"
+
+cov-vscode:
+	pytest --cov-report xml:cov.xml --cov remix -k "not instances and not tutorials"
+
+coverage:
+	coverage run --source=remix -m pytest testing  -k "not instances and not tutorials"
+	coverage report
+
+lint:
+	black $(PACKAGE) testing --check
+	flake8 $(PACKAGE)
+
+
+format:
+	black $(PACKAGE) testing
+	isort remix testing
+
+doctest-remix:
+	pytest remix --doctest-modules
+
+doctest-docs:
+	pytest docs --doctest-glob="*.md"
+
+test-remix:
+	pytest testing --mode=solve -k "instances"
+
+unit-tests:
+	pytest testing -k "not instances"
+
+test-all:
+	pytest testing
+
+tech-docs:
+	remix run --datadir=testing/instances/minimal_lp/data docfile=docs/scripts/remix --roundts=1
+	model2tex docs/scripts/remix -m remix
+	python ./docs/scripts/parse_model_markdown.py
+
+changelog:
+	python ./docs/scripts/get_changelog_from_gitlab.py

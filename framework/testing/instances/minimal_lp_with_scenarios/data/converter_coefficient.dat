@@ -1,0 +1,12 @@
+                                       coefficient
+CCGT_CH4 . 2020 . Powergen . CH4            -1.587
+CCGT_CH4 . 2020 . Powergen . CO2             0.320
+CCGT_CH4 . 2020 . Powergen . Elec            1.000
+GT_CH4 . 2020 . Powergen . CH4              -2.127
+GT_CH4 . 2020 . Powergen . CO2               0.428
+GT_CH4 . 2020 . Powergen . Elec              1.000
+LiIon . 2020 . Charge . Elec                -1.000
+LiIon . 2020 . Charge . Elec_LiIon           0.950
+LiIon . 2020 . Discharge . Elec              0.950
+LiIon . 2020 . Discharge . Elec_LiIon       -1.000
+PV . 2020 . Powergen . Elec                  1.000

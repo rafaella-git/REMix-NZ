@@ -1,0 +1,7 @@
+remix_parameters:
+  crossover: 1
+  accuracy: 1e-8
+  roundts: 1
+
+metrics:
+  runtime: <=350

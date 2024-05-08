@@ -1,0 +1,5 @@
+                                t0001      t0002 
+CASE . DECIMAL_3_CHAR_NEG        -0.1       -0.4
+CASE . DECIMAL_3_CHAR_POS         0.1        0.4
+CASE . DECIMAL_8_CHAR_NEG   -0.000001  -0.000010
+CASE . DECIMAL_8_CHAR_POS    0.000001   0.000010

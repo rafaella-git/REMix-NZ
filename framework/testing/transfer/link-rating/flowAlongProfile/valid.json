@@ -1,0 +1,71 @@
+{
+  "indicator_accounting": {
+    "R1_model.2030.Invest": 143.75,
+    "R1_model.2030.OMVar": 217.647,
+    "R1_model.2030.SystemCost": 361.397,
+    "R1_model.horizon.Invest": 143.75,
+    "R1_model.horizon.OMVar": 217.647,
+    "R1_model.horizon.SystemCost": 361.397,
+    "R2_model.2030.FuelCost": -65.2941,
+    "R2_model.2030.Invest": 143.75,
+    "R2_model.2030.OMVar": 217.647,
+    "R2_model.2030.SystemCost": 296.103,
+    "R2_model.horizon.FuelCost": -65.2941,
+    "R2_model.horizon.Invest": 143.75,
+    "R2_model.horizon.OMVar": 217.647,
+    "R2_model.horizon.SystemCost": 296.103,
+    "global.2030.FuelCost": -65.2941,
+    "global.2030.Invest": 287.5,
+    "global.2030.OMVar": 435.294,
+    "global.2030.SystemCost": 657.5,
+    "global.horizon.FuelCost": -65.2941,
+    "global.horizon.Invest": 287.5,
+    "global.horizon.OMVar": 435.294,
+    "global.horizon.SystemCost": 657.5
+  },
+  "indicator_accounting_detailed": {
+    "FuelCost.R2_model.2030.FuelImport": -65.2941,
+    "Invest.R1_model.2030.HVDC": 143.75,
+    "Invest.R2_model.2030.HVDC": 143.75,
+    "OMVar.R1_model.2030.HVDC": 217.647,
+    "OMVar.R2_model.2030.HVDC": 217.647
+  },
+  "transfer_caps": {
+    "R1_model.R2_model.link1.2030.HVDC.Elec.build": 287.5,
+    "R1_model.R2_model.link1.2030.HVDC.Elec.total": 287.5,
+    "R1_model.R2_model.link1.2030.HVDC.Elec.upperLimit": 1000.0
+  },
+  "transfer_flows_annual": {
+    "R1_model.R2_model.link1.2030.HVDC.Elec.netto": 65.2941,
+    "R1_model.R2_model.link1.2030.HVDC.Elec.brutto": 435.294,
+    "R1_model.R2_model.link1.2030.HVDC.Elec.positive": 250.294,
+    "R1_model.R2_model.link1.2030.HVDC.Elec.negative": -185.0,
+    "R1_model.R2_model.link1.2030.HVDC.Elec.flh": 1.51407
+  },
+  "commodity_balance_annual": {
+    "R1_model.2030.HVDC.Elec.netto": -65.2941,
+    "R1_model.2030.HVDC.Elec.brutto": 435.294,
+    "R1_model.2030.HVDC.Elec.positive": 185.0,
+    "R1_model.2030.HVDC.Elec.negative": -250.294,
+    "R1_model.2030.Demand.Elec.netto": 65.2941,
+    "R1_model.2030.Demand.Elec.brutto": 435.294,
+    "R1_model.2030.Demand.Elec.positive": 250.294,
+    "R1_model.2030.Demand.Elec.negative": -185.0,
+    "R2_model.2030.HVDC.Elec.netto": 65.2941,
+    "R2_model.2030.HVDC.Elec.brutto": 435.294,
+    "R2_model.2030.HVDC.Elec.positive": 250.294,
+    "R2_model.2030.HVDC.Elec.negative": -185.0,
+    "R2_model.2030.FuelImport.Elec.netto": -65.2941,
+    "R2_model.2030.FuelImport.Elec.brutto": 435.294,
+    "R2_model.2030.FuelImport.Elec.positive": 185.0,
+    "R2_model.2030.FuelImport.Elec.negative": -250.294,
+    "global.2030.Demand.Elec.netto": 65.2941,
+    "global.2030.Demand.Elec.brutto": 435.294,
+    "global.2030.Demand.Elec.positive": 250.294,
+    "global.2030.Demand.Elec.negative": -185.0,
+    "global.2030.FuelImport.Elec.netto": -65.2941,
+    "global.2030.FuelImport.Elec.brutto": 435.294,
+    "global.2030.FuelImport.Elec.positive": 185.0,
+    "global.2030.FuelImport.Elec.negative": -250.294
+  }
+}

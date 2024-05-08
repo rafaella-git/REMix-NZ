@@ -1,0 +1,7 @@
+                     lifeTime  activityUpperLimit
+CCGT_CH4 . 2020          30.0                 1.0
+GT_CH4 . 2020            30.0                 1.0
+LiIon . 2020             25.0                 1.0
+PV . 2020                20.0                 0.0
+Wind_onshore . 2020      25.0                 0.0
+GreenImport . 2040       30.0                 1.0

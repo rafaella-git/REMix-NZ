@@ -1,0 +1,5 @@
+indicator,accLinksData,transfer_techs,vintage,link_types,perLengthBuild,perLengthTotal,useAnnuity,amorTime,interest
+Invest,global,HVDC,2020,land,0.2,0.0,1,40,0.06
+Invest,global,HVDC,2020,sea,0.4,0.0,1,40,0.06
+OMFix,global,HVDC,2020,land,0.0,0.004,0,0,0.0
+OMFix,global,HVDC,2020,sea,0.0,0.005,0,0,0.0

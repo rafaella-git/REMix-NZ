@@ -1,0 +1,5 @@
+                                      t0001       t0002 
+CASE . INTEGER_1_CHAR_NEGATIVE           -1          -0
+CASE . INTEGER_1_CHAR_POSITIVE            1           0
+CASE . INTEGER_9_CHAR_NEGATIVE   -100000000  -000000001
+CASE . INTEGER_9_CHAR_POSITIVE    100000000   000000001

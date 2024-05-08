@@ -1,0 +1,10 @@
+remix_parameters:
+  crossover: 1
+  epgap: 1e-6
+  gdx_mipconverter: 1
+  
+check_symbols:
+  - converter_activity
+
+metrics:
+  runtime: <=12

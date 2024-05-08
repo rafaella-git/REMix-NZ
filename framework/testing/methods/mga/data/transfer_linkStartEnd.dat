@@ -1,0 +1,9 @@
+             start  end
+CH__IT . CH    1.0  0.0
+CH__IT . IT    0.0  1.0
+DE__CH . CH    0.0  1.0
+DE__CH . DE    1.0  0.0
+DE__FR . DE    1.0  0.0
+DE__FR . FR    0.0  1.0
+FR__CH . CH    0.0  1.0
+FR__CH . FR    1.0  0.0

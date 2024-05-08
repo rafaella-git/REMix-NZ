@@ -1,0 +1,32 @@
+check_symbols:
+  - converter_caps
+  - commodity_balance_annual
+  - indicator_accounting
+  - indicator_accounting_detailed
+  - transfer_caps
+  - transfer_flows_annual
+  - storage_caps
+  - storage_flows_annual
+  - marginals_sourcesink_sum
+  - marginals_indicator_bounds
+
+diff_parameters:
+  eps: 1e-8
+
+error_messages:
+  run:
+
+gdx_json_parameters:
+  # This avoids missing elements due to numerical inaccuracy, where zeros can sometimes be represented as tiny numbers
+  round: 1
+
+remix_parameters:
+  crossover: 1
+  datadir: ./data
+  scendir: ./
+  resultdir: ./
+  logfile: ./run_remix.log
+  output: ./run_remix.lst
+  optdir: ./
+  resultfile: check
+  #method: "Commented option which will not be recognized by the testing environment."

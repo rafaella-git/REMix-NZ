@@ -1,0 +1,5 @@
+indicator,indicator_a,accNodesData,accYears,perIndicator
+SystemCost,EmissionTax,global,2020,1.0
+SystemCost,FuelCost,global,2020,1.0
+SystemCost,Invest,global,2020,1.0
+SystemCost,OMFix,global,2020,1.0

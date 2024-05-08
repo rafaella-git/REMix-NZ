@@ -1,0 +1,9 @@
+[flake8]
+exclude =
+    .git,
+    __pycache__,
+    docs/conf.py,
+    build,
+    dist,
+    .eggs
+max-line-length = 120

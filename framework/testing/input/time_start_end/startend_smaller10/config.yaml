@@ -1,0 +1,13 @@
+remix_parameters:
+  crossover: 1
+  roundts: 1
+  timestart: 2
+  timeend: 8
+  datadir: ../data
+
+metrics:
+  runtime: <=23
+
+check_symbols:
+  - indicator_accounting_detailed
+  - timeModelToCalc
