@@ -1,0 +1,7 @@
+storage_techs,vintage,commodity,size,selfdischarge
+Battery,2020,Elec_battery,4.0,0.0
+Battery,2030,Elec_battery,4.0,0.0
+Battery,2040,Elec_battery,4.0,0.0
+Battery,2050,Elec_battery,4.0,0.0
+H2_storage,2020,H2_stored,6.9993,0.0
+Hydro_reservoir,1950,Water_in,1.0,0.0

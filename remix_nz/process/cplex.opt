@@ -1,7 +1,7 @@
 rerun no
 iis 1
 lpmethod 4
-barorder 3
+barorder 1
 preind 1
 scaind 0
 predual -1
@@ -13,5 +13,5 @@ startalg 4
 epgap 1e-3
 quality 1
 barcolnz 0
-threads 12
+threads 8
 parallelmode 1

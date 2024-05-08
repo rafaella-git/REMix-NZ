@@ -1,0 +1,8 @@
+method 2
+iis 1
+barorder 1
+presolve -1
+mipgap 1e-3
+crossover 0
+threads 8
+barconvtol 1e-6

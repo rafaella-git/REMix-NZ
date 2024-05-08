@@ -11,22 +11,20 @@ import warnings
 # ## Define cases
 # Global path variables
 path_base = "C:/Local/REMix"
-path_input, path_demand, path_profiles, path_geo,  path_brownfield, path_output, yrs_mentioned, yrs2run, group_name, files_lst, data_dir, results_dir, geofile = [None] * 13
+path_input, path_demand, path_profiles, path_geo,  path_brownfield, path_output, yrs_sel, yrs_to_calc, group_name, files_lst, data_dir, results_dir, geofile = [None] * 13
 def set_up(name):
-    global group_name, files_lst, yrs2run, yrs_mentioned, path_input, path_demand, path_profiles, path_geo, path_brownfield, path_output
+    global group_name, files_lst, yrs_sel, yrs_to_calc, path_input, path_demand, path_profiles, path_geo, path_brownfield, path_output
 
-    # Demand files available for different scenarios
-    will_lst = ["01-battery-distributed", "01-h2-distributed", "02-battery-overnight", "02-h2-overnight",
-                "03-battery-recharging", "03-h2-recharging", "04-battery-solar", "04-h2-solar"]
+
     will_elec = ["01-battery-distributed", "02-battery-overnight", "03-battery-recharging", "04-battery-solar"]
     will_h2 = ["01-h2-distributed", "02-h2-overnight", "03-h2-recharging", "04-h2-solar"]
-    test_lst=["00-test-elec"]
-    sdewes_lst = ["base", "highpop", "lowpop", "medpop", "base_ev", "medpop_ev"]
-
-    scenario_dict = {
-        "will": [will_elec, [2020, 2035, 2050]],
-        "sdewes-ap": [sdewes_lst, [2020, 2030, 2040, 2050]]
+    sdewes_ap = ["base", "high", "low", "med", "med_ev"]
+        
+    scenario_dict = {       
+        "will": [will_h2, [2020, 2035, 2050]],
+        "sdewes-ap": [sdewes_ap, [2020, 2030, 2040, 2050]]
     }
+    group_name="sdewes-ap"
 
     # Check if the name exists as a key in the scenario_dict
     if name not in scenario_dict:
@@ -35,8 +33,8 @@ def set_up(name):
 
     group_name = name
     files_lst = scenario_dict[name][0]
-    yrs2run = scenario_dict[name][1]
-    yrs_mentioned = [2000, 2020,2035,2050]
+    yrs_sel = scenario_dict[group_name][1] 
+    yrs_to_calc = [2020, 2025, 2030, 2035, 2040, 2045, 2050]
     
     # Define paths as global variables
     path_input = f"{path_base}/remix_nz/input"
@@ -53,16 +51,16 @@ def set_up(name):
     results_dir = Path(f"{path_output}/{case_name}/result")
     results_dir.mkdir(parents=True, exist_ok=True)
 
-    return group_name, files_lst, yrs2run, yrs_mentioned
+    return group_name, files_lst, yrs_to_calc , yrs_sel
 #%%
 # Customise: set up the scenarios to run
-set_up("will")
+set_up("sdewes-ap")
 
 # %%
 # Build data
 def build_data(demand_file):
     nodes_lst=["NIS","AKL","WTO","TRN","BOP","HBY","CEN","WEL","NEL","CAN","OTG" ]
-    yrs_str='-'.join([str(item) for item in yrs2run])
+    yrs_str='-'.join([str(item) for item in yrs_sel])
     case_name=f"{demand_file}_{yrs_str}"
     geofile="11regionsNZ.geojson"
 
@@ -76,11 +74,11 @@ def build_data(demand_file):
     if __name__ == "__main__":
         # Create instance
         s1 = time.perf_counter()
-        m = Instance()
-
+        m = Instance(datadir=data_dir)
 
         add_scope(m)
         add_demand(m)
+
         # renewables
         add_renewables(m)
         add_geothermal(m)
@@ -88,13 +86,13 @@ def build_data(demand_file):
 
         # batteries
         add_lithium_batteries(m)
-        
+
         # conventional
         add_thermal(m)
         add_gas_turbines(m)
 
-        if "h2" in case_name:
-            # hydrogen
+        # hydrogen
+        if "h2" in demand_file:
             add_electrolyser(m)
             add_h2_storage(m)
 
@@ -120,6 +118,7 @@ def build_data(demand_file):
         e2 = time.perf_counter()
         d2=time.strftime("%Hh %Mm %Ss", time.gmtime(e2-s2))
         print(f"Writing dataset took {d2}.")
+
 s0 = int(time.perf_counter())
 for file in files_lst:
     s1 = int(time.perf_counter())
@@ -131,7 +130,7 @@ for file in files_lst:
 # %% [markdown]
 # Run the model
 def case_run(demand_file):
-    yrs_str='-'.join([str(item) for item in yrs2run])
+    yrs_str='-'.join([str(item) for item in yrs_sel])
     case_name=f"{demand_file}_{yrs_str}"
     output_dir = Path(f"{path_output}/{case_name}")
     data_dir = Path(f"{output_dir}/data")
@@ -141,10 +140,11 @@ def case_run(demand_file):
 
     s1 = time.perf_counter()
     # running GAMS from Python script
-    m_run = Instance.from_path(data_dir)
-    m_run.run(
+    m = Instance(datadir=data_dir)
+    m.run(
         resultdir=results_dir,
         resultfile=case_name,
+        threads=12,
         lo=4,
         timeres=1,
         names=1,

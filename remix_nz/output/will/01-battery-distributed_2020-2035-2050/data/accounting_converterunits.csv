@@ -2,6 +2,9 @@ indicator,accNodesData,converter_techs,vintage,perUnitBuild,useAnnuity,amorTime,
 Invest,global,BIO,1950,2600.0,1,30,0.06
 Invest,global,BIO,2030,2300.0,1,30,0.06
 Invest,global,Battery,2020,117.0,1,20,0.06
+Invest,global,Battery,2030,55.0,1,20,0.06
+Invest,global,Battery,2040,37.0,1,20,0.06
+Invest,global,Battery,2050,30.0,1,20,0.06
 Invest,global,CCGT,1950,775.0,1,30,0.06
 Invest,global,CCGT,2030,775.0,1,30,0.06
 Invest,global,COAL,1950,1600.0,1,30,0.06
@@ -41,6 +44,9 @@ Invest,global,wind_onshore,2050,960.0,1,30,0.06
 OMFix,global,BIO,1950,0.0,0,0,0.0
 OMFix,global,BIO,2030,0.0,0,0,0.0
 OMFix,global,Battery,2020,0.0,0,0,0.0
+OMFix,global,Battery,2030,0.0,0,0,0.0
+OMFix,global,Battery,2040,0.0,0,0,0.0
+OMFix,global,Battery,2050,0.0,0,0,0.0
 OMFix,global,CCGT,1950,0.0,0,0,0.0
 OMFix,global,CCGT,2030,0.0,0,0,0.0
 OMFix,global,COAL,1950,0.0,0,0,0.0
