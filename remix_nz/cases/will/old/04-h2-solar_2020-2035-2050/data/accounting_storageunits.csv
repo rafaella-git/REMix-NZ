@@ -1,7 +1,0 @@
-indicator,accNodesData,storage_techs,vintage,perUnitBuild,useAnnuity,amorTime,interest
-Invest,global,Battery,2020,234.0,1,20,0.06
-Invest,global,H2_storage,2020,131.91,1,40,0.06
-Invest,global,Hydro_reservoir,1950,1650.0,1,20,0.06
-OMFix,global,Battery,2020,0.0,0,0,0.0
-OMFix,global,H2_storage,2020,0.0,0,0,0.0
-OMFix,global,Hydro_reservoir,1950,0.0,0,0,0.0
