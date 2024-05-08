@@ -1,0 +1,7 @@
+                                                  perActivity
+OMVar . global . CCGT_CH4 . 2020 . Powergen           0.00020
+OMVar . global . GT_CH4 . 2020 . Powergen             0.00030
+OMVar . global . Wind_Onshore . 2020 . Powergen       0.00003
+OMVar . global . LiIon . 2020 . Charge                0.00006
+OMVar . global . LiIon . 2020 . Discharge             0.00006
+FuelCost . global . GreenImport . 2040 . Import       0.15000

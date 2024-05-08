@@ -1,0 +1,3 @@
+                                    usesFixedProfile  usesLowerSum  usesUpperSum
+R1_data . 2030 . Demand . Elec                     1             0             0
+R2_data . 2030 . FuelImport . Elec                 0             1             1

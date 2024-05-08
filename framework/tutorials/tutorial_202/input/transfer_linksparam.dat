@@ -1,0 +1,17 @@
+                      linksUpperLimit
+R1__R2 . 2020 . HVDC              6.0
+R1__R2 . 2030 . HVDC             10.0
+R1__R2 . 2040 . HVDC             15.0
+R1__R2 . 2050 . HVDC             15.0
+R1__R3 . 2020 . HVDC              2.0
+R1__R3 . 2030 . HVDC              3.0
+R1__R3 . 2040 . HVDC              5.0
+R1__R3 . 2050 . HVDC              5.0
+R2__R3 . 2020 . HVDC              4.0
+R2__R3 . 2030 . HVDC              6.0
+R2__R3 . 2040 . HVDC              8.0
+R2__R3 . 2050 . HVDC              8.0
+R3__R4 . 2020 . HVDC              2.0
+R3__R4 . 2030 . HVDC              3.0
+R3__R4 . 2040 . HVDC              5.0
+R3__R4 . 2050 . HVDC              5.0

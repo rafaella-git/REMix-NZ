@@ -1,0 +1,15 @@
+                                              coefficient  minLoad
+CONV_generic . 2030 . Powergen . CH4               -1.700    0.000
+CONV_generic . 2030 . Powergen . Elec               1.000    0.000
+CONV_generic . 2030 . Powergen2 . CH4              -1.300    0.600
+CONV_generic . 2030 . Powergen2 . Elec              1.000    0.600
+CONV_generic . 2030 . Heatgen . CH4                -1.200    0.000
+CONV_generic . 2030 . Heatgen . Heat                1.000    0.000
+CONV_generic . 2030 . Heatgen2 . CH4               -1.100    0.300
+CONV_generic . 2030 . Heatgen2 . Heat               1.000    0.300
+CONV_generic . 2030 . Combi . CH4                  -1.700    0.000
+CONV_generic . 2030 . Combi . Heat                  0.300    0.000
+CONV_generic . 2030 . Combi . Elec                  1.000    0.000
+CONV_generic . 2030 . Combi2 . CH4                 -1.300    0.600
+CONV_generic . 2030 . Combi2 . Heat                 0.300    0.600
+CONV_generic . 2030 . Combi2 . Elec                 1.000    0.600

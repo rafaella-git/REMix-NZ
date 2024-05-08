@@ -1,0 +1,13 @@
+remix_parameters:
+  crossover: 1
+  roundts: 1
+  timestart: 8
+  timeend: 8
+  datadir: ../data
+  opfmethod: angle
+  
+metrics:
+  runtime: <=10
+
+check_symbols:
+  - transfer_flows_annual

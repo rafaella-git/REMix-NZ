@@ -1,0 +1,16 @@
+                                obj  endyear  upperValue  useUpper  integral  discount  isVariable  useLower
+global . horizon . SystemCost  -1.0     10.0         0.0       0.0       1.0      0.01         0.0       0.0
+A . horizon . Carbon            0.0     50.0      1200.0       1.0       1.0      0.00         0.0       0.0
+A . 2050 . Carbon               0.0      1.0         0.0       1.0       1.0      0.00         0.0       0.0
+A . 2060 . Carbon               0.0      1.0         0.0       1.0       1.0      0.00         0.0       0.0
+A . horizon . CarbonSlack       0.0      0.0         0.0       0.0       0.0      0.00         1.0       1.0
+B . horizon . Carbon            0.0     50.0      1000.0       1.0       1.0      0.00         0.0       0.0
+B . horizon . CarbonSlack       0.0      0.0         0.0       0.0       0.0      0.00         1.0       1.0
+C . horizon . Carbon            0.0     50.0       900.0       1.0       1.0      0.00         0.0       0.0
+C . 2050 . Carbon               0.0      1.0         0.0       1.0       1.0      0.00         0.0       0.0
+C . 2060 . Carbon               0.0      1.0         0.0       1.0       1.0      0.00         0.0       0.0
+C . horizon . CarbonSlack       0.0      0.0         0.0       0.0       0.0      0.00         1.0       1.0
+D . horizon . Carbon            0.0     50.0       800.0       1.0       1.0      0.00         0.0       0.0
+D . 2050 . Carbon               0.0      1.0         0.0       1.0       1.0      0.00         0.0       0.0
+D . 2060 . Carbon               0.0      1.0         0.0       1.0       1.0      0.00         0.0       0.0
+D . horizon . CarbonSlack       0.0      0.0         0.0       0.0       0.0      0.00         1.0       1.0

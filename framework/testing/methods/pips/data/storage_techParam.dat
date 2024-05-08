@@ -1,0 +1,7 @@
+                      lifeTime  freeDecom  levelUpperLimit
+LiIonBattery . 2030       20.0        0.0              1.0
+LiIonBattery . 2040       20.0        0.0              1.0
+LiIonBattery . 2050       20.0        0.0              1.0
+PumpedStorage . 2030      69.0        0.0              1.0
+PumpedStorage . 2040      69.0        0.0              1.0
+PumpedStorage . 2050      69.0        0.0              1.0

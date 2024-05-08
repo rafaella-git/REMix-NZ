@@ -1,0 +1,761 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="202.10211mm"
+   height="117.03779mm"
+   viewBox="0 0 202.1021 117.03778"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2 (dc2aedaf03, 2022-05-15)"
+   sodipodi:docname="ESOM_scope.svg"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:snap-bbox="true"
+     inkscape:zoom="1.7791439"
+     inkscape:cx="348.48221"
+     inkscape:cy="256.02201"
+     inkscape:window-width="2520"
+     inkscape:window-height="1481"
+     inkscape:window-x="-11"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     inkscape:object-paths="true"
+     inkscape:showpageshadow="2"
+     inkscape:deskcolor="#d1d1d1" />
+  <defs
+     id="defs2">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient80918">
+      <stop
+         style="stop-color:#b72323;stop-opacity:1;"
+         offset="0"
+         id="stop80914" />
+      <stop
+         style="stop-color:#b72323;stop-opacity:0;"
+         offset="1"
+         id="stop80916" />
+    </linearGradient>
+    <marker
+       style="overflow:visible"
+       id="TriangleOutL-4-3-8-6-3-9-0"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="TriangleOutL"
+       inkscape:isstock="true">
+      <path
+         transform="scale(0.8)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path6862-2-2-0-7-2-9-2" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="TriangleOutL-4-3-8-6-3-9-0-9"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="TriangleOutL"
+       inkscape:isstock="true">
+      <path
+         transform="scale(0.8)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path6862-2-2-0-7-2-9-2-1" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="TriangleOutL-4-3-8-6-3-9-0-9-1"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="TriangleOutL"
+       inkscape:isstock="true">
+      <path
+         transform="scale(0.8)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path6862-2-2-0-7-2-9-2-1-9" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="TriangleOutL-4-3-8-6-3-9-0-9-1-2"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="TriangleOutL"
+       inkscape:isstock="true">
+      <path
+         transform="scale(0.8)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path6862-2-2-0-7-2-9-2-1-9-5" />
+    </marker>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient80918"
+       id="linearGradient80920"
+       x1="117.2148"
+       y1="226.38382"
+       x2="132.86554"
+       y2="226.38382"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-97.08741,-187.56429)">
+    <g
+       id="g16929-4-2-4"
+       transform="matrix(1.6631099,0,0,4.2795268,225.46302,-610.01811)">
+      <g
+         id="g16893-8-5-0"
+         transform="rotate(90,20.614242,197.03946)">
+        <g
+           id="g13007-8-2-3-9"
+           transform="rotate(180,41.679547,168.58322)">
+          <path
+             style="fill:none;stroke:#000000;stroke-width:0.155224;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:2;stroke-dasharray:none;stroke-opacity:1;marker-mid:url(#TriangleOutL-4-3-8-6-3-9-0-9-1-2)"
+             d="m 53.406838,140.16748 c 18.676028,-0.081 18.676028,-0.081 18.676028,-0.081 v 0"
+             id="path8026-09-6-6-9-4-9-0-3-6"
+             inkscape:export-xdpi="1000"
+             inkscape:export-ydpi="1000" />
+        </g>
+      </g>
+    </g>
+    <g
+       id="g12874"
+       transform="translate(44.993785,-1.8375277)">
+      <g
+         id="g12866">
+        <rect
+           style="mix-blend-mode:darken;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-miterlimit:1.9;stroke-dasharray:none;stroke-opacity:1"
+           id="rect1602"
+           width="83.695442"
+           height="10.737246"
+           x="111.59428"
+           y="291.82849" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';letter-spacing:0.0079375px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+           x="133.34697"
+           y="298.07535"
+           id="text17062-4-3"><tspan
+             sodipodi:role="line"
+             id="tspan17060-7-9"
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';stroke-width:0.264583;font-size:3.52777778px"
+             x="133.34697"
+             y="298.07535">Typical scope of REMix models</tspan></text>
+        <rect
+           style="fill:#81d575;fill-opacity:0.333333;stroke:#5aae4e;stroke-width:0;stroke-opacity:0.333333"
+           id="rect2305"
+           width="11.563188"
+           height="3.5790818"
+           x="118.47714"
+           y="295.40756"
+           rx="0.5"
+           ry="0.49999997" />
+      </g>
+    </g>
+    <rect
+       style="fill:#1c3b59;fill-opacity:1;stroke:#726769;stroke-width:0.4;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="rect2231-0-5-9-1"
+       width="23.538673"
+       height="17.247452"
+       x="259.8602"
+       y="201.72116" />
+    <g
+       id="g16929"
+       transform="matrix(1.6631099,0,0,4.2795267,79.492779,-609.27457)">
+      <g
+         id="g16893"
+         transform="rotate(90,20.614242,197.03946)">
+        <g
+           id="g13007-8"
+           transform="rotate(180,41.679547,168.58322)">
+          <path
+             style="fill:none;stroke:#000000;stroke-width:0.155224;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:2;stroke-dasharray:none;stroke-opacity:1;marker-mid:url(#TriangleOutL-4-3-8-6-3-9-0)"
+             d="m 53.406838,140.16748 c 18.676028,-0.081 18.676028,-0.081 18.676028,-0.081 v 0"
+             id="path8026-09-6-6-9-4-9"
+             inkscape:export-xdpi="1000"
+             inkscape:export-ydpi="1000" />
+        </g>
+      </g>
+    </g>
+    <g
+       id="g16929-4"
+       transform="matrix(1.6631099,0,0,4.2795267,128.14953,-609.27454)">
+      <g
+         id="g16893-8"
+         transform="rotate(90,20.614242,197.03946)">
+        <g
+           id="g13007-8-2"
+           transform="rotate(180,41.679547,168.58322)">
+          <path
+             style="fill:none;stroke:#000000;stroke-width:0.155224;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:2;stroke-dasharray:none;stroke-opacity:1;marker-mid:url(#TriangleOutL-4-3-8-6-3-9-0-9)"
+             d="m 53.406838,140.16748 c 18.676028,-0.081 18.676028,-0.081 18.676028,-0.081 v 0"
+             id="path8026-09-6-6-9-4-9-0"
+             inkscape:export-xdpi="1000"
+             inkscape:export-ydpi="1000" />
+        </g>
+      </g>
+    </g>
+    <g
+       id="g16929-4-2"
+       transform="matrix(1.6631099,0,0,4.2795267,176.80627,-609.29351)">
+      <g
+         id="g16893-8-5"
+         transform="rotate(90,20.614242,197.03946)">
+        <g
+           id="g13007-8-2-3"
+           transform="rotate(180,41.679547,168.58322)">
+          <path
+             style="fill:none;stroke:#000000;stroke-width:0.155224;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:2;stroke-dasharray:none;stroke-opacity:1;marker-mid:url(#TriangleOutL-4-3-8-6-3-9-0-9-1)"
+             d="m 53.406838,140.16748 c 18.676028,-0.081 18.676028,-0.081 18.676028,-0.081 v 0"
+             id="path8026-09-6-6-9-4-9-0-3"
+             inkscape:export-xdpi="1000"
+             inkscape:export-ydpi="1000" />
+        </g>
+      </g>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="115.57386"
+       y="283.29013"
+       id="text17945-1-0-8"><tspan
+         sodipodi:role="line"
+         id="tspan17943-0-0-7"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';stroke-width:0.264583"
+         x="115.57386"
+         y="283.29013">Spatial scale</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="104.28384"
+       y="274.94598"
+       id="text17062"><tspan
+         sodipodi:role="line"
+         id="tspan17060"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';stroke-width:0.264583"
+         x="104.28384"
+         y="274.94598">Local</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="101.93081"
+       y="198.6433"
+       id="text17062-4"><tspan
+         sodipodi:role="line"
+         id="tspan17060-7"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';stroke-width:0.264583"
+         x="101.93081"
+         y="198.6433">Global</tspan></text>
+    <rect
+       style="fill:#6f290b;fill-opacity:1;stroke:#726769;stroke-width:0.4;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="rect2231-0"
+       width="23.538673"
+       height="17.247452"
+       x="114.03864"
+       y="201.72116" />
+    <rect
+       style="fill:#b75929;fill-opacity:1;stroke:#726769;stroke-width:0.4;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="rect2231-0-3"
+       width="23.538673"
+       height="17.247452"
+       x="114.03864"
+       y="219.04964" />
+    <rect
+       style="fill:#d86941;fill-opacity:1;stroke:#726769;stroke-width:0.4;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="rect2231-0-3-8"
+       width="23.538673"
+       height="17.247452"
+       x="114.03864"
+       y="236.41176" />
+    <rect
+       style="fill:#f3a178;fill-opacity:1;stroke:#726769;stroke-width:0.4;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="rect2231-0-3-8-6"
+       width="23.538673"
+       height="17.247452"
+       x="114.03864"
+       y="253.74023" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="162.35912"
+       y="283.29013"
+       id="text17945-1-0-8-7"><tspan
+         sodipodi:role="line"
+         id="tspan17943-0-0-7-7"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';stroke-width:0.264583"
+         x="162.35912"
+         y="283.29013">Temporal scale</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="147.47034"
+       y="274.94598"
+       id="text17062-2"><tspan
+         sodipodi:role="line"
+         id="tspan17060-1"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';stroke-width:0.264583"
+         x="147.47034"
+         y="274.94598">Seconds</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="147.34769"
+       y="198.64325"
+       id="text17062-4-7"><tspan
+         sodipodi:role="line"
+         id="tspan17060-7-5"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';stroke-width:0.264583"
+         x="147.34769"
+         y="198.64325">Decades</tspan></text>
+    <rect
+       style="fill:#f3779b;fill-opacity:1;stroke:#726769;stroke-width:0.4;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="rect2231-0-3-8-6-1"
+       width="23.538673"
+       height="17.247452"
+       x="162.69539"
+       y="253.74023" />
+    <rect
+       style="fill:#6a0b2d;fill-opacity:1;stroke:#726769;stroke-width:0.4;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="rect2231-0-5"
+       width="23.538673"
+       height="17.247452"
+       x="162.69539"
+       y="201.72116" />
+    <rect
+       style="fill:#a63b62;fill-opacity:1;stroke:#726769;stroke-width:0.4;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="rect2231-0-3-0"
+       width="23.538673"
+       height="17.247452"
+       x="162.69539"
+       y="219.04965" />
+    <rect
+       style="fill:#d74173;fill-opacity:1;stroke:#726769;stroke-width:0.4;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="rect2231-0-3-8-5"
+       width="23.538673"
+       height="17.247452"
+       x="162.69539"
+       y="236.41176" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="207.48985"
+       y="283.26892"
+       id="text17945-1-0-8-7-7"><tspan
+         sodipodi:role="line"
+         id="tspan17943-0-0-7-7-1"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';stroke-width:0.264583"
+         x="207.48985"
+         y="283.26892">Technological scale</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="195.21242"
+       y="274.85428"
+       id="text17062-2-6"><tspan
+         sodipodi:role="line"
+         id="tspan17060-1-7"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';stroke-width:0.264583"
+         x="195.21242"
+         y="274.85428">Accurate</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="194.05475"
+       y="198.6433"
+       id="text17062-4-7-0"><tspan
+         sodipodi:role="line"
+         id="tspan17060-7-5-4"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';stroke-width:0.264583"
+         x="194.05475"
+         y="198.6433">Extensive</tspan></text>
+    <rect
+       style="fill:#4b2852;fill-opacity:1;stroke:#726769;stroke-width:0.4;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="rect2231-0-5-9"
+       width="23.538673"
+       height="17.247452"
+       x="211.35214"
+       y="201.72116" />
+    <rect
+       style="fill:#914d8e;fill-opacity:1;stroke:#726769;stroke-width:0.4;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="rect2231-0-3-0-3"
+       width="23.538673"
+       height="17.247452"
+       x="211.35214"
+       y="219.0307" />
+    <rect
+       style="fill:#ba5eb4;fill-opacity:1;stroke:#726769;stroke-width:0.4;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="rect2231-0-3-8-5-0"
+       width="23.538673"
+       height="17.247452"
+       x="211.35214"
+       y="236.41176" />
+    <rect
+       style="fill:#f07ae9;fill-opacity:1;stroke:#726769;stroke-width:0.4;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="rect2231-0-3-8-6-1-5"
+       width="23.538673"
+       height="17.247452"
+       x="211.35214"
+       y="253.74023" />
+    <rect
+       style="fill:#336999;fill-opacity:1;stroke:#726769;stroke-width:0.4;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="rect2231-0-3-0-3-9"
+       width="23.538673"
+       height="17.247452"
+       x="259.8602"
+       y="219.04964" />
+    <rect
+       style="fill:#418fd8;fill-opacity:1;stroke:#726769;stroke-width:0.4;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="rect2231-0-3-8-5-0-5"
+       width="23.538673"
+       height="17.247452"
+       x="259.8602"
+       y="236.41176" />
+    <rect
+       style="fill:#77b4f3;fill-opacity:1;stroke:#726769;stroke-width:0.4;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="rect2231-0-3-8-6-1-5-9"
+       width="23.538673"
+       height="17.247452"
+       x="259.8602"
+       y="253.74023" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="253.71368"
+       y="283.26721"
+       id="text17945-1-0-8-7-7-8"><tspan
+         sodipodi:role="line"
+         id="tspan17943-0-0-7-7-1-8"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';stroke-width:0.264583"
+         x="253.71368"
+         y="283.26721">Economic perspective</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="234.17271"
+       y="274.92307"
+       id="text17062-2-6-8"><tspan
+         sodipodi:role="line"
+         id="tspan17060-1-7-0"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';stroke-width:0.264583"
+         x="234.17271"
+         y="274.92307">Microeconomic</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="232.95476"
+       y="198.6433"
+       id="text17062-4-7-0-7"><tspan
+         sodipodi:role="line"
+         id="tspan17060-7-5-4-6"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';stroke-width:0.264583"
+         x="232.95476"
+         y="198.6433">Macroeconomic</tspan></text>
+    <path
+       style="fill:#83d777;fill-opacity:0.332353;fill-rule:evenodd;stroke:none;stroke-width:0.220515"
+       d="m 113.83864,215.77119 h 43.34171 l 7.81649,-9.62975 h 31.45301 l 10.57666,14.61561 h 38.85745 c 7.22409,-2.23912 8.47059,-2.77432 11.82722,-3.93023 h 26.20536 l 0.36583,2.60497 h -26.57119 c -0.77617,1.34466 -2.74934,27.21162 -4.05562,34.27871 h -46.62905 l -10.57666,-10.70905 h -31.62732 l -7.8312,-4.20575 h -43.15269 z"
+       id="path91394"
+       sodipodi:nodetypes="ccccccccccccccccc" />
+    <g
+       id="g11852"
+       transform="translate(0.94524322,-1.5400997)">
+      <g
+         id="g78458"
+         style="fill:#ffffff;fill-opacity:1"
+         transform="translate(-0.94524248,0.94524512)" />
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke:none;stroke-width:0.264583"
+         x="173.50476"
+         y="225.82886"
+         id="text17062-1-84"><tspan
+           sodipodi:role="line"
+           id="tspan17060-9-5"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="173.50476"
+           y="225.82886">Seasonal </tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="173.50476"
+           y="230.23859"
+           id="tspan34674">weather </tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="173.50476"
+           y="234.6483"
+           id="tspan34676">conditions</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke:none;stroke-width:0.264583"
+         x="173.91481"
+         y="242.89874"
+         id="text17062-1-84-9"><tspan
+           sodipodi:role="line"
+           id="tspan17060-9-5-1"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="173.91481"
+           y="242.89874">Renewable </tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="173.91481"
+           y="247.30847"
+           id="tspan34668">energy </tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="173.91481"
+           y="251.71819"
+           id="tspan34670">variability</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke:none;stroke-width:0.264583"
+         x="173.57608"
+         y="260.2272"
+         id="text17062-1-1-9"><tspan
+           sodipodi:role="line"
+           id="tspan17060-9-8-5"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="173.57608"
+           y="260.2272">Stable </tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="173.57608"
+           y="264.63693"
+           id="tspan34637">system</tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="173.57608"
+           y="269.04666"
+           id="tspan34639">operation</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke:#020203;stroke-width:0.264583;stroke-opacity:0"
+         x="173.45903"
+         y="210.13205"
+         id="text17062-1-2-6"><tspan
+           sodipodi:role="line"
+           id="tspan17060-9-3-1"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke:#020203;stroke-width:0.264583;stroke-opacity:0"
+           x="173.45903"
+           y="210.13205">Investment</tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke:#020203;stroke-width:0.264583;stroke-opacity:0"
+           x="173.45903"
+           y="214.54178"
+           id="tspan34672">planning</tspan></text>
+    </g>
+    <g
+       id="g78444"
+       style="display:inline"
+       transform="translate(0,-0.44614154)">
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke:none;stroke-width:0.264583"
+         x="223.17264"
+         y="261.50662"
+         id="text17062-1-1-9-2"><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="223.17264"
+           y="261.50662"
+           id="tspan34639-3">Process</tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="223.17264"
+           y="265.91635"
+           id="tspan38032">simulation</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke:#020203;stroke-width:0.264583;stroke-opacity:0"
+         x="223.21837"
+         y="209.49068"
+         id="text17062-1-2-6-9"><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke:#020203;stroke-width:0.264583;stroke-opacity:0"
+           x="223.21837"
+           y="209.49068"
+           id="tspan34672-7">Energy-</tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke:#020203;stroke-width:0.264583;stroke-opacity:0"
+           x="223.21837"
+           y="213.90041"
+           id="tspan38038">water-land</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke:none;stroke-width:0.264583"
+         x="223.55865"
+         y="224.87553"
+         id="text17062-1-84-1"><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="223.55865"
+           y="224.87553"
+           id="tspan39356">Coupling of </tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="223.55865"
+           y="229.28526"
+           id="tspan39358">energy </tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="223.55865"
+           y="233.69498"
+           id="tspan3558">carriers</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke:none;stroke-width:0.264583"
+         x="223.17651"
+         y="242.22093"
+         id="text17062-1-84-9-4"><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="223.17651"
+           y="242.22093"
+           id="tspan34670-9">Power</tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="223.17651"
+           y="246.63066"
+           id="tspan38050">generation</tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#fffaeb;fill-opacity:1;stroke-width:0.264583"
+           x="223.17651"
+           y="251.04037"
+           id="tspan38052">mix</tspan></text>
+    </g>
+    <g
+       id="g11881"
+       transform="translate(0.94524294,-0.94524165)"
+       style="fill:#ffffff;fill-opacity:1">
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
+         x="270.59436"
+         y="229.80069"
+         id="text17062-1-84-1-3"><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke-width:0.264583;font-size:3.52777778px"
+           x="270.59436"
+           y="229.80069"
+           id="tspan34676-3-3">Markets</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
+         x="270.65793"
+         y="243.67699"
+         id="text17062-1-84-9-4-8"><tspan
+           sodipodi:role="line"
+           id="tspan17060-9-5-1-9-2"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke-width:0.264583;font-size:3.52777778px"
+           x="270.65793"
+           y="243.67699"> </tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke-width:0.264583;font-size:3.52777778px"
+           x="270.65793"
+           y="247.64574"
+           id="tspan34670-9-2">Companies</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
+         x="270.64243"
+         y="264.4913"
+         id="text17062-1-1-9-2-2"><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke-width:0.264583;font-size:3.52777778px"
+           x="270.64243"
+           y="264.4913"
+           id="tspan34639-3-8">Individuals</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52777778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#020203;stroke-width:0.264583;stroke-opacity:0"
+         x="270.64941"
+         y="206.22377"
+         id="text17062-1-2-6-9-8"><tspan
+           sodipodi:role="line"
+           id="tspan17060-9-3-1-2-6"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#020203;stroke-width:0.264583;stroke-opacity:0;font-size:3.52777778px"
+           x="270.64941"
+           y="206.22377" /><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#020203;stroke-width:0.264583;stroke-opacity:0;font-size:3.52777778px"
+           x="270.64941"
+           y="210.19252"
+           id="tspan34672-7-4">World</tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#020203;stroke-width:0.264583;stroke-opacity:0;font-size:3.52777778px"
+           x="270.64941"
+           y="214.16127"
+           id="tspan43898">economy</tspan></text>
+    </g>
+    <g
+       id="g78404"
+       transform="translate(1.0409968,0.44614154)">
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#ffffff;fill-opacity:1;stroke:#794b4b;stroke-width:0.065;stroke-dasharray:none;stroke-opacity:0"
+         x="117.0815"
+         y="227.66264"
+         id="text17062-1"><tspan
+           sodipodi:role="line"
+           id="tspan17060-9"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#ffffff;fill-opacity:1;stroke:#794b4b;stroke-width:0.065;stroke-dasharray:none;stroke-opacity:0"
+           x="117.0815"
+           y="227.66264">Countries</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
+         x="118.10934"
+         y="245.02786"
+         id="text17062-1-8"><tspan
+           sodipodi:role="line"
+           id="tspan17060-9-9"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
+           x="118.10934"
+           y="245.02786">Districts</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
+         x="115.20409"
+         y="262.35324"
+         id="text17062-1-1"><tspan
+           sodipodi:role="line"
+           id="tspan17060-9-8"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
+           x="115.20409"
+           y="262.35324">Households</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#ffffff;fill-opacity:1;stroke:#020202;stroke-width:0.264583;stroke-opacity:0"
+         x="116.01645"
+         y="210.33417"
+         id="text17062-1-2"><tspan
+           sodipodi:role="line"
+           id="tspan17060-9-3"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;font-family:Frutiger;-inkscape-font-specification:'Frutiger Bold';fill:#ffffff;fill-opacity:1;stroke:#020202;stroke-width:0.264583;stroke-opacity:0"
+           x="116.01645"
+           y="210.33417">Continents</tspan></text>
+    </g>
+  </g>
+</svg>

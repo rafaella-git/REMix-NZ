@@ -1,0 +1,11 @@
+remix_parameters:
+  crossover: 1
+  accuracy: 1e-12
+  roundts: 1
+  scendir: scenario
+
+metrics:
+  runtime: <=50
+
+check_symbols:
+  - commodity_balance

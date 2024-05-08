@@ -1,0 +1,9 @@
+remix_parameters:
+  crossover: 1
+
+metrics:
+  runtime: <=16
+
+check_symbols:
+  - storage_flows
+  - storage_level_out

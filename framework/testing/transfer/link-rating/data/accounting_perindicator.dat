@@ -1,0 +1,5 @@
+                                       perIndicator
+SystemCost . FuelCost . global . 2030           1.0
+SystemCost . Invest . global . 2030             1.0
+SystemCost . OMFix . global . 2030              1.0
+SystemCost . OMVar . global . 2030              1.0

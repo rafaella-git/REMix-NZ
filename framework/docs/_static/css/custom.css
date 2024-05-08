@@ -1,0 +1,21 @@
+.dropdown-menu {
+	min-width: 18rem; /* default 10rem */
+}
+
+.bd-page-width {
+	max-width: 98rem; /* default 88rem */
+}
+
+.bd-main .bd-content .bd-article-container {
+	max-width: 70em; /* default 60em */
+}
+
+figure {
+	margin-bottom: 0;
+	padding: 0; /* default 60em */
+}
+
+div.highlight-none {
+	max-height: 24em;
+	overflow-y: auto;
+  }

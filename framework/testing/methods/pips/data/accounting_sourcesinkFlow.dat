@@ -1,0 +1,20 @@
+                                                 perFlow
+CO2 . global . 2030 . FuelImport . Coal            0.360
+CO2 . global . 2030 . FuelImport . Lignite         0.400
+CO2 . global . 2030 . FuelImport . NGas            0.187
+FuelCost . global . 2030 . FuelImport . Biomass    0.039
+FuelCost . global . 2030 . FuelImport . Coal       0.014
+FuelCost . global . 2030 . FuelImport . Lignite    0.006
+FuelCost . global . 2030 . FuelImport . NGas       0.024
+FuelCost . global . 2030 . FuelImport . Nuclear    0.004
+FuelCost . global . 2040 . FuelImport . Biomass    0.039
+FuelCost . global . 2040 . FuelImport . Coal       0.016
+FuelCost . global . 2040 . FuelImport . Lignite    0.006
+FuelCost . global . 2040 . FuelImport . NGas       0.037
+FuelCost . global . 2040 . FuelImport . Nuclear    0.004
+FuelCost . global . 2050 . FuelImport . Biomass    0.060
+FuelCost . global . 2050 . FuelImport . Coal       0.018
+FuelCost . global . 2050 . FuelImport . Lignite    0.016
+FuelCost . global . 2050 . FuelImport . NGas       0.040
+FuelCost . global . 2050 . FuelImport . Nuclear    0.004
+SlackCost . global . 2030 . Slack . Elec           7.500

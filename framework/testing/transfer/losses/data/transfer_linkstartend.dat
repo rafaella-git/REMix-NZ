@@ -1,0 +1,3 @@
+                  start  end
+R1__R2 . R1_data      0    1
+R1__R2 . R2_data      1    0

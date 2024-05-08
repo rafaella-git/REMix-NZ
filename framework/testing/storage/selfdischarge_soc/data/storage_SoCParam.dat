@@ -1,0 +1,4 @@
+                     SoC  cRate  eRate  selfdischarge
+LiIon . 2030 . low   0.0    INF    INF        -0.0002
+LiIon . 2030 . mid   0.3    INF    INF        -0.0002
+LiIon . 2030 . high  1.0    INF    INF        -0.0005

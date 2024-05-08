@@ -1,0 +1,3 @@
+                      linksUpperLimit  flowAlongLimit  flowAgainstLimit  limitFlows
+R1__R2 . 2030 . HVDC              inf                1              0.3           1
+R2__R1 . 2030 . HVDC           1000.0                1              0.5           1

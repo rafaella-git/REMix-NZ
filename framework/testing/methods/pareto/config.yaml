@@ -1,0 +1,5 @@
+remix_parameters:
+  method: pareto
+  paretopoints: 2
+  paretofactor: 1.01
+  roundts: 1

@@ -1,0 +1,10 @@
+remix_parameters:
+  crossover: 1
+  gdx_mipconverter: 1
+  
+check_symbols:
+  - converter_unitsOnline
+  - converter_activity
+
+metrics:
+  runtime: <=15

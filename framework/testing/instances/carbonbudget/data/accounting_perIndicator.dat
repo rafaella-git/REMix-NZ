@@ -1,0 +1,11 @@
+                                                  perIndicator
+SystemCost . FuelCost . global . horizon                   1.0
+SystemCost . Invest . global . horizon                     1.0
+SystemCost . OMFix . global . horizon                      1.0
+SystemCost . OMVar . global . horizon                      1.0
+SystemCost . Slack_Carbon . global . horizon               0.6
+SystemCost . Slack_Delta_PV . global . horizon          1500.0
+SystemCost . Slack_Delta_Wind . global . horizon        1500.0
+Carbon . Slack_Carbon . global . horizon                  -1.0
+Delta_PV . Slack_Delta_PV . global . horizon              -1.0
+Delta_Wind . Slack_Delta_Wind . global . horizon          -1.0

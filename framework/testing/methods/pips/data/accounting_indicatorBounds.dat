@@ -1,0 +1,3 @@
+                               discount  endyear  integral  obj  upperValue  useUpper
+global . 2030 . CO2                0.00      0.0       0.0  0.0    165000.0       1.0
+global . horizon . SystemCost      0.03      5.0       1.0 -1.0         0.0       0.0

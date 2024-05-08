@@ -1,0 +1,7 @@
+                                       coefficient
+GT_H2 . 2010 . Powergen . H2                -2.325
+GT_H2 . 2010 . Powergen . Elec               1.000
+GT_CH4 . 1990 . Powergen . CH4              -2.127
+GT_CH4 . 1990 . Powergen . Elec              1.000
+GT_CH4 . 2020 . Powergen . CH4              -2.000
+GT_CH4 . 2020 . Powergen . Elec              1.000
