@@ -24,19 +24,19 @@ idx = pd.IndexSlice
 will_elec = ["00-test-elec","01-battery-distributed", "02-battery-overnight", "03-battery-recharging", "04-battery-solar"]
 will_h2 = ["01-h2-distributed", "02-h2-overnight", "03-h2-recharging", "04-h2-solar"]
 sdewes_ap = ["base", "high", "med", "ev-med", "low"]
-mbie=["base","h2"]
+mbie=["base","h2pos", "h2"]
     
 scenario_dict = {       
     "will": [will_h2, [2020, 2035, 2050]],
     "sdewes-ap": [sdewes_ap, [2020, 2030, 2040, 2050]],
     "mbie": [mbie, [2020, 2030, 2040, 2050]]
 }
-group_name="will"
+group_name="mbie"
 files_lst = scenario_dict[group_name][0]
 yrs_sel = scenario_dict[group_name][1] # [2020, 2025, 2030, 2035, 2040, 2045, 2050]
 yrs_str='-'.join([str(item) for item in yrs_sel])
 yrs_to_calc = [2020, 2025, 2030, 2035, 2040, 2045, 2050]
-indx=3
+indx=1
 
 # Define paths/directories
 path_base = "C:/Local/REMix"
@@ -139,40 +139,40 @@ def add_demand(m):
   
     # # Hydrogen
     # # "sourcesink_annualSum"
-    h2_nodes =  m.set.nodesdata
-    h2_annual = pd.DataFrame(
-        index=pd.MultiIndex.from_product([h2_nodes, yrs_to_calc, ["Demand"], ["H2"]])
-    )
+    # h2_nodes =  m.set.nodesdata
+    # h2_annual = pd.DataFrame(
+    #     index=pd.MultiIndex.from_product([h2_nodes, yrs_to_calc, ["Demand"], ["H2"]])
+    # )
 
     # Adding the new column "upper" to the DataFrame and setting values for the year 2050
-    h2_annual["upper"] = 0 # Initializing with  0
-    h2_annualdemand=0 # if it is one it takes the annual demand
-    if h2_annualdemand==1:
-        h2_2050 = {
-            'NIS': 1038.15623,
-            'AKL': 70793.7597,
-            'WTO': 11663.81169,
-            'BOP': 11700.05017,
-            'HBY': 13060.32836,
-            'TRN': 62016.13938,
-            'CEN': 11842.51657,
-            'WEL': 34654.12968,
-            'NEL': 9158.885102,
-            'CAN': 39314.18837,
-            'OTG': 18806.67305
-            }
-        for node, value in h2_2050.items():
-            h2_annual.loc[(node, 2050, "Demand", "H2"), "upper"] = value
-    m.parameter.add(h2_annual, "sourcesink_annualsum")
+    # h2_annual["upper"] = 0 # Initializing with  0
+    # h2_annualdemand=0 # if it is one it takes the annual demand
+    # if h2_annualdemand==1:
+    #     h2_2050 = {
+    #         'NIS': 1038.15623,
+    #         'AKL': 70793.7597,
+    #         'WTO': 11663.81169,
+    #         'BOP': 11700.05017,
+    #         'HBY': 13060.32836,
+    #         'TRN': 62016.13938,
+    #         'CEN': 11842.51657,
+    #         'WEL': 34654.12968,
+    #         'NEL': 9158.885102,
+    #         'CAN': 39314.18837,
+    #         'OTG': 18806.67305
+    #         }
+    #     for node, value in h2_2050.items():
+    #         h2_annual.loc[(node, 2050, "Demand", "H2"), "upper"] = value
+    # m.parameter.add(h2_annual, "sourcesink_annualsum")
 
-    h2_cfg = pd.DataFrame(
-        index=pd.MultiIndex.from_product([h2_nodes, yrs_to_calc, ["Demand"], ["H2"]])
-    )
-    h2_cfg["usesUpperSum"] = 1
-    h2_cfg["usesUpperProfile"] = 1
+    # h2_cfg = pd.DataFrame(
+    #     index=pd.MultiIndex.from_product([h2_nodes, yrs_to_calc, ["Demand"], ["H2"]])
+    # )
+    # h2_cfg["usesUpperSum"] = 1
+    # h2_cfg["usesUpperProfile"] = 1
    
-    # h2_cfg["usesLowerProfile"] = 1
-    m.parameter.add(h2_cfg, "sourcesink_config")   
+    # # h2_cfg["usesLowerProfile"] = 1
+    # m.parameter.add(h2_cfg, "sourcesink_config")   
 
     # Derive region and time scope
     m.set.add(list(ts_ffe.index.get_level_values(0)), "nodesdata")
@@ -808,6 +808,97 @@ def add_electrolyser(m):
     m.parameter.add(electrolyser_acc, "accounting_converterunits")
 
 
+def add_H2_CCGT(m):
+    H2_CCGT_vintage = [2030, 2035, 2040, 2045, 2050]
+    H2_CCGT_nodes = [n for n in m.set.nodesdata]
+    # technology
+    H2_CCGT_tech = pd.DataFrame(index=pd.MultiIndex.from_product([["H2_CCGT"], H2_CCGT_vintage]))
+    H2_CCGT_tech.loc[idx[:, :], ["lifeTime"]] = 35  # years
+    H2_CCGT_tech["activityUpperLimit"] = 1  # availability of technology
+    m.parameter.add(H2_CCGT_tech, "converter_techparam")
+
+    # capacities
+    H2_CCGT_caps = pd.DataFrame(index=pd.MultiIndex.from_product([H2_CCGT_nodes, yrs_to_calc, ["H2_CCGT"]]))
+    H2_CCGT_caps["unitsUpperLimit"] = 100  # GW_el
+    m.parameter.add(H2_CCGT_caps, "converter_capacityparam")
+
+    # coefficients
+    H2_CCGT_coef = pd.DataFrame(
+        index=pd.MultiIndex.from_product(
+            [
+                ["H2_CCGT"],
+                H2_CCGT_vintage,
+                ["Powergen"],
+                ["Elec", "H2"],
+            ]
+        )
+    )
+    H2_CCGT_coef.loc[idx[:, :, :, "H2"], "coefficient"] = -1     
+    H2_CCGT_coef.loc[idx[:, :, :, "Elec"], "coefficient"] = [0.58, 0.59, 0.60, 0.60,  0.60] # C. Habib
+    m.parameter.add(H2_CCGT_coef, "converter_coefficient")
+
+    # accounting
+    H2_CCGT_acc = pd.DataFrame(
+        index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], ["H2_CCGT"], H2_CCGT_vintage])
+        ).sort_index()
+
+    H2_CCGT_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 100 #853   #  
+    H2_CCGT_acc.loc[idx["Invest", :, :, :], "amorTime"] = 35  # years
+    H2_CCGT_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
+    H2_CCGT_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
+    H2_CCGT_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
+        H2_CCGT_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.025
+        )  # Mio EUR per unit
+
+    m.parameter.add(H2_CCGT_acc, "accounting_converterunits")
+
+
+def add_H2_FC(m):
+    H2_FC_vintage = [2020, 2025, 2030, 2035, 2040, 2045, 2050]
+    H2_FC_nodes = [n for n in m.set.nodesdata]
+    # technology
+    H2_FC_tech = pd.DataFrame(index=pd.MultiIndex.from_product([["H2_FC"], H2_FC_vintage]))
+    H2_FC_tech.loc[idx[:, :], ["lifeTime"]] = 35  # years
+    H2_FC_tech["activityUpperLimit"] = 1  # availability of technology
+    m.parameter.add(H2_FC_tech, "converter_techparam")
+
+    # capacities
+    H2_FC_caps = pd.DataFrame(index=pd.MultiIndex.from_product([H2_FC_nodes, yrs_to_calc, ["H2_FC"]]))
+    H2_FC_caps["unitsUpperLimit"] = 100  # GW_el
+    m.parameter.add(H2_FC_caps, "converter_capacityparam")
+
+    # coefficients
+    H2_FC_coef = pd.DataFrame(
+        index=pd.MultiIndex.from_product(
+            [
+                ["H2_FC"],
+                H2_FC_vintage,
+                ["Powergen"],
+                ["Elec", "H2"],
+            ]
+        )
+    )
+    H2_FC_coef.loc[idx[:, :, :, "H2"], "coefficient"] = -1     
+    H2_FC_coef.loc[idx[:, :, :, "Elec"], "coefficient"] = [0.579, 0.6134, 0.6383, 0.6477, 0.6514, 0.6686, 0.6737] # C. Habib
+    m.parameter.add(H2_FC_coef, "converter_coefficient")
+
+    # accounting
+    H2_FC_acc = pd.DataFrame(
+        index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], ["H2_FC"], H2_FC_vintage])
+        ).sort_index()
+
+    H2_FC_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 100 #[2980.992, 1468.139, 773.195, 733.604, 694.012, 654.421, 614.830]   #  
+    H2_FC_acc.loc[idx["Invest", :, :, :], "amorTime"] = 35  # years
+    H2_FC_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
+    H2_FC_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
+    H2_FC_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
+        H2_FC_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.05
+        )  # Mio EUR per unit
+
+    m.parameter.add(H2_FC_acc, "accounting_converterunits")
+
+
+
 def add_dac(m):
     dac_vintage = [2020, 2030, 2040, 2050]
     dac_techs = ["DAC"]
@@ -1101,7 +1192,7 @@ def add_h2_storage(m):
     # converter is the compressor 
     # storage is the gas tank
     h2_stor_vintage = [2020]#, 2030, 2040, 2050]
-    yrs_h2=[2020]#, 2025, 2030, 2035, 2040, 2045, 2050]
+    yrs_h2=[2020, 2035, 2050]#, 2025, 2030, 2035, 2040, 2045, 2050]
     h2_stor_techs = ["H2_storage"]
     h2_stor_nodes = [n for n in m.set.nodesdata]
 
@@ -1127,7 +1218,7 @@ def add_h2_storage(m):
         )
     )
     # electrolyzer_coef.loc[idx[:, :, :, "Elec"], "coefficient"] = -1
-    conv_coef.loc[idx[:, :, "Charge", "Elec"], "coefficient"] = [ -0.043346085]#,	-0.043346085, -0.035470537,	-0.035470537, -0.035470537, -0.031529343, -0.031529343]
+    conv_coef.loc[idx[:, :, "Charge", "Elec"], "coefficient"] =  [ -0.043346085, -0.035470537,  -0.031529343] #[ -0.043346085]#,	-0.043346085, -0.035470537,	-0.035470537, -0.035470537, -0.031529343, -0.031529343]
     # 2020, 2025, 030, 2035, 2040, 2045, 2040...
     conv_coef.loc[idx[:, :, "Charge", "H2"], "coefficient"] = -0.15  # GW_h2
     conv_coef.loc[idx[:, :, "Charge", "H2_stored"], "coefficient"] = 0.15  * 0.89 # GW_h2
@@ -1430,9 +1521,15 @@ if __name__ == "__main__":
     add_gas_turbines(m)
 
     # hydrogen
-    if "h2" in demand_file:
-        add_electrolyser(m)
-        add_h2_storage(m)
+    # if "h2" in demand_file:
+    #     add_electrolyser(m)
+    #     add_h2_storage(m)
+    #     add_H2_CCGT(m)
+    #     add_H2_FC(m)
+    add_electrolyser(m)
+    add_h2_storage(m)
+    add_H2_CCGT(m)
+    add_H2_FC(m)
 
     #add_methanizer(m)
     #add_methanol_syn(m)
