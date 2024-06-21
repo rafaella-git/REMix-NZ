@@ -45,11 +45,11 @@ manually and unzipping the content to a system folder of your choice.
 The following steps are shown with Mamba as example, but should work analogously
 with other Python environment managers like ``virtualenv`` or ``conda``.
 
-When wanting to install the `remix.framework` package from PyPI, you can do as
-follows:
+When wanting to install the `remix.framework` package from PyPI, you can do,
+e.g., as follows:
 
 ```bash
-mamba create -n remix-env python
+mamba create -n remix-env python=3.10
 mamba activate remix-env
 pip install remix.framework
 ```
@@ -96,7 +96,7 @@ steps are needed to be executed in your REMix environment.
 
 - GAMS 37-41: no further action needed
 - GAMS 42-44: `pip install gams[transfer] --find-links [PATH TO GAMS]\api\python\bdist`
-- since GAMS 45: `pip install 'gamsapi[transfer]'==<version_number>.y.z`
+- since GAMS 45: `pip install gamsapi[transfer]==<version_number>.y.z`
 
 ## Create and run a REMix model
 
@@ -157,7 +157,7 @@ Branches available are:
 These branches are typically under active development and are not ensured (see
 below to get the list of branches available).
 
-- specific version: You can check out a specific version of REMix, e.g. `0.9.4`.
+- specific version: You can check out a specific version of REMix, e.g. `0.10.0`.
 
 Check out any branch by using
 

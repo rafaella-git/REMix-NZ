@@ -100,10 +100,10 @@ pip install -e ./framework
 
 ## Recent Publications
 
--   [Wetzel et al. (2023): "Green energy carriers and energy sovereignty in a climate neutral European energy system"](10.1016/j.renene.2023.04.015)
--   [Gils et al. (2022): "Model-related outcome differences in power system models with sector coupling - quantification and drivers"](10.1016/j.rser.2022.112177)[^1]
--   [Gils et al. (2021): "Interaction of hydrogen infrastructures with other sector coupling options towards a zero-emission energy system in Germany"](10.1016/j.renene.2021.08.016)[^1]
--   [Sasanpour et al. (2021): "Strategic policy targets and the contribution of hydrogen in a 100% renewable European power system"](10.1016/j.egyr.2021.07.005)[^1]
+-   [Wetzel et al. (2023): "Green energy carriers and energy sovereignty in a climate neutral European energy system"](https://doi.org/10.1016/j.renene.2023.04.015)
+-   [Gils et al. (2022): "Model-related outcome differences in power system models with sector coupling - quantification and drivers"](https://doi.org/10.1016/j.rser.2022.112177)[^1]
+-   [Gils et al. (2021): "Interaction of hydrogen infrastructures with other sector coupling options towards a zero-emission energy system in Germany"](https://doi.org/10.1016/j.renene.2021.08.016)[^1]
+-   [Sasanpour et al. (2021): "Strategic policy targets and the contribution of hydrogen in a 100% renewable European power system"](https://doi.org/10.1016/j.egyr.2021.07.005)[^1]
 
 ## Contact
 

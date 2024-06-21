@@ -673,7 +673,7 @@ def container_factory(descriptor, name="Container"):
 
                     dataframes[label] = df_out.fillna(self.defaults[label])
                 else:
-                    dataframes[label] = self.__dict__[f"_{label}"].fillna(self.defaults[label])
+                    dataframes[label] = self.__dict__[f"_{label}"].infer_objects(copy=False).fillna(self.defaults[label])
 
                 if not dataframes[label].empty:
                     dataframes[label] = dataframes[label].loc[:, ~(np.isnan(dataframes[label]).all())]

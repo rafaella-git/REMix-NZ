@@ -10,21 +10,25 @@ from remix.framework import __version__
 
 program = Typer()
 
-CLI_PLUGINS = {
-    entry_point.name: entry_point.load()
-    for entry_point in entry_points().select(group="remix.plugins")
-}
-CONTEXT_SETTINGS = {
-    "allow_extra_args": True,
-    "ignore_unknown_options": True
-}
+ENTRY_POINTS = entry_points()
+
+if isinstance(ENTRY_POINTS, dict):
+    CLI_PLUGINS = {
+        entry_point.name: entry_point.load()
+        for entry_point in entry_points()["remix.plugins"]
+    }
+else:
+    CLI_PLUGINS = {
+        entry_point.name: entry_point.load()
+        for entry_point in entry_points().select(group="remix.plugins")
+    }
+CONTEXT_SETTINGS = {"allow_extra_args": True, "ignore_unknown_options": True}
 
 for name, entry_point in CLI_PLUGINS.items():
     program.registered_commands.append(
-        CommandInfo(
-            name=name, callback=entry_point, context_settings=CONTEXT_SETTINGS
-        )
+        CommandInfo(name=name, callback=entry_point, context_settings=CONTEXT_SETTINGS)
     )
+
 
 def version_callback(value: bool):
     """Function to print the REMix version on :code:`remix --version` command.
@@ -45,5 +49,7 @@ def version_callback(value: bool):
 
 
 @program.callback()
-def program_main(version: Optional[bool] = Option(None, "--version", callback=version_callback)):
+def program_main(
+    version: Optional[bool] = Option(None, "--version", callback=version_callback)
+):
     pass

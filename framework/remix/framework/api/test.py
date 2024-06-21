@@ -3,7 +3,6 @@ default_test_remix_kwargs = {
     "mode": "solve",
     "junitxml": "report.xml",
     "keep": 0,
-    "workers": 4,
     "timelimit": 7200,
 }
 

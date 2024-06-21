@@ -204,7 +204,7 @@ For example, we can obtain the CO<sub>2</sub> emissions from the results' annual
 commodity balance value, or the objective value for the system cost:
 
 ```python
->>> m.result["commodity_balance_annual"].loc[("global", "2030", "Emissions", "CO2", "netto"), "value"]
+>>> m.result["commodity_balance_annual"].loc[("global", "2030", "Emissions", "CO2", "net"), "value"]
 -13.5
 
 >>> m.result["indicator_accounting"].loc[("global", "2030", "SystemCost"), "value"]
@@ -230,7 +230,7 @@ rerun the model.
 We can see that there is no difference in any of the results:
 
 ```python
->>> m.result["commodity_balance_annual"].loc[("global", "2030", "Emissions", "CO2", "netto"), "value"]
+>>> m.result["commodity_balance_annual"].loc[("global", "2030", "Emissions", "CO2", "net"), "value"]
 -13.5
 
 >>> m.result["indicator_accounting"].loc[("global", "2030", "SystemCost"), "value"]

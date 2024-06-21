@@ -36,11 +36,12 @@ remix run <argument>
 | `--timestart=...` | First time step for the optimization, default 1 |
 | `--timeend=...` | Last time step for the optimization, default 8760 |
 | `--timeres=...` | "time resolution", e.g. timeres=24 aggregates hourly data to daily resolution, default 1 |
+| `--scaletimefrac=...` | Scaling of time-dependent accounting indicators and source/sink annual sums according the timeslice calculated based on timestart and timeend, default 1 |
 | `--postcalc=...` | Run post-processing of the results, default 1 |
 | `--roundts=...` | Automatically round after-comma digits in large profile files where necessary to successfully read them |
 | `--roundcoefs=...` | Automatically round profiles for converter activities, converter coefficients and source sink profiles to 1e-3, set all values below to 0, default 0 |
 | `--equlist=...` | Write all equations with all variables in the output remix.lst file, can be helpful for model debugging, should only be used if very few time steps, otherwise GB-sized *.txt file, default 0 |
-| `--method=...` | Choose method: "solve" = run the model with commercial solvers, "pareto" = solve the REMix model once and afterwards run multiple points along the pareto front, "mga" = solve the model once and afterwards maximize the distance metric of indicators, "iternodes" = run the model by iterating through all individual nodes while all connections between nodes are ignored, "pips" = build an annotated *.gdx file for PIPS-IPM++ |
+| `--method=...` | Choose method: "solve" = run the model with commercial solvers, "pareto" = solve the REMix model once and afterwards run multiple points along the pareto front, "mga" = solve the model once and afterwards maximize the distance metric of indicators, "iternodes" = run the model by iterating through all individual nodes while all connections between nodes are ignored, "pips" = build an annotated *.gdx file for PIPS-IPM++, default "solve" |
 | `--gdx_mipconverter=...` | Write the MIP features for converters into the results file |
 | `--gdx_mipstorage=...` | Write the MIP features for storage technologies into the results file |
 
