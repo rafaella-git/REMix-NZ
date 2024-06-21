@@ -209,7 +209,7 @@ For example, we can sum up the total methane generation and check whether the va
 To do so, we extract the total generation of the methanation for the R1 region from the annual commodity balance:
 
 ```python
->>> su_methane_total = su.result["commodity_balance_annual"].loc[("R1_model", "2030", "Methanation", "Methane", "netto"), "value"]
+>>> su_methane_total = su.result["commodity_balance_annual"].loc[("R1_model", "2030", "Methanation", "Methane", "net"), "value"]
 >>> su_methane_total
 300.0
 
@@ -228,8 +228,8 @@ The annual commodity balance gives us the total consumption of these commodities
 By this we find out if the specific consumption is set up correctly:
 
 ```python
->>> su_CO2_total = su.result["commodity_balance_annual"].loc[("R1_model", "2030", "Methanation", "CO2", "brutto"), "value"]
->>> su_hydrogen_total = su.result["commodity_balance_annual"].loc[("R1_model", "2030", "Methanation", "Hydrogen", "brutto"), "value"]
+>>> su_CO2_total = su.result["commodity_balance_annual"].loc[("R1_model", "2030", "Methanation", "CO2", "gross"), "value"]
+>>> su_hydrogen_total = su.result["commodity_balance_annual"].loc[("R1_model", "2030", "Methanation", "Hydrogen", "gross"), "value"]
 >>> su_CO2_total / su_methane_total
 198.0
 >>> su_hydrogen_total / su_methane_total
@@ -329,13 +329,13 @@ We finish the setup and run the model:
 We can compare the results of both models:
 
 ```python
->>> su_methane_total == mu.result["commodity_balance_annual"].loc[("R1_model", "2030", "Methanation", "Methane", "netto"), "value"]
+>>> su_methane_total == mu.result["commodity_balance_annual"].loc[("R1_model", "2030", "Methanation", "Methane", "net"), "value"]
 True
 >>> su.result["indicator_accounting"].loc[("R1_model", "2030", "OMVar"), "value"] == mu.result["indicator_accounting"].loc[("R1_model", "2030", "OMVar"), "value"]
 True
->>> su_CO2_total == mu.result["commodity_balance_annual"].loc[("R1_model", "2030", "Methanation", "CO2", "brutto"), "value"]
+>>> su_CO2_total == mu.result["commodity_balance_annual"].loc[("R1_model", "2030", "Methanation", "CO2", "gross"), "value"]
 True
->>> su_hydrogen_total == mu.result["commodity_balance_annual"].loc[("R1_model", "2030", "Methanation", "Hydrogen", "brutto"), "value"]
+>>> su_hydrogen_total == mu.result["commodity_balance_annual"].loc[("R1_model", "2030", "Methanation", "Hydrogen", "gross"), "value"]
 True
 
 ```

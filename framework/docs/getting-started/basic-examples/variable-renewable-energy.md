@@ -169,7 +169,7 @@ or how much electricity is generated:
 >>> units = m1.result["converter_units"].loc[("R1_model", "2030", "WindOnshore", "2030", "build"), "value"]
 >>> round(units, 1)
 46.0
->>> total_production = m1.result["commodity_balance_annual"].loc[("R1_model", "2030", "WindOnshore", "Electricity", "netto"), "value"]
+>>> total_production = m1.result["commodity_balance_annual"].loc[("R1_model", "2030", "WindOnshore", "Electricity", "net"), "value"]
 >>> round(total_production, 1)
 62.8
 
@@ -255,7 +255,7 @@ production limit.
 Therefore, we do not need to take the number of units into account.
 
 ```python
->>> total_production = m2.result["commodity_balance_annual"].loc[("R1_model", "2030", "WindOnshore", "Electricity", "netto"), "value"]
+>>> total_production = m2.result["commodity_balance_annual"].loc[("R1_model", "2030", "WindOnshore", "Electricity", "net"), "value"]
 >>> round(total_production, 1)
 62.8
 >>> actual_production = m2.result["commodity_balance"].loc[idx[:, "R1_model", "2030", "WindOnshore", "Electricity"], "value"].values
@@ -327,10 +327,10 @@ curtailed electricity is still the same value but can be directly read from the
 results file.
 
 ```python
->>> total_production = m1.result["commodity_balance_annual"].loc[("R1_model", "2030", "WindOnshore", "Electricity", "netto"), "value"]
+>>> total_production = m1.result["commodity_balance_annual"].loc[("R1_model", "2030", "WindOnshore", "Electricity", "net"), "value"]
 >>> round(total_production, 1)
 62.8
->>> total_curtailment = m1.result["commodity_balance_annual"].loc[("R1_model", "2030", "WindOnshore", "Electricity_curtailed", "netto"), "value"]
+>>> total_curtailment = m1.result["commodity_balance_annual"].loc[("R1_model", "2030", "WindOnshore", "Electricity_curtailed", "net"), "value"]
 >>> round(total_curtailment, 1)
 86.7
 >>> total_costs_without_penalty = m1.result["indicator_accounting"].loc[("R1_model", "2030", "SystemCost"), "value"]

@@ -163,3 +163,25 @@ cython_debug/
 *.gdx
 remix_nz/output/will/01-battery-distributed_2020-2035-2050/result/csv/01-battery-distributed_2020-2035-2050_commodity_balance.csv
 *01-battery-distributed_2020-2035-2050/result/csv/01-battery-distributed_2020-2035-2050_commodity_balance.csv
+
+
+# Ignore auto-generated files and folders
+225*/
+node_modules/
+*.gsp
+*.opt
+*.o99
+*.lst
+*.log
+*.~gm
+*.gpr
+*.lxi
+**/__pycache__/
+*schema.yaml
+# Ignore files from testing and gitlab CI
+*.json
+!valid.json
+metrics.txt
+
+framework/
+*.zip
