@@ -10,7 +10,7 @@ lang: en-US
 ## Feedback and bug reports
 
 If you encounter a bug in the software, we appreciate if you open an
-[issue](https://gitlab.com/dlr-ve/remix/framework/-/issues). Please
+[issue](https://gitlab.com/dlr-ve/esy/remix/framework/-/issues). Please
 include the following information:
 
 -  Your operating system name and version.

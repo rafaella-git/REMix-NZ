@@ -65,7 +65,7 @@ below).
 Adjust the link in case you are using `ssh` instead of `https`.
 
 ```bash
-git remote add upstream https://gitlab.com/dlr-ve/remix/framework.git
+git remote add upstream https://gitlab.com/dlr-ve/esy/remix/framework.git
 git fetch upstream
 # checkout your local dev branch and pull updates to from the dev branch of
 # the upstream repository (remix/framework) and rebase
