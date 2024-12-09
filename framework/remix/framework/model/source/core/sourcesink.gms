@@ -225,9 +225,11 @@ Eq_sourcesink_useFixedSum(nodesModelSel,yearsSel,sourcesink_techs,commodity)
         and sourcesink_config(nodesModelSel,yearsSel,sourcesink_techs,commodity,"usesFixedSum") = 1 )
     ..
     sum(timeModelSel,
-        sourcesink_flow(timeModelSel,nodesModelSel,yearsSel,sourcesink_techs,commodity))
+        sourcesink_flow(timeModelSel,nodesModelSel,yearsSel,sourcesink_techs,commodity)
+        * timeLength(timeModelSel))
     =e=
     sourcesink_annualSum(nodesModelSel,yearsSel,sourcesink_techs,commodity,"fixed")
+    * timefrac
     ;
 
 * // ### Lower annual sums for sources and sinks
@@ -239,9 +241,11 @@ Eq_sourcesink_useLowerSum(nodesModelSel,yearsSel,sourcesink_techs,commodity)
         and sourcesink_annualSum(nodesModelSel,yearsSel,sourcesink_techs,commodity,"lower") > -inf )
     ..
     sum(timeModelSel,
-        sourcesink_flow(timeModelSel,nodesModelSel,yearsSel,sourcesink_techs,commodity))
+        sourcesink_flow(timeModelSel,nodesModelSel,yearsSel,sourcesink_techs,commodity)
+        * timeLength(timeModelSel))
     =g=
     sourcesink_annualSum(nodesModelSel,yearsSel,sourcesink_techs,commodity,"lower")
+    * timefrac
     ;
 
 * // ### Upper annual sums for sources and sinks
@@ -253,9 +257,11 @@ Eq_sourcesink_useUpperSum(nodesModelSel,yearsSel,sourcesink_techs,commodity)
         and sourcesink_annualSum(nodesModelSel,yearsSel,sourcesink_techs,commodity,"upper") < inf )
     ..
     sum(timeModelSel,
-        sourcesink_flow(timeModelSel,nodesModelSel,yearsSel,sourcesink_techs,commodity))
+        sourcesink_flow(timeModelSel,nodesModelSel,yearsSel,sourcesink_techs,commodity)
+        * timeLength(timeModelSel))
     =l=
     sourcesink_annualSum(nodesModelSel,yearsSel,sourcesink_techs,commodity,"upper")
+    * timefrac
     ;
 
 

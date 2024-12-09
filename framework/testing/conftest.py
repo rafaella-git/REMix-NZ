@@ -40,7 +40,9 @@ def metadata_cleaner():
 @pytest.fixture
 def example_gdx(tmp_path_factory):
     results = tmp_path_factory.mktemp("results")
-    code = run_remix(datadir=MINIMAL_LP_PATH, resultdir=results, resultfile="remix")
+    code = run_remix(
+        datadir=MINIMAL_LP_PATH, resultdir=results, resultfile="remix", metadata="0"
+    )
     gdx = results / "remix.gdx"
     assert code == 0
     assert gdx.exists

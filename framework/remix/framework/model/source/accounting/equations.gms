@@ -119,11 +119,13 @@ Eq_accounting_indicatorCalc(accNodesModel,accYearsSel(accYears),indicator)
             converter_activity(timeModelSel,nodesModelSel,yearsSel,converter_techs,vintage,activity)
             * timeLength(timeModelSel)
             * accounting_converterActivity(indicator_a,nodesModelSel,converter_techs,vintage,activity,"perActivity") )
+        / timefrac
 
         + sum ((timeModelSel,converter_techs,vintage)
                     $converter_usedTech(nodesModelSel,yearsSel,converter_techs,vintage),
             converter_unitStartups(timeModelSel,nodesModelSel,yearsSel,converter_techs,vintage)
             * accounting_converterStartup(indicator_a,nodesModelSel,converter_techs,vintage,"perStartup") )
+        / timefrac
 
         + sum ((timeModelSel,converter_techs,vintage)
                     $converter_usedTech(nodesModelSel,yearsSel,converter_techs,vintage),
@@ -133,7 +135,8 @@ Eq_accounting_indicatorCalc(accNodesModel,accYearsSel(accYears),indicator)
 
             + converter_rampNeg(timeModelSel,nodesModelSel,yearsSel,converter_techs,vintage)
             * (accounting_converterStartup(indicator_a,nodesModelSel,converter_techs,vintage,"perRamp")
-               + accounting_converterStartup(indicator_a,nodesModelSel,converter_techs,vintage,"perRampNeg")))
+               + accounting_converterStartup(indicator_a,nodesModelSel,converter_techs,vintage,"perRampNeg")) )
+        / timefrac
         )
     )
 
@@ -284,7 +287,8 @@ Eq_accounting_indicatorCalc(accNodesModel,accYearsSel(accYears),indicator)
                 + transfer_flowAgainst(timeModelSel,linksModelToCalc,yearsSel,transfer_techs,vintage)
                 * timeLength(timeModelSel)
                 * ( accounting_transferLinks(indicator_a,linksModelToCalc,transfer_techs,vintage,"perFlow")
-                    + accounting_transferLinks(indicator_a,linksModelToCalc,transfer_techs,vintage,"perFlowAgainst")))
+                    + accounting_transferLinks(indicator_a,linksModelToCalc,transfer_techs,vintage,"perFlowAgainst")) )
+            / timefrac
 
             + 0.5
             * sum ((timeModelSel, link_types),
@@ -298,7 +302,8 @@ Eq_accounting_indicatorCalc(accNodesModel,accYearsSel(accYears),indicator)
                 * timeLength(timeModelSel)
                 * transfer_lengthParam(linksModelToCalc,link_types,"length")
                 * (accounting_transferPerLength(indicator_a,linksModelToCalc,transfer_techs,vintage,link_types,"perFlow")
-                    + accounting_transferPerLength(indicator_a,linksModelToCalc,transfer_techs,vintage,link_types,"perFlowAgainst")))
+                    + accounting_transferPerLength(indicator_a,linksModelToCalc,transfer_techs,vintage,link_types,"perFlowAgainst")) )
+            / timefrac
             )
         )
     )
@@ -315,6 +320,7 @@ Eq_accounting_indicatorCalc(accNodesModel,accYearsSel(accYears),indicator)
             sourcesink_flow(timeModelSel,nodesModelSel,yearsSel,sourcesink_techs,commodity)
             * timeLength(timeModelSel)
             * accounting_sourcesinkFlow(indicator_a,nodesModelSel,yearsSel,sourcesink_techs,commodity,"perFlow") )
+        / timefrac
     );
 
 * // ### Accounting Indicator Calculation Links
@@ -383,7 +389,8 @@ Eq_accounting_indicatorCalc_links(linksModelToCalc,yearsSel,indicator)
             + transfer_flowAgainst(timeModelSel,linksModelToCalc,yearsSel,transfer_techs,vintage)
             * timeLength(timeModelSel)
             * ( accounting_transferLinks(indicator,linksModelToCalc,transfer_techs,vintage,"perFlow")
-                + accounting_transferLinks(indicator,linksModelToCalc,transfer_techs,vintage,"perFlowAgainst")))
+                + accounting_transferLinks(indicator,linksModelToCalc,transfer_techs,vintage,"perFlowAgainst")) )
+        / timefrac
 
         + sum ((timeModelSel, link_types),
             transfer_flowAlong(timeModelSel,linksModelToCalc,yearsSel,transfer_techs,vintage)
@@ -396,7 +403,8 @@ Eq_accounting_indicatorCalc_links(linksModelToCalc,yearsSel,indicator)
             * timeLength(timeModelSel)
             * transfer_lengthParam(linksModelToCalc,link_types,"length")
             * (accounting_transferPerLength(indicator,linksModelToCalc,transfer_techs,vintage,link_types,"perFlow")
-                + accounting_transferPerLength(indicator,linksModelToCalc,transfer_techs,vintage,link_types,"perFlowAgainst")))
+                + accounting_transferPerLength(indicator,linksModelToCalc,transfer_techs,vintage,link_types,"perFlowAgainst")) )
+        / timefrac
         );
 
 * // ### Accounting Objective

@@ -1,0 +1,6 @@
+gdx_path: "c:/Local/REMix/remix_nz/output/europe/h2-lut-domestic_2020-2030-2050/result/h2-lut-domestic_2020-2030-2050.gdx"
+geojson_path: "c:/Local/REMix/remix_nz/input/shapefiles/11regionsNZ.geojson" 
+
+debug: False
+host: 127.0.0.1
+port: 5000  

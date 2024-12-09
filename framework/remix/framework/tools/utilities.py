@@ -26,14 +26,38 @@ def merge_dfs(df_list: list):
     pandas.DataFrame
         single pandas.DataFrame.
     """
-    if len(df_list) > 0:
-    #    df_list = [df for df in df_list if (not df.empty) | (len(df.index) != 0) | (len(df.columns) != 0)]
-    #    if not len(df_list) > 0:
-    #        return pd.DataFrame()
-        df_out = pd.concat(df_list, axis=0)
+    if len(df_list) == 1:
+        return df_list[0]
+
+    elif len(df_list) > 0:
+        all_columns = []
+        for df in df_list:
+            all_columns += df.columns.tolist()
+        all_columns = list(set(all_columns))
+
+        df_list_out = [df for df in df_list if (not df.empty)]
+
+        if len(df_list_out) == 1:
+            df_out = df_list_out[0]
+
+        elif len(df_list_out) == 0:
+            new_index = df_list[0].index
+            for df in df_list[1:]:
+                new_index = new_index.union(df.index)
+
+            new_index.names = df_list[0].index.names
+            return pd.DataFrame(index=new_index)
+
+        else:
+            df_out = pd.concat(df_list_out, axis=0)
+
+        for missing in set(all_columns) - set(df_out.columns):
+            df[missing] = np.nan
+
         df_out.index.names = df_list[0].index.names
         df_out = df_out.groupby(level=list(range(df_out.index.nlevels))).agg("last")
         df_out = df_out.sort_index()
+
     else:
         df_out = pd.DataFrame()
 

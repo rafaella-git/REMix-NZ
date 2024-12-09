@@ -195,21 +195,34 @@ loop ( optiframeToCalc,
     converter_unitsDelta_upper(nodesModelToCalc,yearsToFix,converter_techs)
         $(converter_unitsDelta_upper(nodesModelToCalc,yearsToFix,converter_techs) < 0) = 0;
 
-    converter_unitsDelta_lower(nodesModelToCalc,yearsToCalc,converter_techs,vintage)
-        = converter_unitsDecom.lo(nodesModelToCalc,yearsToCalc,converter_techs,vintage)
-            - converter_unitsTotal.l(nodesModelToCalc,yearsToCalc-1,converter_techs,vintage);
-    converter_unitsDelta_lower(nodesModelToCalc,yearsToCalc,converter_techs,vintage)
-        $(converter_unitsDelta_lower(nodesModelToCalc,yearsToCalc,converter_techs,vintage) < 0) = 0;
+    converter_unitsDelta_lower(nodesModelToCalc,yearsToFix,converter_techs)
+        $(sum(yearsToCalc$sameas(yearsToFix, yearsToCalc), 1))
+        = converter_capacityParam(nodesModelToCalc,yearsToFix,converter_techs,"unitsLowerLimit")
+            - sum(vintage, converter_unitsTotal.l(nodesModelToCalc,yearsToFix,converter_techs,vintage));
+    converter_unitsDelta_lower(nodesModelToCalc,yearsToFix,converter_techs)
+        $(converter_unitsDelta_lower(nodesModelToCalc,yearsToFix,converter_techs) < 0) = 0;
+
+    converter_unitsDelta_decom(nodesModelToCalc,yearsSel,converter_techs,vintage)
+        = converter_unitsDecom.lo(nodesModelToCalc,yearsSel,converter_techs,vintage)
+            - sum(yearsToCalc$(ord(yearsToCalc) = 1 and sameas(yearsToCalc, yearsSel)),
+                sum(years$sameas(years, yearsToCalc),
+                    converter_unitsTotal.l(nodesModelToCalc,years-1,converter_techs,vintage)
+                    $converter_usedTech(nodesModelToCalc,years-1,converter_techs,vintage)))
+            - sum((yearsToCalc)$(ord(yearsToCalc) > 1 and sameas(yearsToCalc, yearsSel)),
+                converter_unitsTotal.l(nodesModelToCalc,yearsToCalc-1,converter_techs,vintage)
+                    $converter_usedTech(nodesModelToCalc,yearsToCalc-1,converter_techs,vintage));
+    converter_unitsDelta_decom(nodesModelToCalc,yearsSel,converter_techs,vintage)
+        $(converter_unitsDelta_decom(nodesModelToCalc,yearsSel,converter_techs,vintage) < 0) = 0;
 
     converter_unitsBuild.l(nodesModelToCalc,yearsToFix,converter_techs,vintage)
         $converter_availTech(nodesModelToCalc,yearsToFix,converter_techs,vintage)
         = converter_unitsBuild.l(nodesModelToCalc,yearsToFix,converter_techs,vintage)
             - converter_unitsDelta_upper(nodesModelToCalc,yearsToFix,converter_techs);
 
-    converter_unitsDecom.lo(nodesModelToCalc,yearsToCalc,converter_techs,vintage)
-        $converter_usedTech(nodesModelToCalc,yearsToCalc,converter_techs,vintage)
-        = converter_unitsDecom.lo(nodesModelToCalc,yearsToCalc,converter_techs,vintage)
-            - converter_unitsDelta_lower(nodesModelToCalc,yearsToCalc,converter_techs,vintage);
+    converter_unitsDecom.l(nodesModelToCalc,yearsToFix,converter_techs,vintage)
+        $converter_usedTech(nodesModelToCalc,yearsToFix,converter_techs,vintage)
+        = converter_unitsDecom.l(nodesModelToCalc,yearsToFix,converter_techs,vintage)
+            - converter_unitsDelta_lower(nodesModelToCalc,yearsToFix,converter_techs);
 
     converter_unitsBuild.l(nodesModelToCalc,yearsToFix,converter_techs,vintage)
         $(converter_unitsBuild.l(nodesModelToCalc,yearsToFix,converter_techs,vintage) < 0) = 0;

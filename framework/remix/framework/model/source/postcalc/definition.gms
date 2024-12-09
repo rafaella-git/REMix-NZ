@@ -36,11 +36,13 @@ indicator_accounting_detailed(%selscen%indicator,nodesModelToCalc,yearsToCalc,te
         converter_activity.l(timeModelToCalc,nodesModelToCalc,yearsToCalc,converter_techs,vintage,activity)
         * timeLength(timeModelToCalc)
         * accounting_converterActivity(indicator,nodesModelToCalc,converter_techs,vintage,activity,"perActivity") )
+        / timefrac
 
     + sum ((timeModelToCalc,converter_techs(techs),vintage)
                 $converter_usedTech(nodesModelToCalc,yearsToCalc,converter_techs,vintage),
         converter_unitStartups.l(timeModelToCalc,nodesModelToCalc,yearsToCalc,converter_techs,vintage)
         * accounting_converterStartup(indicator,nodesModelToCalc,converter_techs,vintage,"perStartup") )
+        / timefrac
 
     + sum ((timeModelToCalc,converter_techs(techs),vintage)
                 $converter_usedTech(nodesModelToCalc,yearsToCalc,converter_techs,vintage),
@@ -51,6 +53,7 @@ indicator_accounting_detailed(%selscen%indicator,nodesModelToCalc,yearsToCalc,te
         + converter_rampNeg.l(timeModelToCalc,nodesModelToCalc,yearsToCalc,converter_techs,vintage)
         * (accounting_converterStartup(indicator,nodesModelToCalc,converter_techs,vintage,"perRamp")
             + accounting_converterStartup(indicator,nodesModelToCalc,converter_techs,vintage,"perRampNeg")))
+        / timefrac
 
 * == storage ==
     + sum ((storage_techs(techs),vintage)
@@ -154,7 +157,8 @@ indicator_accounting_detailed(%selscen%indicator,nodesModelToCalc,yearsToCalc,te
             * timeLength(timeModelToCalc)
             * ( accounting_transferLinks(indicator,linksModel,transfer_techs,vintage,"perFlow")
                 + accounting_transferLinks(indicator,linksModel,transfer_techs,vintage,"perFlowAgainst")))
-
+            / timefrac
+        
         + 0.5
         * sum ((timeModelToCalc, link_types),
             transfer_flowAlong.l(timeModelToCalc,linksModel,yearsToCalc,transfer_techs,vintage)
@@ -168,6 +172,7 @@ indicator_accounting_detailed(%selscen%indicator,nodesModelToCalc,yearsToCalc,te
             * transfer_lengthParam(linksModel,link_types,"length")
             * (accounting_transferPerLength(indicator,linksModel,transfer_techs,vintage,link_types,"perFlow")
                 + accounting_transferPerLength(indicator,linksModel,transfer_techs,vintage,link_types,"perFlowAgainst"))))
+            / timefrac
 
 
 * == sources / sinks ==
@@ -176,6 +181,7 @@ indicator_accounting_detailed(%selscen%indicator,nodesModelToCalc,yearsToCalc,te
         sourcesink_flow.l(timeModelToCalc,nodesModelToCalc,yearsToCalc,sourcesink_techs,commodity)
         * timeLength(timeModelToCalc)
         * accounting_sourcesinkFlow(indicator,nodesModelToCalc,yearsToCalc,sourcesink_techs,commodity,"perFlow"))
+        / timefrac
     ;
 
 
@@ -283,6 +289,7 @@ indicator_accounting_links(%selscen%indicator,nodesModelToCalc,nodesModelToCalc_
             * timeLength(timeModelToCalc)
             * ( accounting_transferLinks(indicator,linksModelToCalc,transfer_techs,vintage,"perFlow")
                 + accounting_transferLinks(indicator,linksModelToCalc,transfer_techs,vintage,"perFlowAgainst")))
+            / timefrac
 
         + sum ((timeModelToCalc, link_types),
             transfer_flowAlong.l(timeModelToCalc,linksModelToCalc,yearsToCalc,transfer_techs,vintage)
@@ -296,6 +303,7 @@ indicator_accounting_links(%selscen%indicator,nodesModelToCalc,nodesModelToCalc_
             * transfer_lengthParam(linksModelToCalc,link_types,"length")
             * (accounting_transferPerLength(indicator,linksModelToCalc,transfer_techs,vintage,link_types,"perFlow")
                 + accounting_transferPerLength(indicator,linksModelToCalc,transfer_techs,vintage,link_types,"perFlowAgainst")))
+            / timefrac
     );
 
 
@@ -432,7 +440,7 @@ transfer_flows(%selscen%timeModelToCalc,nodesModelToCalc_start,nodesModelToCalc_
         * timeLength(timeModelToCalc)
         * transfer_coefficient(transfer_techs,vintage,commodity,"coefficient"));
 
-transfer_flows_annual(%selscen%nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs(techs),commodity,"netto")
+transfer_flows_annual(%selscen%nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs(techs),commodity,"net")
     $transfer_usedStartEnd(nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs)
     = sum(timeModelToCalc,
         transfer_flows(%selscen%timeModelToCalc,nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs,commodity));
@@ -449,16 +457,16 @@ transfer_flows_annual(%selscen%nodesModelToCalc_start,nodesModelToCalc_end,links
             $(transfer_flows(%selscen%timeModelToCalc,nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs,commodity) < 0),
         transfer_flows(%selscen%timeModelToCalc,nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs,commodity));
 
-transfer_flows_annual(%selscen%nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs(techs),commodity,"brutto")
+transfer_flows_annual(%selscen%nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs(techs),commodity,"gross")
     $transfer_usedStartEnd(nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs)
     = transfer_flows_annual(%selscen%nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs,commodity,"positive")
         - transfer_flows_annual(%selscen%nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs,commodity,"negative");
 
 transfer_flows_annual(%selscen%nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs(techs),commodity,"flh")
     $(transfer_usedStartEnd(nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs)
-        and transfer_flows_annual(%selscen%nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs,commodity,"brutto") > 0
+        and transfer_flows_annual(%selscen%nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs,commodity,"gross") > 0
         and transfer_caps(%selscen%nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs,commodity,"total") > 0)
-    = transfer_flows_annual(%selscen%nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs,commodity,"brutto")
+    = transfer_flows_annual(%selscen%nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs,commodity,"gross")
         / transfer_caps(%selscen%nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs,commodity,"total");
 
 transfer_losses(%selscen%timeModelToCalc,nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs(techs),commodity)
@@ -474,7 +482,7 @@ transfer_losses(%selscen%timeModelToCalc,nodesModelToCalc_start,nodesModelToCalc
                 * transfer_lengthParam(linksModel,link_types,"length")))))
         * timeLength(timeModelToCalc);
 
-transfer_losses_annual(%selscen%nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs(techs),commodity,"netto")
+transfer_losses_annual(%selscen%nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs(techs),commodity,"net")
     $(transfer_usedStartEnd(nodesModelToCalc_start,nodesModelToCalc_end,linksModel,yearsToCalc,transfer_techs)
         and (sum(vintage$transfer_coefPerFlow(transfer_techs,vintage,commodity,"coefPerFlow"), 1)
             or sum((vintage, link_types)$transfer_coefPerLength(transfer_techs,vintage,commodity,link_types,"coefPerLength"), 1)))
@@ -590,7 +598,7 @@ storage_level_out(%selscen%timeModelToCalc,accNodesModel,accYears,storage_techs(
         storage_level_out_ext(%selscen%timeModelToCalc,accNodesModel,nodesModelToCalc,accYears,yearsToCalc,storage_techs,vintage,commodity));
 option clear = storage_level_out_ext;
 
-storage_flows_annual(%selscen%accNodesModel,accYears,storage_techs(techs),commodity,"netto")
+storage_flows_annual(%selscen%accNodesModel,accYears,storage_techs(techs),commodity,"net")
     = sum(timeModelToCalc,
         storage_flows(%selscen%timeModelToCalc,accNodesModel,accYears,storage_techs,commodity));
 
@@ -604,14 +612,14 @@ storage_flows_annual(%selscen%accNodesModel,accYears,storage_techs(techs),commod
             $(storage_flows(%selscen%timeModelToCalc,accNodesModel,accYears,storage_techs,commodity) < 0),
         storage_flows(%selscen%timeModelToCalc,accNodesModel,accYears,storage_techs,commodity));
 
-storage_flows_annual(%selscen%accNodesModel,accYears,storage_techs(techs),commodity,"brutto")
+storage_flows_annual(%selscen%accNodesModel,accYears,storage_techs(techs),commodity,"gross")
     = storage_flows_annual(%selscen%accNodesModel,accYears,storage_techs,commodity,"positive")
         + storage_flows_annual(%selscen%accNodesModel,accYears,storage_techs,commodity,"negative");
 
 storage_flows_annual(%selscen%accNodesModel,accYears,storage_techs(techs),commodity,"flh")
-    $(storage_flows_annual(%selscen%accNodesModel,accYears,storage_techs,commodity,"brutto") > 0
+    $(storage_flows_annual(%selscen%accNodesModel,accYears,storage_techs,commodity,"gross") > 0
         and storage_caps(%selscen%accNodesModel,accYears,storage_techs,commodity,"total") > 0)
-    = storage_flows_annual(%selscen%accNodesModel,accYears,storage_techs,commodity,"brutto")
+    = storage_flows_annual(%selscen%accNodesModel,accYears,storage_techs,commodity,"gross")
         / storage_caps(%selscen%accNodesModel,accYears,storage_techs,commodity,"total");
 
 storage_losses_out(%selscen%timeModelToCalc,accNodesModel,accYears,storage_techs(techs),commodity)
@@ -622,7 +630,7 @@ storage_losses_out(%selscen%timeModelToCalc,accNodesModel,accYears,storage_techs
         storage_losses.l(timeModelToCalc,nodesModelToCalc,yearsToCalc,storage_techs,vintage,commodity)
         * timeLength(timeModelToCalc));
 
-storage_losses_annual(%selscen%accNodesModel,accYears,storage_techs(techs),commodity,"netto")
+storage_losses_annual(%selscen%accNodesModel,accYears,storage_techs(techs),commodity,"net")
     = sum(timeModelToCalc,
         storage_losses_out(%selscen%timeModelToCalc,accNodesModel,accYears,storage_techs,commodity));
 
@@ -634,10 +642,10 @@ commodity_balance_ext(%selscen%timeModelToCalc,map_accNodesPostCalc(accNodesMode
         and balance_usedConverter(nodesModelToCalc,yearsToCalc,commodity))
     = sum((activity)
             $(converter_coefficientProfile(timeModelToCalc,nodesModelToCalc,yearsToCalc,converter_techs,vintage,activity,commodity)),
-        converter_activity.l(timeModelToCalc,nodesModelToCalc,yearsToCalc,converter_techs,vintage,activity)
+        converter_activity.l(timeModelToCalc--converter_coefficient(converter_techs,vintage,activity,commodity,"delay"),nodesModelToCalc,yearsToCalc,converter_techs,vintage,activity)
             * timeLength(timeModelToCalc)
             * converter_coefficientProfile(timeModelToCalc,nodesModelToCalc,yearsToCalc,converter_techs,vintage,activity,commodity)
-        + converter_unitsUsingActivity_MIP.l(timeModelToCalc,nodesModelToCalc,yearsToCalc,converter_techs,vintage,activity)
+        + converter_unitsUsingActivity_MIP.l(timeModelToCalc--converter_coefficient(converter_techs,vintage,activity,commodity,"delay"),nodesModelToCalc,yearsToCalc,converter_techs,vintage,activity)
             * timeLength(timeModelToCalc)
             * converter_coefficient(converter_techs,vintage,activity,commodity,"constant"));
 
@@ -668,13 +676,15 @@ commodity_balance_ext(%selscen%timeModelToCalc,map_accNodesPostCalc(accNodesMode
                 and transfer_usedTech(linksModel,yearsToCalc,transfer_techs,vintage)
                 and transfer_coefficient(transfer_techs,vintage,commodity,"coefficient")),
 
-            (transfer_flowAlong.l(timeModelToCalc,linksModel,yearsToCalc,transfer_techs,vintage)
+* incoming transfer flows
+            (transfer_flowAlong.l(timeModelToCalc--transfer_delay(linksModel,transfer_techs,vintage,commodity),linksModel,yearsToCalc,transfer_techs,vintage)
                     $(transfer_incidenceModel(nodesModelToCalc,linksModel) > 0)
-              + transfer_flowAgainst.l(timeModelToCalc,linksModel,yearsToCalc,transfer_techs,vintage)
+              + transfer_flowAgainst.l(timeModelToCalc--transfer_delay(linksModel,transfer_techs,vintage,commodity),linksModel,yearsToCalc,transfer_techs,vintage)
                     $(transfer_incidenceModel(nodesModelToCalc,linksModel) < 0))
             * timeLength(timeModelToCalc)
             * transfer_coefficient(transfer_techs,vintage,commodity,"coefficient")
 
+* outgoing transfer flows
             - (transfer_flowAlong.l(timeModelToCalc,linksModel,yearsToCalc,transfer_techs,vintage)
                     $(transfer_incidenceModel(nodesModelToCalc,linksModel) < 0)
               + transfer_flowAgainst.l(timeModelToCalc,linksModel,yearsToCalc,transfer_techs,vintage)
@@ -704,7 +714,7 @@ option clear = commodity_balance_ext;
 
 * ==== annual commodity sums ====
 
-commodity_balance_annual(%selscen%accNodesModel,accYears,techs,commodity,"netto")
+commodity_balance_annual(%selscen%accNodesModel,accYears,techs,commodity,"net")
     = sum(timeModelToCalc,
         commodity_balance(%selscen%timeModelToCalc,accNodesModel,accYears,techs,commodity));
 
@@ -718,14 +728,14 @@ commodity_balance_annual(%selscen%accNodesModel,accYears,techs,commodity,"negati
             $(commodity_balance(%selscen%timeModelToCalc,accNodesModel,accYears,techs,commodity) < 0),
         commodity_balance(%selscen%timeModelToCalc,accNodesModel,accYears,techs,commodity));
 
-commodity_balance_annual(%selscen%accNodesModel,accYears,techs,commodity,"brutto")
+commodity_balance_annual(%selscen%accNodesModel,accYears,techs,commodity,"gross")
     = commodity_balance_annual(%selscen%accNodesModel,accYears,techs,commodity,"positive")
         - commodity_balance_annual(%selscen%accNodesModel,accYears,techs,commodity,"negative");
 
 commodity_balance_annual(%selscen%accNodesModel,accYears,techs,commodity,"flh")
-    $(commodity_balance_annual(%selscen%accNodesModel,accYears,techs,commodity,"brutto") > 0
+    $(commodity_balance_annual(%selscen%accNodesModel,accYears,techs,commodity,"gross") > 0
         and converter_caps(%selscen%accNodesModel,accYears,techs,commodity,"total") > 0 )
-    = commodity_balance_annual(%selscen%accNodesModel,accYears,techs,commodity,"brutto")
+    = commodity_balance_annual(%selscen%accNodesModel,accYears,techs,commodity,"gross")
         / converter_caps(%selscen%accNodesModel,accYears,techs,commodity,"total");
 
 
@@ -931,5 +941,11 @@ marginals_sourcesink_profile(%selscen%timeModelToCalc,nodesModelToCalc,yearsToCa
     $marginals_sourcesink_profile(%selscen%timeModelToCalc,nodesModelToCalc,yearsToCalc,sourcesink_techs,commodity)
     = round(marginals_sourcesink_profile(%selscen%timeModelToCalc,nodesModelToCalc,yearsToCalc,sourcesink_techs,commodity), 6);
 $endif.roundts
+
+* ==== Dump diagnostics ====
+
+diagnostics("variables") = remix.numVar;
+diagnostics("equations") = remix.numEqu;
+diagnostics("iterations") = remix.iterUsd;
 
 $endif.run_postcalc

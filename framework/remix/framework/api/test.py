@@ -22,7 +22,4 @@ default_test_remix_help = {
     "keep":
         "Instruct GAMS to keep the scratch directory (225a) after the run is "
         "finished.",
-
-    "workers":
-        "Number of threads available concurrently for testing. Currently disabled on windows!",
 }

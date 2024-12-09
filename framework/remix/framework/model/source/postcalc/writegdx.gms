@@ -5,7 +5,10 @@ $onVerbatim
 $ifthene.run_postcalc %run_postcalc%
 
 execute_unload "%resultdir%%system.dirsep%%resultfile%.gdx"
+$iftheni.gdx_metadata %metadata% == 0
+$elseIf.gdx_metadata a == a
     metadata
+$endif.gdx_metadata
     timeModel
     timeModelToCalc
     nodesModel
@@ -78,6 +81,7 @@ $iftheni.r2a %gdx_r2a%==1
     r2a_storage_selfdischarge
     r2a_storage_e2p
 $endif.r2a
+    diagnostics
     ;
 $endif.run_postcalc
 $offVerbatim

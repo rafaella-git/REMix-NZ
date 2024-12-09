@@ -7,7 +7,7 @@
 
 # %%
 # importing dependencies
-from remix.framework.tools.gdx import GDXEval
+from remix.framework import GDXEval
 import pandas as pd
 import matplotlib.pyplot as plt
 

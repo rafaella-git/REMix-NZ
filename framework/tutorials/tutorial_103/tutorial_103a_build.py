@@ -38,7 +38,7 @@
 
 # %%
 # import dependencies
-from remix.framework.api.instance import Instance
+from remix.framework import Instance
 import pandas as pd
 import numpy as np
 import pathlib as pt

@@ -34,7 +34,7 @@
 import numpy as np
 import pandas as pd
 
-from remix.framework.api.instance import Instance
+from remix.framework import Instance
 
 # define often-used shortcut
 idx = pd.IndexSlice

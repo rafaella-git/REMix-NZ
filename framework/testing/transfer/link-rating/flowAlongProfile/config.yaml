@@ -5,6 +5,7 @@ remix_parameters:
   roundts: 1
   datadir: ../data
   scendir: ./flowAlongProfile
+  scaletimefrac: 0
 
 metrics:
   runtime: <=23

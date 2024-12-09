@@ -16,7 +16,8 @@ def build_cmat(inc):
     Returns
     -------
     pandas.Dataframe
-        Kirchhoff's loop matrix (cycle matrix), shows which links belong to which loops.
+        Kirchhoff's loop matrix (cycle matrix), shows which links belong to
+        which loops.
     """
     df = pd.DataFrame(inc)
     df.index = pd.MultiIndex.from_tuples(df[0]).swaplevel(i=0, j=1)

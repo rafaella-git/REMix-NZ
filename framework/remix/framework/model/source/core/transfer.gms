@@ -123,6 +123,7 @@ $if not exist "%instancedir%/transfer_techparam.csv" $log "No technology paramet
 set pc_transfer_coefficient
     /
     coefficient         "Coefficient | Coefficient for maximum commodity flow | minimum:0 | number | {rate} | MISSING_TERM:transmission coefficient"
+    delay               "Commodity delay | Delay in hours between the inflow and outflow for the line. | | number | {none} | MISSING_TERM:transmission delay"
     /;
 table transfer_coefficient(transfer_techs,vintage,commodity,pc_transfer_coefficient)
 $ondelim
@@ -155,6 +156,7 @@ $if not exist "%instancedir%/transfer_coefperflow.csv" $log "No coefficients for
 set pc_transfer_coefPerLength
     /
     coefPerLength     "Coefficient per length | Coefficients for losses and gains per flow times length | default:0 | number | {rate} | OEO_00030019:process attribute"
+    delayPerLength    "Commodity delay per length | Delay in hours per length between the inflow and outflow for the line. | | number | {none} | MISSING_TERM:transmission delay"
     /;
 table transfer_coefPerLength(transfer_techs,vintage,commodity,link_types,pc_transfer_coefPerLength)
 $ondelim
@@ -314,6 +316,18 @@ set transfer_hasflowProfile(linksModel,years,transfer_techs,pc_transfer_flowProf
 transfer_hasflowProfile(linksModelToCalc,yearsToCalc,transfer_techs,pc_transfer_flowProfile)
     = sum(linksData$links_aggregate(linksModelToCalc,linksData),
             transfer_hasflowProfileIn(linksData,yearsToCalc,transfer_techs,pc_transfer_flowProfile));
+
+* aggregate coefficient delays per line and reduce based on time resolution 
+parameter transfer_delay(linksModel,transfer_techs,vintage,commodity);
+transfer_delay(linksModel,transfer_techs,vintage,commodity)
+  $(transfer_coefficient(transfer_techs,vintage,commodity,"delay")
+    or sum(link_types, 
+        transfer_coefPerLength(transfer_techs,vintage,commodity,link_types,"delayperlength")))
+  = ceil((transfer_coefficient(transfer_techs,vintage,commodity,"delay")
+          + sum(link_types,
+              transfer_lengthParam(linksModel,link_types,"length")
+              * transfer_coefPerLength(transfer_techs,vintage,commodity,link_types,"delayperlength")))
+          / %timeres%);
 
 * ==== parameter modifications ====
 transfer_linksParam(linksModelToCalc,yearsToCalc,transfer_techs,"linksLowerLimit")

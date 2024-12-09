@@ -5,6 +5,7 @@ remix_parameters:
   roundts: 1
   datadir: ../data
   scendir: ./flowAgainstLimit
+  scaletimefrac: 0
 
 metrics:
   runtime: <=23

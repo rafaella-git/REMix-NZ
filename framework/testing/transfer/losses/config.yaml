@@ -3,6 +3,7 @@ remix_parameters:
   timestart: 1
   timeend: 4
   roundts: 1
+  scaletimefrac: 0
 
 metrics:
   runtime: <=23

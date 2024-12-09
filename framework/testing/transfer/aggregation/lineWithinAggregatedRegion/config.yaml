@@ -4,6 +4,7 @@ remix_parameters:
   roundts: 1
   datadir: ../data
   scendir: ./lineWithinAggregatedRegion
+  scaletimefrac: 0
 
 metrics:
   runtime: <=23

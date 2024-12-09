@@ -40,10 +40,6 @@ pv_central_fixed,1950,0.0,35
 pv_central_fixed,2030,0.0,40
 pv_central_fixed,2040,0.0,40
 pv_central_fixed,2050,0.0,40
-pv_central_track_azimuth,1950,0.0,35
-pv_central_track_azimuth,2030,0.0,40
-pv_central_track_azimuth,2040,0.0,40
-pv_central_track_azimuth,2050,0.0,40
 pv_decentral,1950,0.0,35
 pv_decentral,2030,0.0,40
 pv_decentral,2040,0.0,40

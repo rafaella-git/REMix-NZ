@@ -1,4 +1,4 @@
-nodesData,years,sourcesink_techs,commodity,usesFixedProfile,usesUpperSum,usesUpperProfile,usesLowerProfile
+nodesData,years,sourcesink_techs,commodity,usesFixedProfile,usesLowerProfile,usesUpperProfile,usesUpperSum
 AKL,2020,Ocean,Water_out,0,0,1,0
 AKL,2020,Slack,Elec,0,1,0,1
 AKL,2020,Wholesale,Elec,1,0,0,0

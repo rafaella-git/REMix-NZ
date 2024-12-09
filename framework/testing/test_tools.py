@@ -157,6 +157,14 @@ class TestGDX:
             len(list(tmp_path.iterdir())) == 36
         ), "The export csv function did not work properly."
 
+    def test_gdx_eval_init_timeModel(self, example_gdx):
+        gd = GDXEval(example_gdx)
+        idx_len = len(gd["commodity_balance"].index.levels[0].unique())
+        idx_last_digit = list(set(gd["commodity_balance"].index.get_level_values("timeModel")))[-1]
+        assert (
+            idx_len == idx_last_digit
+        ), "The index is not sorted correctly."
+
     def test_gdx_eval_init_from_dict(self, example_gdx, tmp_path):
         gd = GDXEval({"A": example_gdx, "B": example_gdx})
         assert (

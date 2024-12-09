@@ -28,7 +28,7 @@
 
 # %%
 # importing dependencies
-from remix.framework.api.instance import Instance
+from remix.framework import Instance
 import pandas as pd
 import pathlib as pt
 

@@ -5,6 +5,7 @@ remix_parameters:
   timeend: 8
   datadir: ../data
   opfmethod: kirchhoff
+  scaletimefrac: 0
   
 metrics:
   runtime: <=10
