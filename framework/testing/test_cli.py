@@ -57,7 +57,7 @@ class TestTest:
         result = runner.invoke(program, ["test", "--help"])
         assert result.exit_code == 0
 
-        for option in ["--specific", "--mode", "--junitxml", "--keep", "--workers", "--timelimit"]:
+        for option in ["--specific", "--mode", "--junitxml", "--keep", "--timelimit"]:
             assert option in result.stdout
 
     def test_test_run(self):

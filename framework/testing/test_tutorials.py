@@ -5,8 +5,6 @@ import shutil
 import subprocess as sp
 from pathlib import Path
 
-import pytest
-
 
 def pytest_generate_tests(metafunc):
     if "tutorial_path" in metafunc.fixturenames:
@@ -14,6 +12,7 @@ def pytest_generate_tests(metafunc):
         tutorials = [tut for tut in tutorials if bool(re.search(r"tutorial_\d+", tut))]
         tutorials.sort(key=lambda x: int(re.search(r"(?s)(tutorial_?)(\d+)", x)[2]))
         metafunc.parametrize("tutorial_path", tutorials)
+
 
 def test_tutorial_run(tutorial_path):
     """These tests don't deal with content, they are to check that the tutorials are consistent and working."""
@@ -26,9 +25,8 @@ def test_tutorial_run(tutorial_path):
     os.chdir(tutorial_path)
     build_returncode = sp.run(["python", build_part]).returncode
     run_returncode = sp.run(["python", run_part]).returncode
-    evaluate_returncode = 0 # sp.run(["python", evaluate_part]).returncode evaluate is being blocked by the plotting
+    evaluate_returncode = 0  # sp.run(["python", evaluate_part]).returncode evaluate is being blocked by the plotting
 
     os.chdir(working_directory)
 
     assert (build_returncode, run_returncode, evaluate_returncode) == (0, 0, 0)
-

@@ -22,7 +22,7 @@
 
 # %%
 # importing dependencies
-from remix.framework.api.instance import Instance
+from remix.framework import Instance
 import pandas as pd
 import numpy as np
 import pathlib as pt
@@ -194,7 +194,7 @@ accounting_converterActivity = pd.DataFrame(
         [["OMVar"], ["global"], ["EVs_CC"], m.set.yearssel, ["Charge", "Discharge"]]
     )
 )
-accounting_converterActivity["perActivity"] = 0
+accounting_converterActivity["perActivity"] = 0.0
 # Add values (KEur/MWh)
 accounting_converterActivity.loc[
     idx["OMVar", :, "EVs_CC", :, "Charge"], "perActivity"
@@ -259,7 +259,7 @@ charging_avail_scaled = pd.DataFrame(
 )
 
 charging_avail_scaled_stack = pd.DataFrame(charging_avail_scaled.stack())
-max_capacity = charging_avail_scaled_stack.groupby(["region", "year", "tech"]).agg(max)
+max_capacity = charging_avail_scaled_stack.groupby(["region", "year", "tech"]).agg("max")
 max_capacity = max_capacity.rename(columns={0: "unitsUpperLimit"})
 max_capacity = max_capacity / 1000
 max_capacity
@@ -459,7 +459,7 @@ SoCMax_scaled = pd.DataFrame(
     SoCMax_scaled_numpy, columns=SoCMax.columns, index=SoCMax.index
 )
 SoCMax_scaled_stack = pd.DataFrame(SoCMax_scaled.stack())
-max_SoCMax_scaled = SoCMax_scaled_stack.groupby(["region", "years", "tech"]).agg(max)
+max_SoCMax_scaled = SoCMax_scaled_stack.groupby(["region", "years", "tech"]).agg("max")
 max_SoCMax_scaled = max_SoCMax_scaled.rename(columns={0: "unitsUpperLimit"})
 max_SoCMax_scaled = max_SoCMax_scaled / 1000
 
@@ -681,7 +681,7 @@ accounting_converterActivity = pd.DataFrame(
         [["OMVar"], ["global"], ["EVs_UC"], m.set.yearssel, ["Charge", "Discharge"]]
     )
 )
-accounting_converterActivity["perActivity"] = 0
+accounting_converterActivity["perActivity"] = 0.0
 
 # Add values (KEur/MWh)
 accounting_converterActivity.loc[
@@ -754,7 +754,7 @@ charging_avail_uc_scaled = pd.DataFrame(
 charging_avail_uc_scaled_stack = pd.DataFrame(charging_avail_uc_scaled.stack())
 max_capacity_uc = charging_avail_uc_scaled_stack.groupby(
     ["region", "years", "tech"]
-).agg(max)
+).agg("max")
 max_capacity_uc = max_capacity_uc.rename(columns={0: "unitsUpperLimit"})
 
 max_capacity_uc

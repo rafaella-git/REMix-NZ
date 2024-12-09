@@ -178,6 +178,7 @@ set pc_converter_coefficient
     constant            "Constant Commodity Production | Constant commodity production or usage which is independent of the unit load. | | number | {none} | OEO_00030019:process attribute"
     minLoad             "Minimum Load | Minimum required total unit load to gain access to this activity. | | number | {rate} | OEO_00000339:program parameter"
     maxLoad             "Maximum Load | Maximum allowed total unit load to gain access to this activity. | | number | {rate} | OEO_00000339:program parameter"
+    delay               "Commodity delay | Delay in hours between the activity and the output of the selected commodity. | | number | {none} | OEO_00000339:process attribute"
     /;
 table converter_coefficient(converter_techs,vintage,activity,commodity,pc_converter_coefficient)
 $ondelim
@@ -191,6 +192,7 @@ $if not exist "%instancedir%/converter_coefficient.csv" $if not exist "%instance
 * //  In converter coeffiecients, negative values indicate inputs, positive values outputs.
 * // ```
 * //
+
 ** // INPUT: converter_coefficientprofile | IAO:0000100:data set
 * // ### converter_coefficientprofile
 * // Title: Converter Coefficients Profiles
@@ -414,6 +416,11 @@ converter_coefficientProfile(timeModelToCalc,converter_usedTechAct(nodesModelToC
   = 0;
 $endif.roundcoefs
 
+* reduce coefficient delay based on time resolution 
+converter_coefficient(converter_techs,vintage,activity,commodity,"delay")
+  $(converter_coefficient(converter_techs,vintage,activity,commodity,"delay"))
+  = ceil(converter_coefficient(converter_techs,vintage,activity,commodity,"delay") / %timeres%);
+
 * ==== prepare partial load behavior parameters ====
 
 * set disabled max load requirements to 1 to avoid excessive logical expressions later on
@@ -598,7 +605,8 @@ converter_unitsUsingActivity_MIP.up(timeModelToCalc,nodesModel,years,converter_t
 
 * Add parameter for fixing capacities during myopic runs
 parameter converter_unitsDelta_upper(nodesModel,years,converter_techs);
-parameter converter_unitsDelta_lower(nodesModel,years,converter_techs,vintage);
+parameter converter_unitsDelta_lower(nodesModel,years,converter_techs);
+parameter converter_unitsDelta_decom(nodesModel,years,converter_techs,vintage);
 
 * ==== declaration of equations ====
 
@@ -688,7 +696,10 @@ Eq_converter_unitsBalance(nodesModelSel,yearsSel,converter_techs,vintage)
     + converter_unitsBuild(nodesModelSel,yearsSel,converter_techs,vintage)
         $converter_availTech(nodesModelSel,yearsSel,converter_techs,vintage)
     - converter_unitsDecom(nodesModelSel,yearsSel,converter_techs,vintage)
-        $converter_usedTech(nodesModelSel,yearsSel,converter_techs,vintage);
+        $converter_usedTech(nodesModelSel,yearsSel,converter_techs,vintage)
+    + converter_unitsDelta_decom(nodesModelSel,yearsSel,converter_techs,vintage)
+        $converter_usedTech(nodesModelSel,yearsSel,converter_techs,vintage)
+        ;
 
 * // ### Converter Units Fixed Decommission
 * // Restricts the fixed decommissioning of units over the planning period.
@@ -699,7 +710,6 @@ Eq_converter_unitsFixedDecom(nodesModelSel,yearsSel,converter_techs,vintage)
         and not converter_unitBoundsFixed(nodesModelSel,yearsSel,converter_techs))
     ..
     converter_unitsDecom(nodesModelSel,yearsSel,converter_techs,vintage)
-    + converter_unitsDelta_lower(nodesModelSel,yearsSel,converter_techs,vintage)
     =e=
     sum(years$
         (converter_availTech(nodesModelSel,years,converter_techs,vintage)
@@ -900,8 +910,8 @@ $endif.pips
 $iftheni.pips %method%==pips
 $else.pips
 
-* // ### Converter MIP Units Online
-* // Restrict ramping up of unit activity.
+* // ### Converter Units Online
+* // Set converter units online to total converter units for non-MIP case.
 * // {Eq_converter_unitsOnline}
 Eq_converter_unitsOnline(timeModelSel,nodesModelSel,yearsSel,converter_techs,vintage)
     $( converter_usedTech(nodesModelSel,yearsSel,converter_techs,vintage)

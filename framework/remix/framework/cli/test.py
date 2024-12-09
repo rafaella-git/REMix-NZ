@@ -21,7 +21,6 @@ def program_test(
     mode: Optional[str] = typer_args["mode"],
     junitxml: Optional[str] = typer_args["junitxml"],
     keep: Optional[int] = typer_args["keep"],
-    workers: Optional[int] = typer_args["workers"],
     timelimit: Optional[int] = typer_args["timelimit"]
 ):
     """Run the REMix test cases. Requires [dev] dependencies."""
@@ -37,10 +36,7 @@ def program_test(
     else:
         arg_list = []
         for k, v in kwargs.items():
-            if os.name == "nt" and k == "workers":
-                continue
-            else:
-                arg_list += [f"--{k}", str(v)]
+            arg_list += [f"--{k}", str(v)]
 
         retcode = pytest.main([f"{__testingpath__}/test_instances.py"] + arg_list)
         raise Exit(code=retcode)

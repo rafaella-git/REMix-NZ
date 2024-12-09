@@ -11,7 +11,7 @@
 
 # %%
 # reading in model built in `tutorial_101a_build`
-from remix.framework.api.instance import Instance
+from remix.framework import Instance
 import pathlib as pt
 
 _path_tut101_data = pt.Path("../tutorial_101/data")

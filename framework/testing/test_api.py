@@ -52,6 +52,7 @@ def example_dataframes():
     converter_activityprofile = DataFrame(
         columns=build_timeseries_range(),
         index=MultiIndex.from_product([["DE_BW"], ["2050"], ["tech_a"], ["upper"]]),
+        dtype=float,
     ).fillna(0)
     timeseries = {"converter_activityprofile": converter_activityprofile}
     map_aggregatenodesmodel = DataFrame(
@@ -712,16 +713,16 @@ class TestInstance:
         assert inst.set.indicators == example_dataframes["sets"]["set_indicators"]
 
         assert (
-            inst.parameter.converter_capacityparam["unitsLowerLimit"][0]
+            inst.parameter.converter_capacityparam["unitsLowerLimit"].iloc[0]
             == example_dataframes["parameters"]["converter_capacityparam"][
                 "unitsLowerLimit"
-            ][0]
+            ].iloc[0]
         )
         assert (
-            inst.parameter.accounting_indicatorbounds["discount"][0]
+            inst.parameter.accounting_indicatorbounds["discount"].iloc[0]
             == example_dataframes["parameters"]["accounting_indicatorbounds"][
                 "discount"
-            ][0]
+            ].iloc[0]
         )
 
     def test_assign_attributes_roundtrip(self, temporary_dat_files):
