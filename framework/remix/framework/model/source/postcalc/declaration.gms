@@ -17,7 +17,7 @@ $if not set gdx_r2a          $setglobal gdx_r2a                 0
 $if not dexist "%resultdir%" put_utility 'exec' / 'mkdir -p %resultdir%'
 
 set capType / "build", "decom", "total", "lowerLimit", "upperLimit", "total_degraded" /;
-set balanceType / "netto", "brutto", "positive", "negative", "flh" /;
+set balanceType / "net", "gross", "positive", "negative", "flh" /;
 set profileType / "upper", "fixed", "lower" /;
 set r2a_has_converter_cost(indicator,nodesModel,years,techs,vintage,commodity);
 
@@ -213,6 +213,15 @@ parameter r2a_storage_e2p(%scenidx%accNodesModel,accYears,techs,vintage,commodit
 * // ### r2a_storage_selfdischarge
 * // Title: Storage self discharge rates
 parameter r2a_storage_selfdischarge(accNodesModel,accYears,techs,vintage,commodity);
+
+set attribute(*)
+     /
+    "variables"
+    "equations"
+    "iterations"
+    /;
+
+parameter diagnostics(attribute);
 
 $endif.run_postcalc
 $offVerbatim

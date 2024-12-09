@@ -62,14 +62,14 @@ Eq_balance_commodities(timeModelSel(timeModelToCalc),nodesModelSel,yearsSel,comm
     ..
 * converter
     sum((converter_techs,vintage,activity)
-            $( converter_coefficientProfile(timeModelSel,nodesModelSel,yearsSel,converter_techs,vintage,activity,commodity) <> 0
+            $( converter_coefficientProfile(timeModelToCalc,nodesModelSel,yearsSel,converter_techs,vintage,activity,commodity) <> 0
                 AND converter_usedTech(nodesModelSel,yearsSel,converter_techs,vintage) ),
-        converter_activity(timeModelSel,nodesModelSel,yearsSel,converter_techs,vintage,activity)
-            * converter_coefficientProfile(timeModelSel,nodesModelSel,yearsSel,converter_techs,vintage,activity,commodity)
-            * timeLength(timeModelSel)
-        + converter_unitsUsingActivity_MIP(timeModelSel,nodesModelSel,yearsSel,converter_techs,vintage,activity)
+        converter_activity(timeModelToCalc--converter_coefficient(converter_techs,vintage,activity,commodity,"delay"),nodesModelSel,yearsSel,converter_techs,vintage,activity)
+            * converter_coefficientProfile(timeModelToCalc,nodesModelSel,yearsSel,converter_techs,vintage,activity,commodity)
+            * timeLength(timeModelToCalc)
+        + converter_unitsUsingActivity_MIP(timeModelToCalc--converter_coefficient(converter_techs,vintage,activity,commodity,"delay"),nodesModelSel,yearsSel,converter_techs,vintage,activity)
             * converter_coefficient(converter_techs,vintage,activity,commodity,"constant")
-            * timeLength(timeModelSel))
+            * timeLength(timeModelToCalc))
 
 * storages
     + sum((storage_techs,vintage)
@@ -88,17 +88,18 @@ $else.pips
 $endif.pips
         )
 
-* transfer
+* incoming transfer
     + sum((linksModel,transfer_techs,vintage)
             $(transfer_usedTech(linksModel,yearsSel,transfer_techs,vintage)
                 and linksModelToCalc(linksModel)),
-        (   transfer_flowAlong(timeModelSel,linksModel,yearsSel,transfer_techs,vintage)
+        (   transfer_flowAlong(timeModelToCalc--transfer_delay(linksModel,transfer_techs,vintage,commodity),linksModel,yearsSel,transfer_techs,vintage)
                 $(transfer_incidenceModel(nodesModelSel,linksModel) > 0)
-          + transfer_flowAgainst(timeModelSel,linksModel,yearsSel,transfer_techs,vintage)
+          + transfer_flowAgainst(timeModelToCalc--transfer_delay(linksModel,transfer_techs,vintage,commodity),linksModel,yearsSel,transfer_techs,vintage)
                 $(transfer_incidenceModel(nodesModelSel,linksModel) < 0) )
         * transfer_coefficient(transfer_techs,vintage,commodity,"coefficient")
-        * timeLength(timeModelSel))
+        * timeLength(timeModelToCalc))
 
+* outgoing transfer
     - sum((linksModel,transfer_techs,vintage)
             $(transfer_usedTech(linksModel,yearsSel,transfer_techs,vintage)
                 and linksModelToCalc(linksModel)),
@@ -109,6 +110,7 @@ $endif.pips
         * transfer_coefficient(transfer_techs,vintage,commodity,"coefficient")
         * timeLength(timeModelSel))
 
+* transfer losses
     + 0.5 * sum((linksModel,transfer_techs,vintage)
             $(transfer_usedTech(linksModel,yearsSel,transfer_techs,vintage)
                 AND linksModelToCalc(linksModel)),

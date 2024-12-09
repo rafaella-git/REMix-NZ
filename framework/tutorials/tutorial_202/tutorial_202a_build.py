@@ -20,8 +20,8 @@
 # importing dependencies
 import numpy as np
 import pandas as pd
-from remix.framework.api.instance import Instance
-from remix.framework.tools.utilities import read_dat
+from remix.framework import Instance
+from remix.framework import read_dat
 
 # define often-used shortcut
 idx = pd.IndexSlice
@@ -666,7 +666,7 @@ accounting_sourcesinkFlow = pd.DataFrame(
         [["FuelCost", "Carbon"], ["global"], m.set.yearssel, ["FuelImport"], ["CH4"]]
     )
 )
-accounting_sourcesinkFlow["perFlow"] = 0
+accounting_sourcesinkFlow["perFlow"] = 0.0
 accounting_sourcesinkFlow.loc[
     idx["FuelCost", :, "2020", :], "perFlow"
 ] = 0.0306  # Mio EUR per GWh_ch CH4

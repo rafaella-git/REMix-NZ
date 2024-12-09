@@ -1,7 +1,4 @@
 {
-  "indicator_accounting_detailed": {
-    "FuelCost.R1_model.2030.FuelImport": -7.0
-  },
   "timeModelToCalc": {
     "tm2": 1.0,
     "tm3": 1.0,
@@ -10,5 +7,32 @@
     "tm6": 1.0,
     "tm7": 1.0,
     "tm8": 1.0
+  },
+  "indicator_accounting": {
+    "R1_model.2030.FuelCost": -8760.0,
+    "R1_model.2030.SystemCost": -8760.0,
+    "R1_model.horizon.FuelCost": -8760.0,
+    "R1_model.horizon.SystemCost": -8760.0,
+    "global.2030.FuelCost": -8760.0,
+    "global.2030.SystemCost": -8760.0,
+    "global.horizon.FuelCost": -8760.0,
+    "global.horizon.SystemCost": -8760.0
+  },
+  "indicator_accounting_detailed": {
+    "FuelCost.R1_model.2030.FuelImport": -8760.0
+  },
+  "commodity_balance_annual": {
+    "R1_model.2030.Demand.Elec.net": 7.0,
+    "R1_model.2030.Demand.Elec.gross": 7.0,
+    "R1_model.2030.Demand.Elec.positive": 7.0,
+    "R1_model.2030.FuelImport.Elec.net": -7.0,
+    "R1_model.2030.FuelImport.Elec.gross": 7.0,
+    "R1_model.2030.FuelImport.Elec.negative": -7.0,
+    "global.2030.Demand.Elec.net": 7.0,
+    "global.2030.Demand.Elec.gross": 7.0,
+    "global.2030.Demand.Elec.positive": 7.0,
+    "global.2030.FuelImport.Elec.net": -7.0,
+    "global.2030.FuelImport.Elec.gross": 7.0,
+    "global.2030.FuelImport.Elec.negative": -7.0
   }
 }

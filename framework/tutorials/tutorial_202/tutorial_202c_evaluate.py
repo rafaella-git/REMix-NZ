@@ -3,7 +3,7 @@
 #
 # %%
 # importing dependencies
-from remix.framework.tools.gdx import GDXEval
+from remix.framework import GDXEval
 import pandas as pd
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -53,9 +53,9 @@ transfer_caps.loc[idx[:, :, :, "2050", :, "Elec", "total"], :].round(2)
 # (nodesModel_a) is defined as positive, whereas the flow from B to A is
 # accounted negative. With the "balanceType" entry we can check for the
 # individual flows from A to B (positive), flows from B to A (negative), annual
-# sum of directed flows (netto = positive + negative), annual sum of energy
-# transferred (brutto = positive - negative), or line utilization
-# (flh = brutto / line capacity).
+# sum of directed flows (net = positive + negative), annual sum of energy
+# transferred (gross = positive - negative), or line utilization
+# (flh = gross / line capacity).
 
 # %%
 transfer_flows = results_loose["transfer_flows_annual"]
@@ -64,7 +64,7 @@ transfer_flows = transfer_flows[
 ].dropna()  # Remove all flows with less than 0.1 GWh
 
 transfer_flows = (
-    transfer_flows.loc[idx[:, :, :, :, :, "Elec", "netto"], :].div(1e3).round(2)
+    transfer_flows.loc[idx[:, :, :, :, :, "Elec", "net"], :].div(1e3).round(2)
 )  # Convert to TWh
 
 transfer_flows
@@ -154,6 +154,7 @@ plt.rcParams.update({"axes.labelsize": 18})  # label size colormap
 figsize_dual = (13.0, 6)
 figsize_single = (7.5, 6)
 
+
 # %%
 # visualization of energy generation and flows between model regions
 def plot_generation_flows(df_annual):
@@ -163,17 +164,18 @@ def plot_generation_flows(df_annual):
         .set_index(df_annual.index.names)
     )
     df_annual = df_annual.loc[
-        idx[
-            ["R1_model", "R2_model", "R3_model", "R4_model"], "2050", :, "Elec", "netto"
-        ]
+        idx[["R1_model", "R2_model", "R3_model", "R4_model"], "2050", :, "Elec", "net"]
     ]
 
     map_pv = (
-        df_annual.loc[idx[:, :, "PV"], idx[:]].groupby("accNodesModel").sum().div(1e3)
+        df_annual.loc[idx[:, :, "PV"], idx[:]]
+        .groupby("accNodesModel", observed=True)
+        .sum()
+        .div(1e3)
     )
     map_wind = (
         df_annual.loc[idx[:, :, "WindOnshore"], idx[:]]
-        .groupby("accNodesModel")
+        .groupby("accNodesModel", observed=True)
         .sum()
         .div(1e3)
     )
@@ -199,9 +201,9 @@ def plot_generation_flows(df_annual):
 
     flow_elec = (
         n2n_flow[n2n_flow != 0]
-        .loc[idx[:, :, :, :, :, "Elec", "netto"]]
+        .loc[idx[:, :, :, :, :, "Elec", "net"]]
         .dropna()
-        .groupby(["nodesModel_start", "nodesModel_end"])
+        .groupby(["nodesModel_start", "nodesModel_end"], observed=True)
         .sum()
         .div(1e3)
         .abs()
@@ -212,7 +214,7 @@ def plot_generation_flows(df_annual):
         n2n_flow[n2n_flow != 0]
         .loc[idx[:, :, :, :, :, "Elec", "flh"]]
         .dropna()
-        .groupby(["nodesModel_start", "nodesModel_end"])
+        .groupby(["nodesModel_start", "nodesModel_end"], observed=True)
         .sum()
         .abs()
     )
@@ -287,8 +289,8 @@ def plot_total_capacities(df, ax, nodesData, techs, years, upper=800):
     generation_capacities = df.loc[idx[nodesData, years, techs, :, "total"]]
     generation_capacities = (
         generation_capacities.reset_index()
-        .groupby(["accNodesModel", "accYears", "techs"])
-        .agg({"value": sum})
+        .groupby(["accNodesModel", "accYears", "techs"], observed=True)
+        .agg({"value": "sum"}, observed=True)
         .loc[idx[nodesData, years, techs], :]
     )
     if len(techs) == 1:
@@ -379,19 +381,20 @@ plt.ylabel("Total storage capacity in GWh")
 plt.title("Installed storage capacities: Tight")
 years = ["2020", "2030", "2040", "2050"]
 
+
 # %%
 def plot_year_generation(df, ax, nodesData, techs, commodity, years, upper=600):
-    generation_capacities = df.loc[idx[nodesData, years, techs, commodity, "netto"]]
+    generation_capacities = df.loc[idx[nodesData, years, techs, commodity, "net"]]
     generation_capacities = (
         generation_capacities.reset_index()
         .astype({col: object for col in generation_capacities.index.names})
         .groupby(["accNodesModel", "accYears", "techs"])
-        .agg({"value": sum})
+        .agg({"value": "sum"})
     )
     if len(generation_capacities.index.levels[0]) == 1:
         generation_capacities = generation_capacities.groupby(
             ["accYears", "techs"]
-        ).agg({"value": sum})
+        ).agg({"value": "sum"})
     generation_capacities = generation_capacities.unstack() / 1000
     generation_capacities.columns = generation_capacities.columns.get_level_values(1)
 
@@ -508,7 +511,7 @@ def plot_emissions_by_node(df, ax, nodesModel, years, indicator):
         emissions.reset_index()
         .astype({col: object for col in emissions.index.names})
         .groupby(["accNodesModel_a", "accYears_a"])
-        .agg({"value": sum})
+        .agg({"value": "sum"})
         / 1000
     )["value"].unstack()
     emissions.index.name = "Accounting Node"
@@ -606,7 +609,7 @@ def filter_emissions(df):
             ],
             "value",
         ]
-        .groupby("accYears")
+        .groupby("accYears", observed=True)
         .sum()
     )
     return df

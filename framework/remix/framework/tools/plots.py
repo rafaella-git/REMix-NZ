@@ -54,9 +54,9 @@ def get_cmap(cmap, data, limits: Optional[list[int | float]] = None):
     if limits is None:
         limits = [None, None]
     if limits[0] is None:
-        limits[0] = float(data.min())
+        limits[0] = data.min().iloc[0]
     if limits[1] is None:
-        limits[1] = float(data.max())
+        limits[1] = data.max().iloc[0]
     return cmap, limits
 
 
@@ -76,8 +76,8 @@ def plot_lines(ax, data: pd.DataFrame, patch_coll, cmap, limits: Optional[list[i
     for ikey in data.index.values:
         if ikey in patch_coll:
             if limits is not None:
-                edgecolor = cmap(float((data.loc[ikey] - limits[0]) / (limits[1] - limits[0])))
-                lwidth = float((data.loc[ikey] - limits[0]) / (limits[1] - limits[0]))
+                edgecolor = cmap((data.loc[ikey].iloc[0] - limits[0]) / (limits[1] - limits[0]))
+                lwidth = (data.loc[ikey].iloc[0] - limits[0]) / (limits[1] - limits[0])
             else:
                 edgecolor = "Reds"
                 lwidth = 1/8
@@ -100,7 +100,7 @@ def plot_patches(ax, data, patch_coll, cmap, limits: Optional[list[int | float]]
     for ikey in data.index.values:
         if ikey in patch_coll:
             if limits is not None:
-                facecolor = cmap(float((data.loc[ikey] - limits[0]) / (limits[1] - limits[0])))
+                facecolor = cmap((data.loc[ikey, "value"] - limits[0]) / (limits[1] - limits[0]))
             else:
                 facecolor = "Reds"
 
@@ -267,7 +267,7 @@ def filter_dataframe(df: pd.DataFrame, filter) -> pd.DataFrame:
     return df
 
 
-def generate_choropleths(cfg_choro, gdxeval=None, crs: int = 3857) -> None:
+def generate_choropleths(cfg_choro: dict, gdxeval=None, crs: int = 3857) -> None:
     assert "gdx" in cfg_choro and "shp" in cfg_choro and "shp_attr" in cfg_choro
     gdx = cfg_choro["gdx"]
     shp = cfg_choro["shp"]
@@ -316,7 +316,7 @@ def generate_choropleths(cfg_choro, gdxeval=None, crs: int = 3857) -> None:
                 print(f"Saved choropleth plot {plot_dir}/{k}_{y}.png")
 
 
-def generate_networks(cfg_netw, gdxeval=None, crs: int = 3857) -> None:
+def generate_networks(cfg_netw: dict, gdxeval=None, crs: int = 3857) -> None:
     assert "gdx" in cfg_netw and "shp" in cfg_netw and "shp_attr" in cfg_netw
     gdx = cfg_netw["gdx"]
     shp = cfg_netw["shp"]
@@ -364,7 +364,7 @@ def generate_networks(cfg_netw, gdxeval=None, crs: int = 3857) -> None:
                 print(f"Saved network plot {plot_dir}/{k}_{y}.png")
 
 
-def run_plotting(yml) -> None:
+def run_plotting(yml: str) -> None:
     with open(yml, "r") as yf:
         cfg = yaml.load(yf, Loader=yaml.FullLoader)
 

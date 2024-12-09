@@ -17,9 +17,11 @@ $offListing
 ** // SET: timeData | Time data | OEO_00140043:time stamp | set_timedata.csv
 set timeData   "Time data describes the time steps of the input data." / t0001*t8760 /;
 
-$ifthen.timemap not exist "%instancedir%/map_aggregatetimemodel.csv"
 
 $if not set timeres        $setglobal timeres              1
+
+$ifthen.timemap not exist "%instancedir%/map_aggregatetimemodel.csv"
+
 $eval timeModelSteps ceil(card(timeData)/%timeres%)
 
 ** // SET: timeModel | Time model | OEO_00140043:time stamp | set_timemodel.csv
@@ -33,6 +35,13 @@ $ife %DEBUG%=2             $setglobal timestart            1
 $ife %DEBUG%=2             $setglobal timeend             48
 
 $if not set timestart      $setglobal timestart            1
+
+* 
+$if not set scaletimefrac  $setglobal scaletimefrac        1
+
+$if set timeend            $setglobal timeendreal          %timeend%
+$if not set timeend        $setglobal timeendreal          8760
+
 $if not set timeend        $setglobal timeend              %timeModelSteps%
 
 abort$(%timeend% > card(timeModel) or %timeend% < 1)
@@ -43,6 +52,14 @@ abort$(%timestart% > %timeend%)
       "Specified start time must be smaller or equal to end time."
 
 set timeModelToCalc(timeModel) "Time steps to be calculated"  / tm%timestart%*tm%timeend% /;
+
+scalar timefrac;
+$ifthene %scaletimefrac%
+timefrac = (%timeendreal% - %timestart% + 1) / card(timeData) ;
+$else 
+timefrac = 1;
+$endif
+
 $onVerbatim
 
 set timeMappingHelper(timeData, timeModel, timeHelper) / #timeData : (#timeModel . #timeHelper) /;
@@ -76,6 +93,9 @@ $offDelim
 $if not exist "%instancedir%/map_aggregatetimemodel.csv" $log "No set elements for timeData to timeModel mapping included, automatic mapping."
 /;
 $offDelim
+
+scalar timefrac;
+timefrac = 1;
 
 $endif.timemap
 alias(timeModel, timeModel_a);

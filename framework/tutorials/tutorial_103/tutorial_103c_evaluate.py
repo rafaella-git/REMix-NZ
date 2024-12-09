@@ -9,7 +9,7 @@
 
 # %%
 # importing dependencies
-from remix.framework.tools.gdx import GDXEval
+from remix.framework import GDXEval
 from remix.framework.tools.plots import plot_network, plot_choropleth
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -51,9 +51,9 @@ transfer_caps.loc[idx[:, :, :, "2030", :, "Elec", "total"], :].round(2)
 # defined as positive, whereas the flow from B to A is accounted negative.
 # With the "balanceType" entry we can check for the individual flows from A to
 # B (positive), flows from B to A (negative), annual sum of directed flows
-# (netto = positive + negative), annual sum of energy transferred
-# (brutto = positive - negative), or link utilization
-# (flh = brutto / link capacity).
+# (net = positive + negative), annual sum of energy transferred
+# (gross = positive - negative), or link utilization
+# (flh = gross / link capacity).
 
 # %%
 transfer_flows = results["transfer_flows_annual"]
@@ -62,7 +62,7 @@ transfer_flows = transfer_flows[
 ].dropna()  # Remove all flows with less than 0.1 GWh
 
 transfer_flows = (
-    transfer_flows.loc[idx[:, :, :, :, :, "Elec", "netto"], :].div(1e3).round(2)
+    transfer_flows.loc[idx[:, :, :, :, :, "Elec", "net"], :].div(1e3).round(2)
 )  # Convert to TWh
 
 transfer_flows
@@ -155,17 +155,24 @@ figsize_single = (7.5, 6)
 # %%
 # visualization of renewable generation per model region
 df_annual = results["commodity_balance_annual"]
-df_annual = (
-    df_annual.reset_index()
-    .replace({"R3_model": "CH", "R1_model": "DE", "R2_model": "FR", "R4_model": "IT"})
-    .set_index(df_annual.index.names)
-)
-df_annual = df_annual.loc[idx[["DE", "CH", "FR", "IT"], "2030", :, "Elec", "netto"]]
 
-map_pv = df_annual.loc[idx[:, :, "PV"], idx[:]].groupby("accNodesModel").sum().div(1e3)
+df_annual.index = df_annual.index.set_levels(
+    df_annual.index.levels[0].rename_categories(
+        {"R3_model": "CH", "R1_model": "DE", "R2_model": "FR", "R4_model": "IT"}
+    ),
+    level="accNodesModel",
+)
+df_annual = df_annual.loc[idx[["DE", "CH", "FR", "IT"], "2030", :, "Elec", "net"]]
+
+map_pv = (
+    df_annual.loc[idx[:, :, "PV"], idx[:]]
+    .groupby("accNodesModel", observed=True)
+    .sum()
+    .div(1e3)
+)
 map_wind = (
     df_annual.loc[idx[:, :, "WindOnshore"], idx[:]]
-    .groupby("accNodesModel")
+    .groupby("accNodesModel", observed=True)
     .sum()
     .div(1e3)
 )
@@ -205,19 +212,21 @@ plot_choropleth(
 # %%
 # visualization of energy flows between model regions
 n2n_flow = results["transfer_flows_annual"]
-n2n_flow = (
-    n2n_flow.reset_index()
-    .replace({"R3_model": "CH", "R1_model": "DE", "R2_model": "FR", "R4_model": "IT"})
-    .set_index(n2n_flow.index.names)
-)
+for level in ["nodesModel_start", "nodesModel_end"]:
+    n2n_flow.index = n2n_flow.index.set_levels(
+        n2n_flow.index.levels[0].rename_categories(
+            {"R3_model": "CH", "R1_model": "DE", "R2_model": "FR", "R4_model": "IT"}
+        ),
+        level=level,
+    )
 
 n2n_flow = n2n_flow[n2n_flow != 0].dropna(how="all")
 
 flow_elec = (
     n2n_flow[n2n_flow != 0]
-    .loc[idx[:, :, :, :, :, "Elec", "netto"]]
+    .loc[idx[:, :, :, :, :, "Elec", "net"]]
     .dropna()
-    .groupby(["nodesModel_start", "nodesModel_end"])
+    .groupby(["nodesModel_start", "nodesModel_end"], observed=True)
     .sum()
     .div(1e3)
     .abs()
@@ -228,7 +237,7 @@ flow_flh = (
     n2n_flow[n2n_flow != 0]
     .loc[idx[:, :, :, :, :, "Elec", "flh"]]
     .dropna()
-    .groupby(["nodesModel_start", "nodesModel_end"])
+    .groupby(["nodesModel_start", "nodesModel_end"], observed=True)
     .sum()
     .abs()
 )
@@ -246,7 +255,7 @@ plot_network(
     lat=lat,
     lon=lon,
     centroids=centroids,
-    title="Annual netto transmission",
+    title="Annual net transmission",
     clabel="Energy in TWh",
     cmap="Greens",
     fig=fig,

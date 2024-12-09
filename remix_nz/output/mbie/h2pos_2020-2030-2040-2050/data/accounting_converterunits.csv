@@ -40,10 +40,6 @@ Invest,global,pv_central_fixed,1950,560.0,35,1,0.06
 Invest,global,pv_central_fixed,2030,380.0,40,1,0.06
 Invest,global,pv_central_fixed,2040,320.0,40,1,0.06
 Invest,global,pv_central_fixed,2050,290.0,40,1,0.06
-Invest,global,pv_central_track_azimuth,1950,650.0,35,1,0.06
-Invest,global,pv_central_track_azimuth,2030,450.0,40,1,0.06
-Invest,global,pv_central_track_azimuth,2040,380.0,40,1,0.06
-Invest,global,pv_central_track_azimuth,2050,350.0,40,1,0.06
 Invest,global,pv_decentral,1950,870.0,35,1,0.06
 Invest,global,pv_decentral,2030,570.0,40,1,0.06
 Invest,global,pv_decentral,2040,460.0,40,1,0.06
@@ -101,10 +97,6 @@ OMFix,global,pv_central_fixed,1950,0.0,0,0,0.0
 OMFix,global,pv_central_fixed,2030,0.0,0,0,0.0
 OMFix,global,pv_central_fixed,2040,0.0,0,0,0.0
 OMFix,global,pv_central_fixed,2050,0.0,0,0,0.0
-OMFix,global,pv_central_track_azimuth,1950,0.0,0,0,0.0
-OMFix,global,pv_central_track_azimuth,2030,0.0,0,0,0.0
-OMFix,global,pv_central_track_azimuth,2040,0.0,0,0,0.0
-OMFix,global,pv_central_track_azimuth,2050,0.0,0,0,0.0
 OMFix,global,pv_decentral,1950,0.0,0,0,0.0
 OMFix,global,pv_decentral,2030,0.0,0,0,0.0
 OMFix,global,pv_decentral,2040,0.0,0,0,0.0

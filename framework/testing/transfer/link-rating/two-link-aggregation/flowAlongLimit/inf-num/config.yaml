@@ -4,6 +4,7 @@ remix_parameters:
   roundts: 1
   datadir: ../../../data
   scendir: ./two-link-aggregation/flowAlongLimit/inf-num
+  scaletimefrac: 0
 
 metrics:
   runtime: <=23

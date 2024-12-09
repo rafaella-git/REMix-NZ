@@ -5,7 +5,7 @@
 # refer to `tutorial_101b_run`.
 # %%
 # loading model built in `tutorial_103a_build`
-from remix.framework.api.instance import Instance
+from remix.framework import Instance
 import pathlib as pt
 
 _path_tut103_data = pt.Path("../tutorial_103/data")
