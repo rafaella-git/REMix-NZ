@@ -53,10 +53,10 @@ path_geo = f"{path_input}/shapefiles"         # geojson
 geofile="11regionsNZ.geojson"
 demand_file=files_lst[indx] 
 case_name=f"{demand_file}_{yrs_str}"
-path_output = f"{path_base}/remix_nz/output/{group_name}"
-data_dir = Path(f"{path_output}/{case_name}/data")
+path_project = f"{path_base}/remix_nz/project/{group_name}"
+data_dir = Path(f"{path_project}/{case_name}/data")
 data_dir.mkdir(parents=True, exist_ok=True)
-results_dir = Path(f"{path_output}/{case_name}/result")
+results_dir = Path(f"{path_project}/{case_name}/result")
 results_dir.mkdir(parents=True, exist_ok=True)
 
 
@@ -1618,11 +1618,11 @@ if __name__ == "__main__":
 
     # # Create data
     s2 = int(time.perf_counter())
-    # m.write(output_path=data_dir, fileformat="csv")
+    # m.write(project_path=data_dir, fileformat="csv")
     Path("../data").mkdir(parents=True, exist_ok=True)
-    m["Base"].write(output_path=data_dir, fileformat="csv", float_format="{:.4g}".format)
+    m["Base"].write(project_path=data_dir, fileformat="csv", float_format="{:.4g}".format)
     for s in ["wind"]:
-        m[s].write(output_path=f"data_dir/{s}", fileformat="csv", float_format="{:.4g}".format)
+        m[s].write(project_path=f"data_dir/{s}", fileformat="csv", float_format="{:.4g}".format)
 
     e2 = time.perf_counter()
     d2=time.strftime("%Hh %Mm %Ss", time.gmtime(e2-s2))
