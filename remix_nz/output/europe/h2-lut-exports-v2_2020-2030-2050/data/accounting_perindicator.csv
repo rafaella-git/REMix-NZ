@@ -1,6 +1,0 @@
-indicator,indicator_a,accNodesData,accYears,perIndicator
-SystemCost,FuelCost,global,horizon,1.0
-SystemCost,ImportCost,global,horizon,1.0
-SystemCost,Invest,global,horizon,1.0
-SystemCost,OMFix,global,horizon,1.0
-SystemCost,SlackCost,global,horizon,1.0
