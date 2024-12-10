@@ -1,6 +1,0 @@
-,,,,perIndicator
-SystemCost,FuelCost,global,horizon,1
-SystemCost,ImportCost,global,horizon,1
-SystemCost,Invest,global,horizon,1
-SystemCost,OMFix,global,horizon,1
-SystemCost,SlackCost,global,horizon,1

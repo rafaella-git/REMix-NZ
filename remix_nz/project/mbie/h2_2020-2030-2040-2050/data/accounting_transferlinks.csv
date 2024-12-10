@@ -1,0 +1,9 @@
+indicator,accLinksData,transfer_techs,vintage,perLinkBuild,interest,amorTime,useAnnuity,perLinkTotal
+Invest,global,HV,2020,180.0,0.06,40,1,0.0
+Invest,global,HV,2030,180.0,0.06,40,1,0.0
+Invest,global,HV,2040,180.0,0.06,40,1,0.0
+Invest,global,HV,2050,180.0,0.06,40,1,0.0
+OMFix,global,HV,2020,0.0,0.0,0,0,1.8
+OMFix,global,HV,2030,0.0,0.0,0,0,1.8
+OMFix,global,HV,2040,0.0,0.0,0,0,1.8
+OMFix,global,HV,2050,0.0,0.0,0,0,1.8
