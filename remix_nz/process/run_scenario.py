@@ -31,8 +31,8 @@ folder_dict = {
 
 
 group_name="dlr"
-case_name=f"h2-domestic_2020-2030-2050"
-scenario = "wind+"
+case_name=f"separate-demand"
+scenario = "wind"
 
 
 # Defining the directory the model data is written in (folder "data/" in the project directory)
@@ -86,3 +86,4 @@ print(f"------------- Running {case_name} with scenario {scenario} took {d1}.")
 # some other reason. In that case, you can refer to the `run_remix.lst` file and look for the error marker `****`.
 # You can open that file in an editor and look for the error message.
 # Alternatively, you can also use the commandline tool grep to search for the pattern "**** Exec Error"  in the file to see what is wrong.
+# %%

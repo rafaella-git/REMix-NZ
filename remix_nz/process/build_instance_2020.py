@@ -21,6 +21,7 @@ idx = pd.IndexSlice
 # %% [markdown]
 # ### Define the years to run the optimisation and the demand file
 # The demand file and the years run determine the name of the case and its results
+
 will_elec = ["00-test-elec","01-battery-distributed", "02-battery-overnight", "03-battery-recharging", "04-battery-solar"]
 will_h2 = ["01-h2-distributed", "02-h2-overnight", "03-h2-recharging", "04-h2-solar"]
 sdewes_ap = ["base", "high", "med", "ev-med", "low"]
@@ -44,20 +45,22 @@ yrs_to_calc = [2020, 2025, 2030, 2035, 2040, 2045, 2050]
 indx=0
 
 # Define paths/directories
-path_base = "C:/Local/REMix"
-path_input = f"{path_base}/remix_nz/input"
-path_demand = f"{path_input}/demand/{group_name}"
-path_profiles = f"{path_input}/profiles"      # renewables
-path_brownfield = f"{path_input}/brownfield"  # info hydro and existing power plants database
-path_geo = f"{path_input}/shapefiles"         # geojson
-geofile="11regionsNZ.geojson"
+path_demand = f"../input/demand/{group_name}"
+path_profiles = f"../input/profiles"      # renewables
+path_brownfield = f"../input/brownfield"  # info hydro and existing power plants database
 demand_file=files_lst[indx] 
 case_name=f"{demand_file}_{yrs_str}"
-path_project = f"{path_base}/remix_nz/project/{group_name}"
-data_dir = Path(f"{path_project}/{case_name}/data")
+# FIXME: modify 
+case_name=f"separate-demand"
+data_dir = Path(f"../project/{group_name}/{case_name}/data")
 data_dir.mkdir(parents=True, exist_ok=True)
-results_dir = Path(f"{path_project}/{case_name}/result")
+results_dir = Path(f"../project/{group_name}/{case_name}/result")
 results_dir.mkdir(parents=True, exist_ok=True)
+
+
+
+
+
 
 
 def add_scope(m):
@@ -95,7 +98,7 @@ def add_scope(m):
     # "set_yearsSel"
     m["Base"].set.add(yrs_sel, "yearssel")  # years to be optimised
 
-def add_demand(m):
+def add_demandoriginal(m):
     rename_commodity = {"Electricity": "Elec",
                         "Hydrogen": "H2",
                         "H2-feedstock": "H2",
@@ -107,9 +110,7 @@ def add_demand(m):
                         }
     
 
-    # FFE extremos profiles
-    # note: we added the .round(3) part because we were getting errors de
-    #ts_ffe = -1 * pd.read_csv("input/nz_profile_11nodes.csv", index_col=[0, 1, 2, 3]).rename(index=rename_commodity)
+    # note: we added the .round(3) part because we were getting errors 
     ts_ffe = -1 * pd.read_csv(Path(path_demand).joinpath(f"{demand_file}.csv"), index_col=[0, 1, 2, 3]).rename(index=rename_commodity)
     ts_ffe["type"] = "fixed"
     ts_ffe_fixed = ts_ffe.set_index("type", append=True).round(3)
@@ -140,45 +141,6 @@ def add_demand(m):
     # display(slack_cost)
     m["Base"].parameter.add(slack_cost, "accounting_sourcesinkflow")
 
-
-  
-    # # Hydrogen
-    # # "sourcesink_annualSum"
-    # h2_nodes =  m["Base"].set.nodesdata
-    # h2_annual = pd.DataFrame(
-    #     index=pd.MultiIndex.from_product([h2_nodes, yrs_to_calc, ["Demand"], ["H2"]])
-    # )
-
-    # Adding the new column "upper" to the DataFrame and setting values for the year 2050
-    # h2_annual["upper"] = 0 # Initializing with  0
-    # h2_annualdemand=0 # if it is one it takes the annual demand
-    # if h2_annualdemand==1:
-    #     h2_2050 = {
-    #         'NIS': 1038.15623,
-    #         'AKL': 70793.7597,
-    #         'WTO': 11663.81169,
-    #         'BOP': 11700.05017,
-    #         'HBY': 13060.32836,
-    #         'TRN': 62016.13938,
-    #         'CEN': 11842.51657,
-    #         'WEL': 34654.12968,
-    #         'NEL': 9158.885102,
-    #         'CAN': 39314.18837,
-    #         'OTG': 18806.67305
-    #         }
-    #     for node, value in h2_2050.items():
-    #         h2_annual.loc[(node, 2050, "Demand", "H2"), "upper"] = value
-    # m["Base"].parameter.add(h2_annual, "sourcesink_annualsum")
-
-    # h2_cfg = pd.DataFrame(
-    #     index=pd.MultiIndex.from_product([h2_nodes, yrs_to_calc, ["Demand"], ["H2"]])
-    # )
-    # h2_cfg["usesUpperSum"] = 1
-    # h2_cfg["usesUpperProfile"] = 1
-   
-    # # h2_cfg["usesLowerProfile"] = 1
-    # m["Base"].parameter.add(h2_cfg, "sourcesink_config")   
-
     # Efuels
     # "sourcesink_annualSum"
     efuels_nodes =  m["Base"].set.nodesdata
@@ -188,23 +150,6 @@ def add_demand(m):
 
     #Adding the new column "upper" to the DataFrame and setting values for the year 2050
     efuels_annual["upper"] = 0 # Initializing with  0
-    efuels_annualdemand=0 # if it is one it takes the annual demand
-    # if efuels_annualdemand==1:
-    #     h2_2050 = {
-    #         'NIS': 1038.15623,
-    #         'AKL': 70793.7597,
-    #         'WTO': 11663.81169,
-    #         'BOP': 11700.05017,
-    #         'HBY': 13060.32836,
-    #         'TRN': 62016.13938,
-    #         'CEN': 11842.51657,
-    #         'WEL': 34654.12968,
-    #         'NEL': 9158.885102,
-    #         'CAN': 39314.18837,
-    #         'OTG': 18806.67305
-    #         }
-    #     for node, value in h2_2050.items():
-    #         efuels_annual.loc[(node, 2050, "Demand", "H2"), "upper"] = value
     m["Base"].parameter.add(efuels_annual, "sourcesink_annualsum")
 
     efuels_cfg = pd.DataFrame(
@@ -219,6 +164,56 @@ def add_demand(m):
     # Derive region and time scope
     m["Base"].set.add(list(ts_ffe.index.get_level_values(0)), "nodesdata")
     m["Base"].set.add(list(ts_ffe.index.get_level_values(1)), "years")
+
+
+def add_demand(m, file_path, fuel_type, rename_commodity, slack=False, slack_cost=10):
+    """
+    Adds demand profiles for a specific fuel type to the model.
+
+    Args:
+        m: The energy model.
+        file_path: Path to the CSV file containing demand data.
+        fuel_type: Type of fuel (e.g., 'Elec', 'H2').
+        rename_commodity: Dictionary mapping original commodity names to model names.
+        slack: Whether to add slack configuration for this fuel type.
+        slack_cost: Cost of slack for this fuel type (default=10).
+    """
+    # Load and process the fuel demand data
+    ts_fuel = -1 * pd.read_csv(file_path, index_col=[0, 1, 2, 3]).rename(index=rename_commodity)
+    ts_fuel["type"] = "fixed"
+    ts_fuel_fixed = ts_fuel.set_index("type", append=True).round(3)
+    m["Base"].profile.add(ts_fuel_fixed, "sourcesink_profile")
+
+    # Add configuration for fixed profile
+    ts_fuel_cfg = pd.DataFrame(index=ts_fuel.index)
+    ts_fuel_cfg["usesFixedProfile"] = 1
+    m["Base"].parameter.add(ts_fuel_cfg, "sourcesink_config")
+
+    # Add slack configuration if applicable
+    if slack:
+        slack_annual = ts_fuel_cfg.loc[idx[:, :, "Wholesale", fuel_type], idx[:]]
+        slack_annual = slack_annual.rename(index={"Wholesale": "Slack"}, columns={"usesFixedProfile": "upper"})
+        slack_annual["upper"] = np.inf
+        m["Base"].parameter.add(slack_annual, "sourcesink_annualsum")
+
+        slack_cfg = slack_annual.rename(columns={"upper": "usesUpperSum"}).replace(np.inf, 1)
+        slack_cfg["usesLowerProfile"] = 1
+        m["Base"].parameter.add(slack_cfg, "sourcesink_config")
+
+        slack_cost_df = pd.DataFrame(
+            index=pd.MultiIndex.from_product([["SlackCost"], ["global"], m["Base"].set.years, ["Slack"], [fuel_type]])
+        )
+        slack_cost_df["perFlow"] = slack_cost
+        m["Base"].parameter.add(slack_cost_df, "accounting_sourcesinkflow")
+
+    # Update region and year scope
+    m["Base"].set.add(list(ts_fuel.index.get_level_values(0)), "nodesdata")
+    m["Base"].set.add(list(ts_fuel.index.get_level_values(1)), "years")
+
+
+
+
+
 
 # renewables
     
@@ -850,7 +845,6 @@ def add_electrolyser(m):
 
     m["Base"].parameter.add(electrolyser_acc, "accounting_converterunits")
 
-
 def add_H2_CCGT(m):
     H2_CCGT_vintage = [2030, 2035, 2040, 2045, 2050]
     H2_CCGT_nodes = [n for n in m["Base"].set.nodesdata]
@@ -895,7 +889,6 @@ def add_H2_CCGT(m):
 
     m["Base"].parameter.add(H2_CCGT_acc, "accounting_converterunits")
 
-
 def add_H2_FC(m):
     H2_FC_vintage = [2020, 2025, 2030, 2035, 2040, 2045, 2050]
     H2_FC_nodes = [n for n in m["Base"].set.nodesdata]
@@ -939,8 +932,6 @@ def add_H2_FC(m):
         )  # Mio EUR per unit
 
     m["Base"].parameter.add(H2_FC_acc, "accounting_converterunits")
-
-
 
 def add_dac(m):
     dac_vintage = [2020, 2030, 2040, 2050]
@@ -1329,27 +1320,27 @@ def add_h2_storage(m):
     )  # Mio EUR per unit
     m["Base"].parameter.add(stor_acc, "accounting_storageunits")
 
-#
+# co2 constrains
 
-# def add_emission_limit(m):
-#     # Add net zero restriction for 2050
-#     accounting_emissionLimit = pd.DataFrame(
-#         index=pd.MultiIndex.from_product([["global"], [2050], ["CO2Emission"]])
-#     )
-#     accounting_emissionLimit["useUpper"] = 1  # minimization of system costs
-#     accounting_emissionLimit["upperValue"] = 0  # minimization of system costs
-#     m["Base"].parameter.add(accounting_emissionLimit, "accounting_indicatorbounds")
+def add_emission_limit(m):
+    # Add net zero restriction for 2050
+    accounting_emissionLimit = pd.DataFrame(
+        index=pd.MultiIndex.from_product([["global"], [2050], ["CO2Emission"]])
+    )
+    accounting_emissionLimit["useUpper"] = 1  # minimization of system costs
+    accounting_emissionLimit["upperValue"] = 0  # minimization of system costs
+    m["Base"].parameter.add(accounting_emissionLimit, "accounting_indicatorbounds")
 
-# def add_emission_budget(m):
-#     # Add cumulativ emission budget for all years
-#     accounting_emissionBudget = pd.DataFrame(
-#         index=pd.MultiIndex.from_product([["global"], ["horizon"], ["CO2Emission"]])
-#     )
-#     accounting_emissionBudget["integral"] = 1
-#     accounting_emissionBudget["endyear"] = 25 # length of the last year to run (2050)
-#     accounting_emissionBudget["useUpper"] = 1
-#     accounting_emissionBudget["upperValue"] = 45000  # 45 Gt CO2
-#     m["Base"].parameter.add(accounting_emissionBudget, "accounting_indicatorbounds")
+def add_emission_budget(m):
+    # Add cumulativ emission budget for all years
+    accounting_emissionBudget = pd.DataFrame(
+        index=pd.MultiIndex.from_product([["global"], ["horizon"], ["CO2Emission"]])
+    )
+    accounting_emissionBudget["integral"] = 1
+    accounting_emissionBudget["endyear"] = 25 # length of the last year to run (2050)
+    accounting_emissionBudget["useUpper"] = 1
+    accounting_emissionBudget["upperValue"] = 45000  # 45 Gt CO2
+    m["Base"].parameter.add(accounting_emissionBudget, "accounting_indicatorbounds")
 
 # others
     
@@ -1579,7 +1570,35 @@ if __name__ == "__main__":
     m["Base"] = Instance(index_names=False,datadir=data_dir)
 
     add_scope(m)
-    add_demand(m)
+    #add_demand(m)
+    rename_commodity = {"Electricity": "Elec", "Hydrogen": "H2"}
+
+
+        # Add demand for Electricity
+    add_demand(
+        m=m,
+        file_path="../input/demand/dlr/separate-elec.csv",
+        fuel_type="Elec",
+        rename_commodity=rename_commodity,
+        slack=True,
+        slack_cost=10
+    )
+
+    # Add demand for Hydrogen
+    add_demand(
+        m=m,
+        file_path="../input/demand/dlr/separate-h2.csv",
+        fuel_type="H2",
+        rename_commodity=rename_commodity
+    )
+
+    # Add demand for HydroInflow
+    add_demand(
+        m=m,
+        file_path="../input/demand/dlr/separate-inflows.csv",
+        fuel_type="HydroInflow",
+        rename_commodity=rename_commodity
+    )
 
     # renewables
     add_renewables(m)
@@ -1594,7 +1613,6 @@ if __name__ == "__main__":
     add_gas_turbines(m)
 
     # hydrogen
-
     add_electrolyser(m)
     add_h2_storage(m)
     add_H2_CCGT(m)
@@ -1619,42 +1637,11 @@ if __name__ == "__main__":
     # # Create data
     s2 = int(time.perf_counter())
     # m.write(project_path=data_dir, fileformat="csv")
-    Path("../data").mkdir(parents=True, exist_ok=True)
+    
     m["Base"].write(project_path=data_dir, fileformat="csv", float_format="{:.4g}".format)
-    for s in ["wind"]:
-        m[s].write(project_path=f"data_dir/{s}", fileformat="csv", float_format="{:.4g}".format)
+    #for s in ["h2","wind"]:
+    #    m[s].write(project_path=f"data_dir/{s}", fileformat="csv", float_format="{:.4g}".format)
 
     e2 = time.perf_counter()
     d2=time.strftime("%Hh %Mm %Ss", time.gmtime(e2-s2))
     print(f"Writing dataset for {case_name} took {d2}.")
-
-# # %%
-#     #m_run = Instance.from_path(data_dir)
-
-#     #COMMENT: YOU NEED TO  COMMENT THE LINE ABOVE SCEN IS DEFINED HERE AND THEN THE TWO LINES BELOW ARE ALSO CHANGED
-#     scen = "wind+"
-
-#     m["Base"].run(
-#         resultdir=results_dir,
-#         #resultfile=f"{case_name}",
-#         resultfile=f"{case_name}_{scen.replace('/', '_')}",
-#         scendir=f"{scen}",
-#         solver="gurobi",
-#         threads=8,
-#         lo=4,
-#         timeres=1,
-#         names=1,
-#         roundts=1,
-#         iis=1, # Irreducible Infeasible Subsystem
-#         # profile=1,
-#         # gdx="default",
-#         pathopt="myopic",
-#         barorder=1
-#     )
-#     print(os. getcwd())
-
-# e1 = time.perf_counter()
-# d1=time.strftime("%Hh %Mm %Ss", time.gmtime(e1-s1))
-# print(f"------------- Running {case_name} took {d1}.")
-
-# %%
