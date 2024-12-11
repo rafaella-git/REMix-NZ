@@ -1,4 +1,4 @@
-,,,,usesFixedProfile,usesUpperProfile,usesUpperSum,usesLowerProfile
+,,,,usesFixedProfile,usesUpperProfile,usesLowerProfile,usesUpperSum
 AKL,2020,Ocean,Water_out,0,1,0,0
 AKL,2020,Slack,Elec,0,0,1,1
 AKL,2020,Wholesale,Elec,1,0,0,0
