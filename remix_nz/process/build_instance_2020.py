@@ -166,7 +166,7 @@ def add_demandoriginal(m):
     m["Base"].set.add(list(ts_ffe.index.get_level_values(1)), "years")
 
 
-def add_demand(m, file_path, fuel_type, rename_commodity, slack=False, slack_cost=10):
+def add_demandsep(m, file_path, fuel_type, rename_commodity, slack=False, slack_cost=10):
     """
     Adds demand profiles for a specific fuel type to the model.
 
@@ -210,7 +210,69 @@ def add_demand(m, file_path, fuel_type, rename_commodity, slack=False, slack_cos
     m["Base"].set.add(list(ts_fuel.index.get_level_values(0)), "nodesdata")
     m["Base"].set.add(list(ts_fuel.index.get_level_values(1)), "years")
 
+def add_demand(m):
 
+    # Mapping of fuel types to their CSV file paths
+    file_paths = {
+        "Elec": "../input/demand/dlr/separate-elec.csv",
+        "H2": "../input/demand/dlr/separate-h2.csv",
+        "HydroInflow": "../input/demand/dlr/separate-inflows.csv",
+    }
+
+    # Commodity renaming rules
+    rename_commodity = {
+        "Electricity": "Elec",
+        "Hydrogen": "H2",
+        "H2-feedstock": "H2",
+        "Natural Gas": "CH4",
+        "Gas": "CH4",
+        "Feedstock Gas": "CH4",
+        "Feedstock methanol": "CH3OH",
+        "Renewable Fuels": "REfuel",
+    }
+
+    # Slack settings for specific commodities
+    slack_settings = {
+        "Elec": {"enabled": True, "cost": 10},
+        "H2": {"enabled": False, "cost": 0},
+        "HydroInflow": {"enabled": False, "cost": 0}
+    }
+
+    # Iterate through the commodities and process each
+    for commodity_type, file_path in file_paths.items():
+        print(f"Processing demand for {commodity_type}...")
+
+        # Load and process the commodity input profile data
+        ts_commodity = -1 * pd.read_csv(file_path, index_col=[0, 1, 2, 3]).rename(index=rename_commodity)
+        ts_commodity["type"] = "fixed"
+        ts_commodity_fixed = ts_commodity.set_index("type", append=True).round(3)
+        m["Base"].profile.add(ts_commodity_fixed, "sourcesink_profile")
+
+        # Add configuration for fixed profile
+        ts_commodity_cfg = pd.DataFrame(index=ts_commodity.index)
+        ts_commodity_cfg["usesFixedProfile"] = 1
+        m["Base"].parameter.add(ts_commodity_cfg, "sourcesink_config")
+
+        # Add slack configuration if applicable
+        if slack_settings[commodity_type]["enabled"]:
+            slack_annual = ts_commodity_cfg.loc[idx[:, :, "Wholesale", commodity_type], idx[:]]
+            slack_annual = slack_annual.rename(index={"Wholesale": "Slack"}, columns={"usesFixedProfile": "upper"})
+            slack_annual["upper"] = np.inf
+            m["Base"].parameter.add(slack_annual, "sourcesink_annualsum")
+
+            slack_cfg = slack_annual.rename(columns={"upper": "usesUpperSum"}).replace(np.inf, 1)
+            slack_cfg["usesLowerProfile"] = 1
+            m["Base"].parameter.add(slack_cfg, "sourcesink_config")
+
+            slack_cost_df = pd.DataFrame(
+                index=pd.MultiIndex.from_product([["SlackCost"], ["global"], m["Base"].set.years, ["Slack"], [commodity_type]])
+            )
+            slack_cost_df["perFlow"] = slack_settings[commodity_type]["cost"]
+            m["Base"].parameter.add(slack_cost_df, "accounting_sourcesinkflow")
+
+        # Update region and year scope
+        m["Base"].set.add(list(ts_commodity.index.get_level_values(0)), "nodesdata")
+        m["Base"].set.add(list(ts_commodity.index.get_level_values(1)), "years")
 
 
 
@@ -1570,35 +1632,35 @@ if __name__ == "__main__":
     m["Base"] = Instance(index_names=False,datadir=data_dir)
 
     add_scope(m)
-    #add_demand(m)
-    rename_commodity = {"Electricity": "Elec", "Hydrogen": "H2"}
+    add_demand(m)
+    # rename_commodity = {"Electricity": "Elec", "Hydrogen": "H2"}
 
 
-        # Add demand for Electricity
-    add_demand(
-        m=m,
-        file_path="../input/demand/dlr/separate-elec.csv",
-        fuel_type="Elec",
-        rename_commodity=rename_commodity,
-        slack=True,
-        slack_cost=10
-    )
+    #     # Add demand for Electricity
+    # add_demand(
+    #     m=m,
+    #     file_path="../input/demand/dlr/separate-elec.csv",
+    #     fuel_type="Elec",
+    #     rename_commodity=rename_commodity,
+    #     slack=True,
+    #     slack_cost=10
+    # )
 
-    # Add demand for Hydrogen
-    add_demand(
-        m=m,
-        file_path="../input/demand/dlr/separate-h2.csv",
-        fuel_type="H2",
-        rename_commodity=rename_commodity
-    )
+    # # Add demand for Hydrogen
+    # add_demand(
+    #     m=m,
+    #     file_path="../input/demand/dlr/separate-h2.csv",
+    #     fuel_type="H2",
+    #     rename_commodity=rename_commodity
+    # )
 
-    # Add demand for HydroInflow
-    add_demand(
-        m=m,
-        file_path="../input/demand/dlr/separate-inflows.csv",
-        fuel_type="HydroInflow",
-        rename_commodity=rename_commodity
-    )
+    # # Add demand for HydroInflow
+    # add_demand(
+    #     m=m,
+    #     file_path="../input/demand/dlr/separate-inflows.csv",
+    #     fuel_type="HydroInflow",
+    #     rename_commodity=rename_commodity
+    # )
 
     # renewables
     add_renewables(m)
