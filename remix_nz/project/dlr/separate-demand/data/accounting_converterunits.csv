@@ -36,6 +36,8 @@ Invest,global,H2_storage,2020,5.14,40,1,0.06
 Invest,global,H2_storage,2035,5.14,40,1,0.06
 Invest,global,H2_storage,2050,5.14,40,1,0.06
 Invest,global,Hydro,1950,2560,20,1,0.06
+Invest,global,Hydro_Clyde,1950,2560,20,1,0.06
+Invest,global,Hydro_Roxburgh,1950,2560,20,1,0.06
 Invest,global,OCGT,1950,475,30,1,0.06
 Invest,global,OCGT,2030,475,30,1,0.06
 Invest,global,geoth,1950,4970,100,1,0.06
@@ -96,6 +98,8 @@ OMFix,global,H2_storage,2020,0,0,0,0
 OMFix,global,H2_storage,2035,0,0,0,0
 OMFix,global,H2_storage,2050,0,0,0,0
 OMFix,global,Hydro,1950,0,0,0,0
+OMFix,global,Hydro_Clyde,1950,0,0,0,0
+OMFix,global,Hydro_Roxburgh,1950,0,0,0,0
 OMFix,global,OCGT,1950,0,0,0,0
 OMFix,global,OCGT,2030,0,0,0,0
 OMFix,global,geoth,1950,0,0,0,0

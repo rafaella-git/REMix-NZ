@@ -7,6 +7,7 @@ Invest,global,H2_storage,2020,131.9,1,40,0.06
 Invest,global,H2_storage,2035,131.9,1,40,0.06
 Invest,global,H2_storage,2050,131.9,1,40,0.06
 Invest,global,Hydro_reservoir,1950,1650,1,20,0.06
+Invest,global,Lake_Hawea,1950,1650,1,20,0.06
 OMFix,global,Battery,2020,0,0,0,0
 OMFix,global,Battery,2030,0,0,0,0
 OMFix,global,Battery,2040,0,0,0,0
@@ -15,3 +16,4 @@ OMFix,global,H2_storage,2020,0,0,0,0
 OMFix,global,H2_storage,2035,0,0,0,0
 OMFix,global,H2_storage,2050,0,0,0,0
 OMFix,global,Hydro_reservoir,1950,0,0,0,0
+OMFix,global,Lake_Hawea,1950,0,0,0,0
