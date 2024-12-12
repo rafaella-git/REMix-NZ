@@ -816,6 +816,8 @@ NIS,2050,wind_offshore_foundation,0,4.841,0
 NIS,2050,wind_onshore,0,9.923,0
 OTG,2000,BIO,0.0014,inf,0
 OTG,2000,Hydro,1.664,inf,1
+OTG,2000,Hydro_Clyde,0.464,inf,1
+OTG,2000,Hydro_Roxburgh,0.32,inf,1
 OTG,2007,wind_onshore,0.058,inf,0
 OTG,2009,wind_onshore,0.00225,inf,0
 OTG,2010,wind_onshore,0.00045,inf,0
@@ -832,6 +834,8 @@ OTG,2020,H2_CCGT,0,100,0
 OTG,2020,H2_FC,0,100,0
 OTG,2020,H2_storage,0,50,0
 OTG,2020,Hydro,0,inf,1
+OTG,2020,Hydro_Clyde,0,inf,1
+OTG,2020,Hydro_Roxburgh,0,inf,1
 OTG,2020,OCGT,0,100,1
 OTG,2020,pv_central_fixed,0,1165,1
 OTG,2020,pv_decentral,0,0.4882,1
@@ -847,6 +851,8 @@ OTG,2025,GT,0,100,0
 OTG,2025,H2_CCGT,0,100,0
 OTG,2025,H2_FC,0,100,0
 OTG,2025,Hydro,0,inf,1
+OTG,2025,Hydro_Clyde,0,inf,1
+OTG,2025,Hydro_Roxburgh,0,inf,1
 OTG,2025,OCGT,0,100,0
 OTG,2025,pv_central_fixed,0,1165,0
 OTG,2025,pv_decentral,0,0.4882,0
@@ -863,6 +869,8 @@ OTG,2030,GT,0,100,0
 OTG,2030,H2_CCGT,0,100,0
 OTG,2030,H2_FC,0,100,0
 OTG,2030,Hydro,0,inf,1
+OTG,2030,Hydro_Clyde,0,inf,1
+OTG,2030,Hydro_Roxburgh,0,inf,1
 OTG,2030,OCGT,0,100,0
 OTG,2030,pv_central_fixed,0,1165,0
 OTG,2030,pv_decentral,0,0.4882,0
@@ -879,6 +887,8 @@ OTG,2035,H2_CCGT,0,100,0
 OTG,2035,H2_FC,0,100,0
 OTG,2035,H2_storage,0,50,0
 OTG,2035,Hydro,0,inf,1
+OTG,2035,Hydro_Clyde,0,inf,1
+OTG,2035,Hydro_Roxburgh,0,inf,1
 OTG,2035,OCGT,0,100,0
 OTG,2035,pv_central_fixed,0,1165,0
 OTG,2035,pv_decentral,0,0.4882,0
@@ -894,6 +904,8 @@ OTG,2040,GT,0,100,0
 OTG,2040,H2_CCGT,0,100,0
 OTG,2040,H2_FC,0,100,0
 OTG,2040,Hydro,0,inf,1
+OTG,2040,Hydro_Clyde,0,inf,1
+OTG,2040,Hydro_Roxburgh,0,inf,1
 OTG,2040,OCGT,0,100,0
 OTG,2040,pv_central_fixed,0,1165,0
 OTG,2040,pv_decentral,0,0.4882,0
@@ -909,6 +921,8 @@ OTG,2045,GT,0,100,0
 OTG,2045,H2_CCGT,0,100,0
 OTG,2045,H2_FC,0,100,0
 OTG,2045,Hydro,0,inf,1
+OTG,2045,Hydro_Clyde,0,inf,1
+OTG,2045,Hydro_Roxburgh,0,inf,1
 OTG,2045,OCGT,0,100,0
 OTG,2045,pv_central_fixed,0,1165,0
 OTG,2045,pv_decentral,0,0.4882,0
@@ -926,6 +940,8 @@ OTG,2050,H2_CCGT,0,100,0
 OTG,2050,H2_FC,0,100,0
 OTG,2050,H2_storage,0,50,0
 OTG,2050,Hydro,0,inf,1
+OTG,2050,Hydro_Clyde,0,inf,1
+OTG,2050,Hydro_Roxburgh,0,inf,1
 OTG,2050,OCGT,0,100,0
 OTG,2050,pv_central_fixed,0,1165,0
 OTG,2050,pv_central_track_azimuth,0,1153,0
