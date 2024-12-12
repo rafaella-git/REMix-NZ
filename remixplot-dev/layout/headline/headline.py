@@ -4,10 +4,11 @@ from PIL import Image
 
 from scr.color_schema import Color_schema
 
-remix_logo_path: str = "./remixplot-dev/layout/headline/logos/REMix_logo_text.PNG" #
+
+remix_logo_path: str = "C:/Local/REMix/remixplot-dev/layout/headline/logos/REMix_logo_text.PNG" #
 remix_img = Image.open(remix_logo_path)
 
-dlr_logo_path: str = "./remixplot-dev/layout/headline/logos/DLR_Signet_black.png"
+dlr_logo_path: str = "C:/Local/REMix/remixplot-dev/layout/headline/logos/DLR_Signet_black.png"
 dlr_img = Image.open(dlr_logo_path)
 
 height: int = 100  # px
