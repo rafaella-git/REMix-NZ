@@ -5,7 +5,6 @@ import dash_bootstrap_components as dbc
 from dash import Dash, html, dcc
 from dash.dependencies import Input, Output, State
 
-
 from layout.headline.headline import headline
 from layout.tabs.param_tab.param_tab import param_callbacks, param_cards
 from layout.tabs.result_tab.result_tab import (
