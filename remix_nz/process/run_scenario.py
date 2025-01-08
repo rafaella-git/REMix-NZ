@@ -32,7 +32,7 @@ folder_dict = {
 
 group_name="dlr"
 case_name=f"separate-demand"
-scenario = "wind"
+scenario = "not specified"# "wind"
 
 
 # Defining the directory the model data is written in (folder "data/" in the project directory)
@@ -48,9 +48,9 @@ m = {i: Instance(datadir=data_dir,index_names=False) for i in ["wind"]}
 m["Base"] = Instance(index_names=False,datadir=data_dir)
 m["Base"].run(
     resultdir=results_dir,
-    resultfile=f"{case_name}_{scenario.replace('/', '_')}",
-    scendir=f"{scenario}",
-    solver="cplex",
+    resultfile=f"{case_name}",#_{scenario.replace('/', '_')}",
+    #scendir=f"{scenario}",
+    solver="gurobi",#"cplex",
     threads=8,
     lo=4,
     timeres=1,
@@ -66,7 +66,7 @@ m["Base"].run(
 print(os. getcwd())
 e1 = time.perf_counter()
 d1=time.strftime("%Hh %Mm %Ss", time.gmtime(e1-s1))
-print(f"------------- Running {case_name} with scenario {scenario} took {d1}.")
+print(f"------------- Running {case_name} (scenario {scenario}) took {d1}.")
 
 # #### Explanation for command line arguments to GAMS function call
 # `lo=3` : log option of GAMS; ensures that the output from GAMS will be visible in the terminal (`lo=4`

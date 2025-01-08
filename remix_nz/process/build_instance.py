@@ -167,7 +167,7 @@ def add_demandoriginal(m):
     m["Base"].set.add(list(ts_ffe.index.get_level_values(1)), "years")
 
 
-def add_demand(m, file_path, fuel_type, rename_commodity, slack=False, slack_cost=10):
+def add_demandsep(m, file_path, fuel_type, rename_commodity, slack=False, slack_cost=10):
     """
     Adds demand profiles for a specific fuel type to the model.
 
@@ -211,7 +211,7 @@ def add_demand(m, file_path, fuel_type, rename_commodity, slack=False, slack_cos
     m["Base"].set.add(list(ts_fuel.index.get_level_values(0)), "nodesdata")
     m["Base"].set.add(list(ts_fuel.index.get_level_values(1)), "years")
 
-def add_demandbroken(m):
+def add_demand(m):
 
     # Mapping of fuel types to their CSV file paths
     file_paths = {
@@ -703,9 +703,9 @@ def add_hydro(m):
     # hydro_techs = ["Hydroplant"] 
     # hydro_nodes = ["BOP", "CAN", "CEN", "HBY", "NEL", "OTG", "WTO"] 
     
-    hydro_techs = ["Hydro_Clyde", "Hydro_Roxburgh"] 
+    hydro_techs = ["Turb_Clyde", "Turb_Roxburgh"] 
     hydro_nodes = ["OTG"]
-    hydro_commodities = ["Elec",  "Roxburgh_in", "Water_out", "Dunstan_in"]
+    hydro_commodities = ["Elec",  "Roxburgh_in", "Water_out", "Clyde_in"]
     hydro_activities = ["Power_gen","Spill"] 
 
 	# Converter (turbine) lifetime and activity limits
@@ -722,15 +722,8 @@ def add_hydro(m):
     
 
     # Installed turbine capacities for each node and year
-    # conv_cap.loc[idx[["BOP"], [2000], "Hydro"], "unitsBuild"] = 0.17095  # GW_el
-    # conv_cap.loc[idx[["CAN"], [2000], "Hydro"], "unitsBuild"] = 1.82683  # GW_el
-    # conv_cap.loc[idx[["CEN"], [2000], "Hydro"], "unitsBuild"] = 0.399  # GW_el
-    # conv_cap.loc[idx[["HBY"], [2000], "Hydro"], "unitsBuild"] = 0.1422  # GW_el
-    # conv_cap.loc[idx[["NEL"], [2000], "Hydro"], "unitsBuild"] = 0.0453  # GW_el
-    # conv_cap.loc[idx[["OTG"], [2000], "Hydro"], "unitsBuild"] = 1.664  # GW_el
-    # conv_cap.loc[idx[["WTO"], [2000], "Hydro"], "unitsBuild"] = 1.0873  # GW_el
-    conv_cap.loc[idx[["OTG"], [2000], "Hydro_Clyde"], "unitsBuild"] = 464 * 0.001 # GW_el   
-    conv_cap.loc[idx[["OTG"], [2000], "Hydro_Roxburgh"], "unitsBuild"] = 320 * 0.001   # GW_el   
+    conv_cap.loc[idx[["OTG"], [2000], "Turb_Clyde"], "unitsBuild"] = 464 * 0.001 # GW_el   
+    conv_cap.loc[idx[["OTG"], [2000], "Turb_Roxburgh"], "unitsBuild"] = 320 * 0.001   # GW_el   
 
     conv_cap.loc[idx[:, :, :], "noExpansion"] = 1  # Prevent expansion. Boolean.
     m["Base"].parameter.add(conv_cap, "converter_capacityparam")
@@ -739,12 +732,12 @@ def add_hydro(m):
     conv_coef = pd.DataFrame(index=pd.MultiIndex.from_product([hydro_techs, hydro_vintage, hydro_activities,hydro_commodities]))
 
     # Define coefficients for electricity generation.  , "Roxburgh_in"
-    conv_coef.loc[idx["Hydro_Clyde", :, "Power_gen", "Elec"], "coefficient"] = 0.5181 * 0.001 # GW_el
-    conv_coef.loc[idx["Hydro_Clyde", :, "Power_gen", "Dunstan_in"], "coefficient"] = -1  # GW_el
-    conv_coef.loc[idx["Hydro_Clyde", :, "Power_gen", "Roxburgh_in"], "coefficient"] = 1 # GW_el
-    conv_coef.loc[idx["Hydro_Roxburgh", :, "Power_gen", "Elec"], "coefficient"] = 0.4016 * 0.001 # GW_el
-    conv_coef.loc[idx["Hydro_Roxburgh", :, "Power_gen", "Roxburgh_in"], "coefficient"] = -1  # GW_el
-    conv_coef.loc[idx["Hydro_Roxburgh", :, "Power_gen", "Water_out"], "coefficient"] = 1 # GW_el   
+    conv_coef.loc[idx["Turb_Clyde", :, "Power_gen", "Elec"], "coefficient"] = 0.5181 * 0.001 # GW_el
+    conv_coef.loc[idx["Turb_Clyde", :, "Power_gen", "Clyde_in"], "coefficient"] = -1  # GW_el
+    conv_coef.loc[idx["Turb_Clyde", :, "Power_gen", "Roxburgh_in"], "coefficient"] = 1 # GW_el
+    conv_coef.loc[idx["Turb_Roxburgh", :, "Power_gen", "Elec"], "coefficient"] = 0.4016 * 0.001 # GW_el
+    conv_coef.loc[idx["Turb_Roxburgh", :, "Power_gen", "Roxburgh_in"], "coefficient"] = -1  # GW_el
+    conv_coef.loc[idx["Turb_Roxburgh", :, "Power_gen", "Water_out"], "coefficient"] = 1 # GW_el   
     # #FIXME: DIRTY hack TO MATCH 2024 TO REAL DATA MBIE
     # conv_coef.loc[idx[:, :, "Power_gen", "Elec"], "coefficient"] = 1 # GW_el
     # conv_coef.loc[idx[:, :, "Power_gen", "Water_in"], "coefficient"] = -0.95  # GW_el
@@ -752,10 +745,10 @@ def add_hydro(m):
 
 
     # Define coefficients for bypassing water without generating electricity. Spill is not limited by the capacity of the turbine
-    conv_coef.loc[idx["Hydro_Clyde", :, "Spill", "Dunstan_in"], "coefficient"] = -10000  # GW_el
-    conv_coef.loc[idx["Hydro_Clyde", :, "Spill", "Roxburgh_in"], "coefficient"] = 10000 # GW_el
-    conv_coef.loc[idx["Hydro_Roxburgh", :, "Spill", "Roxburgh_in"], "coefficient"] = -10000  # GW_el
-    conv_coef.loc[idx["Hydro_Roxburgh", :, "Spill", "Water_out"], "coefficient"] = 10000 # GW_el   
+    conv_coef.loc[idx["Turb_Clyde", :, "Spill", "Clyde_in"], "coefficient"] = -10000  # GW_el
+    conv_coef.loc[idx["Turb_Clyde", :, "Spill", "Roxburgh_in"], "coefficient"] = 10000 # GW_el
+    conv_coef.loc[idx["Turb_Roxburgh", :, "Spill", "Roxburgh_in"], "coefficient"] = -10000  # GW_el
+    conv_coef.loc[idx["Turb_Roxburgh", :, "Spill", "Water_out"], "coefficient"] = 10000 # GW_el   
     # conv_coef.loc[idx[:, :, "Spill", "Water_in"], "coefficient"] = -100 # GW_el # Arbitrary large bypass.
     # conv_coef.loc[idx[:, :, "Spill", "Water_out"], "coefficient"] = 100 # GW_el
     m["Base"].parameter.add(conv_coef, "converter_coefficient")
@@ -783,8 +776,8 @@ def add_hydro(m):
 
 	# Storage reservoir sizes 
     stor_size = pd.DataFrame(index=pd.MultiIndex.from_product([stor_techs,hydro_vintage, hydro_commodities]))
-    stor_size.loc[idx["Lake_Hawea", :, "Dunstan_in"], "size"] = 1  # GWh_ch / unit  
-    stor_size.loc[idx["Lake_Hawea", :, "Dunstan_in"], "selfdischarge"] = 0 # TODO: ask if i can do that to all commodities or only water comming in
+    stor_size.loc[idx["Lake_Hawea", :, "Clyde_in"], "size"] = 1  # GWh_ch / unit  
+    stor_size.loc[idx["Lake_Hawea", :, "Clyde_in"], "selfdischarge"] = 0 # TODO: ask if i can do that to all commodities or only water comming in
     # stor_size = pd.DataFrame(index=pd.MultiIndex.from_product([stor_techs,hydro_vintage, ["Water_in"]]))
     # stor_size.loc[idx["Hydro_reservoir", :, "Water_in"], "size"] = 1  # GWh_ch / unit  
     # stor_size.loc[idx[:, :, "Water_in"], "selfdischarge"] = 0 
@@ -795,7 +788,7 @@ def add_hydro(m):
     stor_res = pd.DataFrame(index=pd.MultiIndex.from_product([hydro_nodes, hydro_years, stor_techs]))
     stor_res.loc[idx[:, :, :], "unitsUpperLimit"] = 3000  # units 
     #TODO: mdify capacity of the storage
-    stor_res.loc[idx[["OTG"], [2000], "Lake_Hawea"], "unitsBuild"] = 1141.95 * 1000000 # million cubic meters (Mm3)
+    stor_res.loc[idx[["OTG"], [2000], "Lake_Hawea"], "unitsBuild"] = 1141.95 * 1000 # thousand cubic meters (m3)
     # stor_res.loc[idx[["CAN"], [2000], :], "unitsBuild"] = 2517.2429 # GWh_el
     # stor_res.loc[idx[["HBY"], [2000], :], "unitsBuild"] = 154.2635  # GWh_el
     # stor_res.loc[idx[["OTG"], [2000], :], "unitsBuild"] = 729.5595 # GWh_el
@@ -1766,40 +1759,40 @@ if __name__ == "__main__":
     m["Base"] = Instance(index_names=False,datadir=data_dir)
 
     add_scope(m)
-    #add_demand(m)
-    rename_commodity = {"Electricity": "Elec", "Hydrogen": "H2"}
+    add_demand(m)
+    # rename_commodity = {"Electricity": "Elec", "Hydrogen": "H2"}
 
 
-        # Add demand for Electricity
-    add_demand(
-        m=m,
-        file_path="C:/Local/REMix/remix_nz/input/demand/dlr/separate-elec.csv",
-        fuel_type="Elec",
-        rename_commodity=rename_commodity,
-        slack=True,
-        slack_cost=10
-    )
+    #     # Add demand for Electricity
+    # add_demand(
+    #     m=m,
+    #     file_path="C:/Local/REMix/remix_nz/input/demand/dlr/separate-elec.csv",
+    #     fuel_type="Elec",
+    #     rename_commodity=rename_commodity,
+    #     slack=True,
+    #     slack_cost=10
+    # )
 
-    # Add demand for Hydrogen
-    add_demand(
-        m=m,
-        file_path="C:/Local/REMix/remix_nz/input/demand/dlr/separate-h2.csv",
-        fuel_type="H2",
-        rename_commodity=rename_commodity
-    )
+    # # Add demand for Hydrogen
+    # add_demand(
+    #     m=m,
+    #     file_path="C:/Local/REMix/remix_nz/input/demand/dlr/separate-h2.csv",
+    #     fuel_type="H2",
+    #     rename_commodity=rename_commodity
+    # )
 
-    # Add demand for HydroInflow
-    add_demand(
-        m=m,
-        file_path="C:/Local/REMix/remix_nz/input/demand/dlr/separate-inflows.csv",
-        fuel_type="HydroInflow",
-        rename_commodity=rename_commodity
-    )
+    # # Add demand for HydroInflow
+    # add_demand(
+    #     m=m,
+    #     file_path="C:/Local/REMix/remix_nz/input/demand/dlr/separate-inflows.csv",
+    #     fuel_type="HydroInflow",
+    #     rename_commodity=rename_commodity
+    # )
 
     # renewables
     add_renewables(m)
     add_geothermal(m)
-    add_hydro_original(m)
+    #add_hydro_original(m)
     add_hydro(m)
 
     # batteries
