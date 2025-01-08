@@ -9,10 +9,9 @@ Geothermal
 H2_CCGT
 H2_FC
 H2_storage
-Hydro
-Hydro_Clyde
-Hydro_Roxburgh
 OCGT
+Turb_Clyde
+Turb_Roxburgh
 geoth
 pv_central_fixed
 pv_central_track_azimuth
