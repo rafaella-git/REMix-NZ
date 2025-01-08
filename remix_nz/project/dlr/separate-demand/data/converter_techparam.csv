@@ -35,11 +35,10 @@ H2_FC,2050,1,35
 H2_storage,2020,1,40
 H2_storage,2035,1,40
 H2_storage,2050,1,40
-Hydro,1950,1,100
-Hydro_Clyde,1950,1,100
-Hydro_Roxburgh,1950,1,100
 OCGT,1950,1,30
 OCGT,2030,1,30
+Turb_Clyde,1950,1,100
+Turb_Roxburgh,1950,1,100
 geoth,1950,0.9,100
 pv_central_fixed,1950,0,35
 pv_central_fixed,2030,0,40
