@@ -28,6 +28,8 @@ sdewes_ap = ["base", "high", "med", "ev-med", "low"]
 mbie=["base","h2pos", "h2"]
 dlr=["h2-domestic"]
 europe=["h2-lut-domestic", "h2-lut-exports", "h2-lut-exports-v2", "h2-pypsa","h2-pypsa-exports-domestic", "h2-pypsa-exports-20","h2-pypsa-exports-40","h2-pypsa-exports-200"]
+paper2=["no-h2"]
+madison=["base_input"]
 
 
 scenario_dict = {       
@@ -35,9 +37,11 @@ scenario_dict = {
     "sdewes-ap": [sdewes_ap, [2020, 2030, 2040, 2050]],
     "mbie": [mbie, [2020, 2030, 2040, 2050]],
     "europe": [europe, [2020, 2030,2050]],
-    "dlr": [dlr, [2020, 2030,2050]]
+    "dlr": [dlr, [2020, 2030,2050]],
+    "paper2": [paper2, [2020, 2030,2050]],
+    "madison": [madison, [2020, 2030,2050]]
 }
-group_name="dlr"
+group_name="madison"
 files_lst = scenario_dict[group_name][0]
 yrs_sel = scenario_dict[group_name][1] # [2020, 2025, 2030, 2035, 2040, 2045, 2050]
 yrs_str='-'.join([str(item) for item in yrs_sel])
@@ -52,7 +56,7 @@ path_brownfield = f"{path_input}/brownfield"  # info hydro and existing power pl
 demand_file=files_lst[indx] 
 case_name=f"{demand_file}_{yrs_str}"
 # FIXME: modify 
-case_name=f"separate-demand"
+case_name=f"base_input"
 data_dir = Path(f"../project/{group_name}/{case_name}/data")
 data_dir.mkdir(parents=True, exist_ok=True)
 results_dir = Path(f"../project/{group_name}/{case_name}/result")
@@ -215,9 +219,9 @@ def add_demand(m):
 
     # Mapping of fuel types to their CSV file paths
     file_paths = {
-        "Elec": "../input/demand/dlr/separate-elec.csv",
-        "H2": "../input/demand/dlr/separate-h2.csv",
-        "HydroInflow": "../input/demand/dlr/separate-inflows.csv",
+        "Elec": f"../input/demand/{group_name}/base_input.csv", #"../input/demand/dlr/separate-elec.csv",
+        #"H2": f"../input/demand/{group_name}/separate-h2.csv",
+        "HydroInflow": f"../input/demand/{group_name}/separate-inflows.csv", #"../input/demand/dlr/separate-inflows.csv",
     }
 
     # Commodity renaming rules
@@ -554,7 +558,7 @@ def add_geothermal(m):
 
     m["Base"].parameter.add(geoth_acc, "accounting_converterunits")
 
-def add_hydro_original(m):
+def add_hydro(m):
 
     # "sourcesink_config" (import configuration)
     sourcesink_config = pd.DataFrame(
@@ -688,7 +692,7 @@ def add_hydro_original(m):
 
 
 
-def add_hydro(m):
+def add_hydro_cascade(m):
 
     # Configure how water exits the system (flowing to the ocean).
     sourcesink_config = pd.DataFrame(index=pd.MultiIndex.from_product([m["Base"].set.nodesdata, m["Base"].set.yearssel, ["Ocean"], ["Water_out"]]))
