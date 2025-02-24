@@ -22,17 +22,21 @@ from pathlib import Path
 # Defining demand file options per folder
 europe=["h2-lut-domestic", "h2-lut-exports", "h2-lut-exports-v2", "h2-pypsa","h2-pypsa-exports-domestic", "h2-pypsa-exports-20","h2-pypsa-exports-40","h2-pypsa-exports-200"]
 dlr=["h2-domestic"]
+paper2=["no-h2"]
+madison=["base_input"]
 
 folder_dict = { 
     "europe": [europe, [2020, 2030,2050]],
-    "dlr": [dlr, [2020, 2030,2050]]
+    "dlr": [dlr, [2020, 2030,2050]],
+    "paper2": [paper2, [2020, 2030,2050]],
+    "madison": [madison, [2020, 2030,2050]]
 }
 
 
 
-group_name="dlr"
-case_name=f"separate-demand"
-scenario = "not specified"# "wind"
+group_name="madison"
+case_name=f"base_input"#"separate-demand"
+scenario = "base_input"#"not specified"# "wind"
 
 
 # Defining the directory the model data is written in (folder "data/" in the project directory)
