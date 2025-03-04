@@ -41,7 +41,7 @@ scenario_dict = {
     "paper2": [paper2, [2020, 2030,2050]],
     "madison": [madison, [2020, 2030,2050]]
 }
-group_name="madison"
+group_name="paper2"
 files_lst = scenario_dict[group_name][0]
 yrs_sel = scenario_dict[group_name][1] # [2020, 2025, 2030, 2035, 2040, 2045, 2050]
 yrs_str='-'.join([str(item) for item in yrs_sel])
@@ -56,13 +56,11 @@ path_brownfield = f"{path_input}/brownfield"  # info hydro and existing power pl
 demand_file=files_lst[indx] 
 case_name=f"{demand_file}_{yrs_str}"
 # FIXME: modify 
-case_name=f"base_input"
+case_name=f"no-h2"#"separate-demand"
 data_dir = Path(f"../project/{group_name}/{case_name}/data")
 data_dir.mkdir(parents=True, exist_ok=True)
 results_dir = Path(f"../project/{group_name}/{case_name}/result")
 results_dir.mkdir(parents=True, exist_ok=True)
-
-
 
 
 
@@ -613,7 +611,7 @@ def add_hydro(m):
             [hydro_techs, hydro_vintage, hydro_activities, ["Water_in", "Water_out", "Elec"]]
         )
     )
-    #FIXME: DIRTY hack TO MATCH 2024 TO REAL DATA MBIE
+    #FIXME:  TO MATCH 2024 TO REAL DATA MBIE
     conv_coef.loc[idx[:, :, "Power_gen", "Elec"], "coefficient"] = 1 # GW_el
     conv_coef.loc[idx[:, :, "Power_gen", "Water_in"], "coefficient"] = -0.95  # GW_el
     conv_coef.loc[idx[:, :, "Power_gen", "Water_out"], "coefficient"] = 0.95 # GW_el
