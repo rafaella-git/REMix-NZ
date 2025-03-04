@@ -50,11 +50,10 @@ University of Auckland).
 
 The model setup is handled via `build_instance.py`. The key functions include:
 - `add_nodes(m)`: Defines nodes, spatial resolution, and years for modeling.
-- `add_demand_ffe(m)`: Loads commodity demand (electricity, hydrogen, gas, etc.).
-- `add_scope(m)`: Sets up the scenario scope (nodes, optimization years).
+- `add_demand_ffe(m)`: Loads commodity demand (electricity, hydrogen, etc.).
+- `add_scope(m)`: Sets up the scenario scope (nodes, optimisation years).
 - `add_renewables(m)`: Loads renewable energy potential and timeseries data.
-- `add_lithium_batteries(m)`: Configures energy storage technologies.
-- `add_network(m)`: Defines energy transport infrastructure.
+- `add_network(m)`: Defines energy transfer infrastructure.
 - `add_accounting(m)`: Implements economic and energy balance constraints.
 
 To run the model you can use the command line or run_instance.
