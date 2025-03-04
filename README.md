@@ -61,7 +61,30 @@ To evaluate the results you can use the dashboard.
 
 ## Contributions and Contact
 
-- **Contributions:** Pull requests and issues are welcome!
+- **Contributions:** Pull requests and issues are welcome! Please use Common Commit Types.
+- 
+    **Common Commit Types**  
+  - **feat**: New feature  
+  - **fix**: Bug fix  
+  - **docs**: Documentation changes  
+  - **chore**: Routine tasks (e.g., updating `.gitignore`)  
+  - **refactor**: Code changes without affecting behavior  
+  - **ci**: Continuous integration updates  
+  - **perf**: Performance improvements  
+  - **test**: Adding or updating tests  
+  - **style**: Code style changes (e.g., formatting, CSS updates)  
+  
+  **Examples**  
+  ✅ **Feature:** `feat: parameterized additional runner config param settings`  
+  ✅ **Fix:** `fix: Invalid value for vars parameter: vars map does not contain key …`  
+  ✅ **Docs:** `docs: readme update about VPC`  
+  ✅ **Chore:** `chore: update gitignore`  
+  ✅ **Refactor:** `refactor: change code to parameterize properties instead of hardcoding them`  
+  ✅ **CI:** `ci: added Jenkinsfile for Continuous Integration pipeline`  
+  ✅ **Performance:** `perf: running multiple threads for concurrent work`  
+  ✅ **Test:** `test: added test case for feature ...`  
+  ✅ **Style:** `style: changing the fonts - css`  
+
 - **Contact:** Rafaella Canessa (rca139@uclive.ac.nz)
 
 
