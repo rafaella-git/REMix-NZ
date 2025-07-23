@@ -1,5 +1,0 @@
-remix_parameters:
-  method: pips
-
-metrics:
-  runtime: <=70

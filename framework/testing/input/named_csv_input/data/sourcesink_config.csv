@@ -1,4 +1,0 @@
-nodesData,years,sourcesink_techs,commodity,usesFixedProfile,usesLowerProfile,usesUpperProfile,usesLowerSum,usesUpperSum
-DE_data,2030,Demand,Elec,1.0,0.0,0.0,0.0,0.0
-DE_data,2030,Emission,CO2,0.0,0.0,1.0,1.0,0.0
-DE_data,2030,FuelImport,CH4,0.0,1.0,0.0,0.0,1.0

@@ -1,4 +1,0 @@
-                               obj  mga
-global . horizon . SystemCost -1.0  0.0
-global . horizon . AnnualWind  0.0  1.0
-global . horizon . AnnualPV    0.0  1.0

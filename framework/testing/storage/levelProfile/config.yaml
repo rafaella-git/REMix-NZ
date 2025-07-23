@@ -1,7 +1,0 @@
-remix_parameters:
-  crossover: 1
-  gdx_mipstorage: 1
-  
-check_symbols:
-  - storage_flows
-  - storage_level_out
