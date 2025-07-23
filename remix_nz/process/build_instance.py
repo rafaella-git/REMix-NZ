@@ -30,7 +30,7 @@ dlr=["h2-domestic"]
 europe=["h2-lut-domestic", "h2-lut-exports", "h2-lut-exports-v2", "h2-pypsa","h2-pypsa-exports-domestic", "h2-pypsa-exports-20","h2-pypsa-exports-40","h2-pypsa-exports-200"]
 paper2=["no-h2"]
 madison=["base_input"]
-
+hadi=["pypsa"]
 
 scenario_dict = {       
     "will": [will_h2, [2020, 2030, 2050]],
@@ -39,9 +39,10 @@ scenario_dict = {
     "europe": [europe, [2020, 2030,2050]],
     "dlr": [dlr, [2020, 2030,2050]],
     "paper2": [paper2, [2020, 2030,2050]],
-    "madison": [madison, [2020, 2030,2050]]
+    "madison": [madison, [2020, 2030,2050]],
+    "hadi": [hadi, [2020, 2030]]
 }
-group_name="paper2"
+group_name="hadi"
 files_lst = scenario_dict[group_name][0]
 yrs_sel = scenario_dict[group_name][1] # [2020, 2025, 2030, 2035, 2040, 2045, 2050]
 yrs_str='-'.join([str(item) for item in yrs_sel])
@@ -56,7 +57,7 @@ path_brownfield = f"{path_input}/brownfield"  # info hydro and existing power pl
 demand_file=files_lst[indx] 
 case_name=f"{demand_file}_{yrs_str}"
 # FIXME: modify 
-case_name=f"no-h2"#"separate-demand"
+case_name=f"pypsa"#"separate-demand"
 data_dir = Path(f"../project/{group_name}/{case_name}/data")
 data_dir.mkdir(parents=True, exist_ok=True)
 results_dir = Path(f"../project/{group_name}/{case_name}/result")
@@ -217,9 +218,9 @@ def add_demand(m):
 
     # Mapping of fuel types to their CSV file paths
     file_paths = {
-        "Elec": f"../input/demand/{group_name}/base_input.csv", #"../input/demand/dlr/separate-elec.csv",
-        #"H2": f"../input/demand/{group_name}/separate-h2.csv",
-        "HydroInflow": f"../input/demand/{group_name}/separate-inflows.csv", #"../input/demand/dlr/separate-inflows.csv",
+        "Elec": f"C:/Local/REMix/remix_nz/input/demand/{group_name}/{case_name}.csv", #"../input/demand/dlr/separate-elec.csv",
+        "H2": f"C:/Local/REMix/remix_nz/input/demand/{group_name}/{case_name}-h2.csv",
+        "HydroInflow": f"C:/Local/REMix/remix_nz/input/demand/{group_name}/separate-inflows.csv", #"../input/demand/dlr/separate-inflows.csv",
     }
 
     # Commodity renaming rules
@@ -258,8 +259,27 @@ def add_demand(m):
 
         # Add slack configuration if applicable
         if slack_settings[commodity_type]["enabled"]:
-            slack_annual = ts_commodity_cfg.loc[idx[:, :, "Wholesale", commodity_type], idx[:]]
-            slack_annual = slack_annual.rename(index={"Wholesale": "Slack"}, columns={"usesFixedProfile": "upper"})
+            # slack_annual = ts_commodity_cfg.loc[idx[:, :, "Wholesale", commodity_type], idx[:]]
+            # slack_annual = slack_annual.rename(index={"Wholesale": "Slack"}, columns={"usesFixedProfile": "upper"})
+
+            sectors = ["Wholesale", "Transport", "Other", "Heat"]
+            # Filter relevant rows
+            mask = (
+                ts_commodity_cfg.index.get_level_values(2).isin(sectors) &
+                (ts_commodity_cfg.index.get_level_values(3) == commodity_type)
+            )
+            slack_annual = ts_commodity_cfg.loc[mask].copy()
+
+            # Replace level 2 (sector) with "Slack"
+            new_index = [
+                (i[0], i[1], "Slack", i[3])
+                for i in slack_annual.index
+            ]
+            slack_annual.index = pd.MultiIndex.from_tuples(new_index, names=ts_commodity_cfg.index.names)
+
+            # Rename column
+            slack_annual.rename(columns={"usesFixedProfile": "upper"}, inplace=True)
+
             slack_annual["upper"] = np.inf
             m["Base"].parameter.add(slack_annual, "sourcesink_annualsum")
 
@@ -679,7 +699,8 @@ def add_hydro(m):
             [["Invest", "OMFix"], ["global"], stor_techs, hydro_vintage]
         )
     )
-    stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 1650  # million EUR / unit
+    stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 1650  # million EUR / unit, Breyer https://ars.els-cdn.com/content/image/1-s2.0-S0360544225005201-mmc1.pdf
+
     stor_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
     stor_acc.loc[idx["Invest", :, :, :], "amorTime"] = 20  # years
     stor_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
@@ -1299,8 +1320,7 @@ def add_ftropsch_syn(m):
                 ["Synthesis"],
                 #["REfuel", "H2", "CO2_feed", "Elec"], # "H2O"
                 ["e-gasoline", "e-kerosene", "e-diesel", "H2", "CO2_feed", "Elec"],
-            ]
-        )
+            ]        )
     )
     # Esitmates Andi, 65% synthesis efficiency
     #ftropsch_syn_coef.loc[idx[:, :, :, "REfuel"], "coefficient"] = 1 #change for each efuel
@@ -1332,7 +1352,7 @@ def add_ftropsch_syn(m):
 # storage
     
 def add_lithium_batteries(m):
-    battery_vintage = [2020, 2030, 2040, 2050] #FIXME: 2035 was 2030, change when not running will's values
+    battery_vintage = [2020, 2030, 2040, 2050] 
     battery_techs = ["Battery"]
     battery_nodes = [n for n in m["Base"].set.nodesdata if not n.startswith("LNG")]
 
