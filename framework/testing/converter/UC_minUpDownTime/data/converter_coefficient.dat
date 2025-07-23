@@ -1,7 +1,0 @@
-                                              coefficient
-CONV_UC_enabled . 2030 . Powergen . CH4            -1.500
-CONV_UC_enabled . 2030 . Powergen . CO2             0.300
-CONV_UC_enabled . 2030 . Powergen . Elec            1.000
-CONV_generic . 2030 . Powergen . CH4               -1.700
-CONV_generic . 2030 . Powergen . CO2                0.400
-CONV_generic . 2030 . Powergen . Elec               1.000

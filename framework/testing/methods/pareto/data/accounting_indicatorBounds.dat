@@ -1,3 +1,0 @@
-                               obj  pareto
-global . horizon . SystemCost -1.0     0.0
-global . horizon . Emission    0.0    -1.0

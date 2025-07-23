@@ -1,6 +1,0 @@
-                              column1          column2 
-CASE . NORMAL_PARAM_A              -1              1.0
-CASE . NORMAL_PARAM_B             100              0.0
-CASE . NORMAL_PARAM_C     0.000000005    1000000000000
-CASE . NORMAL_PARAM_D            1e-8           2.2e+9
-CASE . NORMAL_PARAM_E             0.0          %debug%

@@ -1,5 +1,0 @@
-CCGT_CH4 "combined cycle gas power unit MW"
-GT_CH4 "turbine gas power unit MW"
-LiIon "lithium-ion battery charging unit MW"
-PV "photovoltaic unit MW"
-Wind_onshore "wind on-shore unit MW"
