@@ -24,19 +24,21 @@ europe=["h2-lut-domestic", "h2-lut-exports", "h2-lut-exports-v2", "h2-pypsa","h2
 dlr=["h2-domestic"]
 paper2=["no-h2"]
 madison=["base_input"]
+hadi=["pypsa"]
 
-folder_dict = { 
+dict = { 
     "europe": [europe, [2020, 2030,2050]],
     "dlr": [dlr, [2020, 2030,2050]],
     "paper2": [paper2, [2020, 2030,2050]],
-    "madison": [madison, [2020, 2030,2050]]
+    "madison": [madison, [2020, 2030,2050]],
+    "hadi": [hadi, [2020, 2030]]
 }
 
 
 
-group_name="paper2"
-case_name=f"no-h2"#"separate-demand"
-scenario = "hydro-eq"#"not specified"# "wind"
+group_name="hadi"
+case_name=f"pypsa"#"separate-demand"
+#scenario = "hydro-eq"#"not specified"# "wind"
 
 
 # Defining the directory the model data is written in (folder "data/" in the project directory)
@@ -52,8 +54,8 @@ m = {i: Instance(datadir=data_dir,index_names=False) for i in ["wind"]}
 m["Base"] = Instance(index_names=False,datadir=data_dir)
 m["Base"].run(
     resultdir=results_dir,
-    resultfile=f"{case_name}_{scenario.replace('/', '_')}",
-    scendir=f"{scenario}",
+    resultfile=f"{case_name}",#_{scenario.replace('/', '_')}",
+    #scendir=f"{scenario}",
     #fixedcapsfromgdx = f"{results_dir}/{case_name}",
     solver="gurobi",#"cplex", # to debug an unfeasible problem, run with CPLEX, you will need a license and select barrier 1
     threads=8,
@@ -72,7 +74,7 @@ m["Base"].run(
 print(os. getcwd())
 e1 = time.perf_counter()
 d1=time.strftime("%Hh %Mm %Ss", time.gmtime(e1-s1))
-print(f"------------- Running {case_name} (scenario {scenario}) took {d1}.")
+print(f"------------- Running {case_name} took {d1}.")# (scenario {scenario}) 
 
 # #### Explanation for command line arguments to GAMS function call
 # `lo=3` : log option of GAMS; ensures that the output from GAMS will be visible in the terminal (`lo=4`
