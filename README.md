@@ -1,6 +1,6 @@
 # REMix-NZ
 
-REMix-NZ is a regional and hourly multi-energy system model for New Zealand. It includes detailed projections to 2050 across the power, heat, and transport sectors, supporting scenario-based analysis and planning. The model is based on the REMix framework developed by DLR (please familiarise yourself with the framework [here](https://dlr-ve.gitlab.io/esy/remix/framework/dev/about/introduction.html#about-introduction)) and it has been adapted for New Zealand. 
+REMix-NZ is a regional and hourly multi-energy system model for New Zealand. It includes detailed projections to 2050 across the power, heat, and transport sectors, supporting scenario-based analysis and planning. The model is based on the REMix framework developed by DLR and it has been adapted for New Zealand. Please familiarise yourself with the original DLR framework [here](https://dlr-ve.gitlab.io/esy/remix/framework/dev/about/introduction.html#about-introduction).
 
 REMix-NZ is under continuous development. Currently it considers:  
 - **Projected energy demand**: For New Zealand from 2020 to 2050
@@ -45,8 +45,8 @@ To run the model you can use the command line or run_instance.
 
 ## Contributions
 Pull requests and issues are welcome! Please use Common Commit Types.
-- 
-    **Common Commit Types**  
+
+**Common Commit Types:**  
   - **feat**: New feature  
   - **fix**: Bug fix  
   - **docs**: Documentation changes  
