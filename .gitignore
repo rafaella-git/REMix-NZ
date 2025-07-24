@@ -163,7 +163,7 @@ cython_debug/
 
 remix_nz/output/will/01-battery-distributed_2020-2035-2050/result/csv/01-battery-distributed_2020-2035-2050_commodity_balance.csv
 *01-battery-distributed_2020-2035-2050/result/csv/01-battery-distributed_2020-2035-2050_commodity_balance.csv
-
+remix_nz/input/demand/electricity-authority/*.csv
 
 # Ignore auto-generated files and folders
 225*/
