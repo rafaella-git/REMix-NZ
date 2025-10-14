@@ -58,7 +58,7 @@ path_brownfield = f"{path_input}/brownfield"  # info hydro and existing power pl
 demand_file=files_lst[indx] 
 case_name=f"{demand_file}_{yrs_str}"
 # FIXME: modify 
-case_name=f"pypsa"#"separate-demand"
+case_name=f"pypsa-low"#"separate-demand"
 data_dir = Path(f"../project/{group_name}/{case_name}/data")
 data_dir.mkdir(parents=True, exist_ok=True)
 results_dir = Path(f"../project/{group_name}/{case_name}/result")
