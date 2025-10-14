@@ -32,7 +32,7 @@ def tag(scn):
 # run options (see docs) 
 run_args = dict(
     resultdir = results_dir,           # where remix.gdx will be written
-    solver    = "cplex", #"gurobi",              # cplex/highs/mosek/xpress/scip also supported
+    solver    = "gurobi", #"cplex",              # cplex/highs/mosek/xpress/scip also supported
     threads   = 8,
     keep      = 1,                     # keep scratch folder “/225a” with exported .csvs for debugging
     lo        = 4,                     # write a .log file next to the .lst
