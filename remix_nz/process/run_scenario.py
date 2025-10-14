@@ -1,80 +1,93 @@
-# %% [markdown]
-# ## Running the model
-#
-# The written `*.dat` files are used as inputs to the GAMS optimization.
-# To successfully run this file, you first need to build the model.
-
-
-# %%
-# Import dependencies
-import os
-import time
-from remix.framework.api.instance import Instance
+# run_remix.py
+import os, time
 from pathlib import Path
+from remix.framework.api.instance import Instance
 
+group_name = "hadi"
+case_name  = "h2-domestic_2020-2030-2050"           # this is the *base* scenario directory under project/{group_name}/{case_name}/data
+# optional: list of sub-scenarios *inside* the base data folder to run (each subfolder overrides files from the base)
+scenarios = [
+    None,              # None = run the base data folder itself (no overrides)
+    #"low",#"wind",            # e.g. data/wind/ contains a lower CAPEX file for wind
+    # "batt-cheap",
+    # "no-h2",
+]
 
-
-
-
-# ### Define the years to run the optimisation and the demand file
-# The demand file and the years run determine the name of the case and its results
-
-# Defining demand file options per folder
-europe=["h2-lut-domestic", "h2-lut-exports", "h2-lut-exports-v2", "h2-pypsa","h2-pypsa-exports-domestic", "h2-pypsa-exports-20","h2-pypsa-exports-40","h2-pypsa-exports-200"]
-dlr=["h2-domestic"]
-paper2=["no-h2"]
-madison=["base_input"]
-hadi=["pypsa"]
-
-dict = { 
-    "europe": [europe, [2020, 2030,2050]],
-    "dlr": [dlr, [2020, 2030,2050]],
-    "paper2": [paper2, [2020, 2030,2050]],
-    "madison": [madison, [2020, 2030,2050]],
-    "hadi": [hadi, [2020, 2030]]
-}
-
-
-
-group_name="hadi"
-case_name=f"pypsa"#"separate-demand"
-#scenario = "hydro-eq"#"not specified"# "wind"
-
-
-# Defining the directory the model data is written in (folder "data/" in the project directory)
-data_dir = Path(f"../project/{group_name}/{case_name}/data")
+# Paths 
+data_dir    = Path(f"../project/{group_name}/{case_name}/data")
 results_dir = Path(f"../project/{group_name}/{case_name}/result")
+results_dir.mkdir(parents=True, exist_ok=True)
+fixed_caps_gdx = results_dir/f"{case_name}.gdx"
+
 if not data_dir.exists():
-    raise IOError("You need to build the model first!")
+    raise IOError(f"Build step missing: {data_dir} not found")
 
-# %% [markdown]
-# Executing optimization model in GAMS
-s1 = time.perf_counter()
-m = {i: Instance(datadir=data_dir,index_names=False) for i in ["wind"]}
-m["Base"] = Instance(index_names=False,datadir=data_dir)
-m["Base"].run(
-    resultdir=results_dir,
-    resultfile=f"{case_name}",#_{scenario.replace('/', '_')}",
-    #scendir=f"{scenario}",
-    #fixedcapsfromgdx = f"{results_dir}/{case_name}",
-    solver="gurobi",#"cplex", # to debug an unfeasible problem, run with CPLEX, you will need a license and select barrier 1
-    threads=8,
-    lo=4,
-    timeres=1,
-    names=1,
-    roundts=1,
-    barrier=1,
-    iis=1, # Irreducible Infeasible Subsystem
-    # profile=1,
-    # gdx="default",
-    pathopt="myopic",
-    barorder=1,
+# one Instance is enough; we pass scendir per run -
+m = Instance(index_names=False, datadir=data_dir)
 
+# Small helper for a nice label in the result filename
+def tag(scn):
+    return "base" if (scn is None or str(scn).strip() == "") else str(scn).replace("/", "_")
+
+# run options (see docs) 
+run_args = dict(
+    resultdir = results_dir,           # where remix.gdx will be written
+    solver    = "cplex", #"gurobi",              # cplex/highs/mosek/xpress/scip also supported
+    threads   = 8,
+    keep      = 1,                     # keep scratch folder “/225a” with exported .csvs for debugging
+    lo        = 4,                     # write a .log file next to the .lst
+    names     = 1,                     # use actual variable names in .lst in case of error
+    roundts   = 1,                     # round profile files to avoid GAMS line length/precision issues
+    timeres   = 1,                     # hourly; use 24 for daily aggregation, etc.
+    postcalc  = 1,                     # run post-processing
+    iis     = 1,                     # write IIS .gdx on infeasibility (enable when needed)
+    # equlist = 1,                     # huge listing of all equations (only for tiny models)
+    # gdx     = "default",             # extra symbol dump for deep debugging
+    # solvermethod = 1,                # 1=barrier (IPM), 2=simplex, 4=dual, etc.
+    # scaletimefrac = 1,               # scale sourcesink annual sums/indicators if using partial year (timestart/timeend)
+    # timestart = 1, timeend = 8760,   # limit time window (e.g. for short debug runs)
+    # fixedcapsfromgdx = ".../result/base.gdx",  # read fixed capacities from a previous run (path relative to run dir)
+    pathopt   = "myopic",               # keep if you use myopic/rolling runs
 )
-print(os. getcwd())
-e1 = time.perf_counter()
-d1=time.strftime("%Hh %Mm %Ss", time.gmtime(e1-s1))
-print(f"------------- Running {case_name} took {d1}.")# (scenario {scenario}) 
+
+# Run base and any scenario overrides 
+m = Instance(index_names=False, datadir=data_dir)
+t0 = time.perf_counter()
+
+for scn in scenarios:
+    label = tag(scn)
+    print(f"\n=== Running case={case_name} scenario={label} ===")
+
+    run_kwargs = dict(run_args)
+    run_kwargs["resultfile"] = f"{case_name}_{label}"
+
+    # Scenario handling
+    if scn is not None:
+        scn_path = data_dir / scn
+        if not scn_path.exists():
+            raise IOError(f"Scenario folder not found: {scn_path}")
+        run_kwargs["scendir"] = str(scn)  # override only the files in data/<scenario>
+
+        # if this scenario is "low", import fixed capacities from base results
+        if scn == "low":
+            if not fixed_caps_gdx.exists():
+                raise FileNotFoundError(f"Missing fixed capacity GDX: {fixed_caps_gdx}")
+            run_kwargs["fixedcapsfromgdx"] = str(fixed_caps_gdx.as_posix())
+            print(f"   Using fixed capacities from {fixed_caps_gdx}")
+
+    # Run REMix
+    rc = m.run(**run_kwargs)
+    if rc != 0:
+        print(f"REMix returned non-zero code {rc} for scenario={label}")
+
+t1 = time.perf_counter()
+print(f"\nAll runs finished in {time.strftime('%Hh %Mm %Ss', time.gmtime(t1 - t0))}")
+print("Results written to:", results_dir)
+
+# ---- Notes -------------------------------------------------------------------
+# - Put only modified files under: ../project/{group_name}/{case_name}/data/<scenario>/
+# - REMix loads base files from data/ and overrides with any file found in data/<scenario>/.
+# - Keep keep=1 & lo=4 to retain exported CSVs and a detailed .log for debugging.
 
 # #### Explanation for command line arguments to GAMS function call
 # `lo=3` : log option of GAMS; ensures that the output from GAMS will be visible in the terminal (`lo=4`
@@ -106,4 +119,3 @@ print(f"------------- Running {case_name} took {d1}.")# (scenario {scenario})
 # some other reason. In that case, you can refer to the `run_remix.lst` file and look for the error marker `****`.
 # You can open that file in an editor and look for the error message.
 # Alternatively, you can also use the commandline tool grep to search for the pattern "**** Exec Error"  in the file to see what is wrong.
-# %%
