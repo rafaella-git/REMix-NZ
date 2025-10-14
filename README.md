@@ -1,6 +1,8 @@
 # REMix-NZ
+
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)]()
 [![Framework: REMix](https://img.shields.io/badge/Framework-REMix-orange.svg)]()
+
 **A regional, hourly multi-energy system model for Aotearoa New Zealand**
 
 **REMix-NZ** is a regional and hourly multi-energy system model for New Zealand, built on the [REMix framework developed by DLR](https://dlr-ve.gitlab.io/esy/remix/framework/).  

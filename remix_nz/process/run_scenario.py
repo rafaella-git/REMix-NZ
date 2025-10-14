@@ -4,7 +4,8 @@ from pathlib import Path
 from remix.framework.api.instance import Instance
 
 group_name = "hadi"
-case_name  = "pypsa" #"h2-domestic_2020-2030-2050"           # this is the *base* scenario directory under project/{group_name}/{case_name}/data
+case_name  = "pypsa-low" #"h2-domestic_2020-2030-2050"           # this is the *base* scenario directory under project/{group_name}/{case_name}/data
+base_case  = "pypsa" 
 # optional: list of sub-scenarios *inside* the base data folder to run (each subfolder overrides files from the base)
 scenarios = [
     None,              # None = run the base data folder itself (no overrides)
@@ -46,7 +47,7 @@ run_args = dict(
     # solvermethod = 1,                # 1=barrier (IPM), 2=simplex, 4=dual, etc.
     # scaletimefrac = 1,               # scale sourcesink annual sums/indicators if using partial year (timestart/timeend)
     # timestart = 1, timeend = 8760,   # limit time window (e.g. for short debug runs)
-    # fixedcapsfromgdx = ".../result/base.gdx",  # read fixed capacities from a previous run (path relative to run dir)
+    fixedcapsfromgdx = "../project/{group_name}/{base_case}/{base_case}.gdx",  # read fixed capacities from a previous run (path relative to run dir)
     pathopt   = "myopic",               # keep if you use myopic/rolling runs
 )
 
