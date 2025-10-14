@@ -1,5 +1,5 @@
-,,,,perLinkBuild,interest,amorTime,useAnnuity,perLinkTotal
-Invest,global,HV,2020,180,0.06,40,1,0
-Invest,global,HV,2030,180,0.06,40,1,0
-OMFix,global,HV,2020,0,0,0,0,1.8
-OMFix,global,HV,2030,0,0,0,0,1.8
+,,,,,perLinkBuild,perLinkDecom,perLinkTotal,perFlow,perFlowAlong,perFlowAgainst,useAnnuity,amorTime,interest
+Invest,global,horizon,HV,2020,180,,0,,,,1,40,0.06
+Invest,global,horizon,HV,2030,180,,0,,,,1,40,0.06
+OMFix,global,horizon,HV,2020,0,,1.8,,,,0,0,0
+OMFix,global,horizon,HV,2030,0,,1.8,,,,0,0,0
