@@ -91,11 +91,16 @@ Key build functions:
 - `add_network(m)` → establishes transmission and pipeline links  
 - `add_accounting(m)` → configures cost and balance equations  
 
+Run from terminal:
+```bash
+python src/build_instance.py
+```
+
 ### Running the Model
 
 Run from terminal:
 ```bash
-python src/build_instance.py
+python src/run_scenarios.py
 ```
 
 ## Funding Acknowledgement
