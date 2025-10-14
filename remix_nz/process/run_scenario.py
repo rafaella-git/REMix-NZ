@@ -4,7 +4,7 @@ from pathlib import Path
 from remix.framework.api.instance import Instance
 
 group_name = "hadi"
-case_name  = "h2-domestic_2020-2030-2050"           # this is the *base* scenario directory under project/{group_name}/{case_name}/data
+case_name  = "pypsa" #"h2-domestic_2020-2030-2050"           # this is the *base* scenario directory under project/{group_name}/{case_name}/data
 # optional: list of sub-scenarios *inside* the base data folder to run (each subfolder overrides files from the base)
 scenarios = [
     None,              # None = run the base data folder itself (no overrides)
