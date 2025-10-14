@@ -57,24 +57,24 @@ Distances are approximated as **Euclidean × 1.2** to account for real-world rou
 remix_nz/
 ├── input/                         # Raw input data organized by type
 │   ├── brownfield/
-│   ├── demand/                     # Demand file create project folders
+│   ├── demand/                    # Demand file creates project folders
 │   ├── profiles/
 │   ├── shapefiles/
 │   ├── technical/
 │   └── xlsx/
 │
-├── process/                        # Core processing scripts and outputs
-│   ├── build_instance.py           # Main script to build model instance
-│   ├── run_scenario.py             # Scenario execution script
-│   └── evaluate.py                 # Evaluation script
+├── process/                       # Core processing scripts and outputs
+│   ├── build_instance.py          # Main script to build model instance
+│   ├── run_scenario.py            # Scenario execution script
+│   └── evaluate.py                # Evaluation script
 │
-├── project/                        # Project-specific configurations and inputs
+├── project/                       # Project-specific configurations and inputs
 │   └── project-name/case-name
-│                    ├── data/      # Model data, created with build_instance.py
-│                    └── result/    # .gdx files, created with run_scenario.py
-│                    
-├── .gitignore                      # Git ignore rules
-└── README.md                       # Project documentation
+│       ├── data/                  # Model data, created with build_instance.py
+│       └── result/                # .gdx files, created with run_scenario.py
+│
+├── .gitignore                     # Git ignore rules
+└── README.md                      # Project documentation
 
 
 ### Building and running the model
