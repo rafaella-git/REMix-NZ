@@ -31,7 +31,7 @@ dlr=["h2-domestic"]
 europe=["h2-lut-domestic", "h2-lut-exports", "h2-lut-exports-v2", "h2-pypsa","h2-pypsa-exports-domestic", "h2-pypsa-exports-20","h2-pypsa-exports-40","h2-pypsa-exports-200"]
 paper2=["no-h2"]
 madison=["base_input"]
-hadi=["pypsa", "pypsa-af", "pypsa-1y"]
+hadi=["pypsa-low", "pypsa-af", "pypsa-1y"]
 
 scenario_dict = {       
     "will": [will_h2, [2020, 2030, 2050]],
@@ -123,6 +123,8 @@ def add_demandoriginal(m):
 
     ts_ffe_cfg = pd.DataFrame(index=ts_ffe.index)
     ts_ffe_cfg["usesFixedProfile"] = 1
+
+
     m["Base"].parameter.add(ts_ffe_cfg, "sourcesink_config")
 
     # Slack for electricity
@@ -162,6 +164,8 @@ def add_demandoriginal(m):
     )
     efuels_cfg["usesUpperSum"] = 1
     efuels_cfg["usesUpperProfile"] = 1
+
+    
    
     # h2_cfg["usesLowerProfile"] = 1
     m["Base"].parameter.add(efuels_cfg, "sourcesink_config")   
@@ -239,7 +243,7 @@ def add_demand(m):
     # Slack settings for specific commodities
     slack_settings = {
         "Elec": {"enabled": True, "cost": 10},
-        "H2": {"enabled": False, "cost": 0},
+        "H2": {"enabled": True, "cost": 10},
         "HydroInflow": {"enabled": False, "cost": 0}
     }
 
@@ -256,6 +260,8 @@ def add_demand(m):
         # Add configuration for fixed profile
         ts_commodity_cfg = pd.DataFrame(index=ts_commodity.index)
         ts_commodity_cfg["usesFixedProfile"] = 1
+        ts_commodity_cfg = ts_commodity_cfg.loc[ts_commodity.select_dtypes(include="number").sum(axis=1) != 0]
+
         m["Base"].parameter.add(ts_commodity_cfg, "sourcesink_config")
 
         # Add slack configuration if applicable
@@ -293,6 +299,9 @@ def add_demand(m):
             )
             slack_cost_df["perFlow"] = slack_settings[commodity_type]["cost"]
             m["Base"].parameter.add(slack_cost_df, "accounting_sourcesinkflow")
+        
+        
+
 
         # Update region and year scope
         m["Base"].set.add(list(ts_commodity.index.get_level_values(0)), "nodesdata")
@@ -436,35 +445,43 @@ def add_renewables(m):
     m["Base"].parameter.add(re_coef, "converter_coefficient")
 
     re_acc = pd.DataFrame(
-        index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], re_techs, re_vintage])
+        index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], ["horizon"], re_techs, re_vintage])
     ).sort_index()
 
     # TODO: Update costs for renewable technologies
     # CSP own assumptions based on: https://aip.scitation.org/doi/pdf/10.1063/5.0028883, https://elib.dlr.de/186998/1/SolarPACES_2021_Paper_Dersch_R1.pdf
-    #re_acc.loc[idx["Invest", :, "csp_parabolic_trough", :], "perUnitBuild"] = [344.5, 274.7, 230.2, 196.0]  # Child 2019 - Mio EUR per unit
-    #re_acc.loc[idx["Invest", :, "csp_solar_tower", :], "perUnitBuild"] = [482, 372, 310, 264]  # Mio EUR per unit
+    #re_acc.loc[idx["Invest", :, "horizon", "csp_parabolic_trough", :], "perUnitBuild"] = [344.5, 274.7, 230.2, 196.0]  # Child 2019 - Mio EUR per unit
+    #re_acc.loc[idx["Invest", :, "horizon", "csp_solar_tower", :], "perUnitBuild"] = [482, 372, 310, 264]  # Mio EUR per unit
 
-    re_acc.loc[idx["Invest", :, "pv_decentral", :], "perUnitBuild"] = [870, 570, 460, 410]  # DEA2022 PV comm&indust - Mio EUR per unit
-    re_acc.loc[idx["Invest", :, "pv_central_fixed", :], "perUnitBuild"] = [560, 380, 320, 290]  # DEA2022 utility scale - Mio EUR per unit
-    #re_acc.loc[idx["Invest", :, "pv_central_track_azimuth", :], "perUnitBuild"] = [650, 450, 380, 350]  # DEA2022 utility scale (tracking) - Mio EUR per unit
+    re_acc.loc[idx["Invest", :, "horizon", "pv_decentral", :], "perUnitBuild"] = [870, 570, 460, 410]  # DEA2022 PV comm&indust - Mio EUR per unit
+    re_acc.loc[idx["Invest", :, "horizon", "pv_central_fixed", :], "perUnitBuild"] = [560, 380, 320, 290]  # DEA2022 utility scale - Mio EUR per unit
+    #re_acc.loc[idx["Invest", :, "horizon", "pv_central_track_azimuth", :], "perUnitBuild"] = [650, 450, 380, 350]  # DEA2022 utility scale (tracking) - Mio EUR per unit
 
-    re_acc.loc[idx["Invest", :, "wind_onshore", :], "perUnitBuild"] = [1330, 1040, 980, 960]  # DEA2022 onshore - Mio EUR per unit
-    re_acc.loc[idx["Invest", :, "wind_offshore_foundation", :], "perUnitBuild"] = [2120, 2287, 2168, 2130] # DEA2022 offshore - Mio EUR per unit
-    re_acc.loc[idx["Invest", :, "wind_offshore_floating", :], "perUnitBuild"] = 1.2 * np.array([2120, 2287, 2168, 2130])  # DEA2022 offshore + 20% assumption - Mio EUR per unit
+    re_acc.loc[idx["Invest", :, "horizon", "wind_onshore", :], "perUnitBuild"] = [1330, 1040, 980, 960]  # DEA2022 onshore - Mio EUR per unit
+    re_acc.loc[idx["Invest", :, "horizon", "wind_offshore_foundation", :], "perUnitBuild"] = [2120, 2287, 2168, 2130] # DEA2022 offshore - Mio EUR per unit
+    re_acc.loc[idx["Invest", :, "horizon", "wind_offshore_floating", :], "perUnitBuild"] = 1.2 * np.array([2120, 2287, 2168, 2130])  # DEA2022 offshore + 20% assumption - Mio EUR per unit
 
-    re_acc.loc[idx["Invest", :, pv_techs, [1950]], "amorTime"] = 35  # years
-    re_acc.loc[idx["Invest", :, pv_techs, [2030, 2040, 2050]], "amorTime"] = 40  # years
-    re_acc.loc[idx["Invest", :, csp_techs + wind_techs, [1950]], "amorTime"] = 27  # years
-    re_acc.loc[idx["Invest", :, csp_techs + wind_techs, [2030, 2040, 2050]], "amorTime"] = 30  # years
+    re_acc.loc[idx["Invest", :, "horizon", pv_techs, [1950]], "amorTime"] = 35  # years
+    re_acc.loc[idx["Invest", :, "horizon", pv_techs, [2030, 2040, 2050]], "amorTime"] = 40  # years
+    re_acc.loc[idx["Invest", :, "horizon", csp_techs + wind_techs, [1950]], "amorTime"] = 27  # years
+    re_acc.loc[idx["Invest", :, "horizon", csp_techs + wind_techs, [2030, 2040, 2050]], "amorTime"] = 30  # years
 
-    re_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    re_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    re_acc.loc[idx["OMFix", :, pv_techs + wind_techs, :], "perUnitTotal"] = (
-        re_acc.loc[idx["Invest", :, pv_techs + wind_techs, :], "perUnitBuild"] * 0.02
-    )  # Mio EUR per unit
-    re_acc.loc[idx["OMFix", :, csp_techs, :], "perUnitTotal"] = (
-        re_acc.loc[idx["Invest", :, csp_techs, :], "perUnitBuild"] * 0.015
-    )  # Mio EUR per unit
+    re_acc.loc[idx["Invest", :, "horizon", :, :], "useAnnuity"] = 1  # binary yes/no
+    re_acc.loc[idx["Invest", :, "horizon", :, :], "interest"] = 0.06  # percent/100
+    # re_acc.loc[idx["OMFix", :, "horizon", pv_techs + wind_techs, :], "perUnitTotal"] = (
+    #     re_acc.loc[idx["Invest", :, "horizon", pv_techs + wind_techs, :], "perUnitBuild"] * 0.02
+    # )  # Mio EUR per unit
+    # re_acc.loc[idx["OMFix", :, "horizon", csp_techs, :], "perUnitTotal"] = (
+    #     re_acc.loc[idx["Invest", :, "horizon", csp_techs, :], "perUnitBuild"] * 0.015
+    # )  # Mio EUR per unit
+
+    invest_vals = re_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+        #names=conv_acc.index.names
+    )
+    re_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.02 # 2% fixed O&M
+
 
     m["Base"].parameter.add(re_acc, "accounting_converterunits")  
 
@@ -557,23 +574,31 @@ def add_geothermal(m):
     m["Base"].parameter.add(geoth_coef, "converter_coefficient")
 
     geoth_acc = pd.DataFrame(
-        index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], geoth_techs, geoth_vintage])
+        index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], ["horizon"],  geoth_techs, geoth_vintage])
     ).sort_index()
 
     # TODO: Update costs for renewable technologies
     # CSP own assumptions based on: https://aip.scitation.org/doi/pdf/10.1063/5.0028883, https://elib.dlr.de/186998/1/SolarPACES_2021_Paper_Dersch_R1.pdf
-    #re_acc.loc[idx["Invest", :, "csp_parabolic_trough", :], "perUnitBuild"] = [344.5, 274.7, 230.2, 196.0]  # Child 2019 - Mio EUR per unit
-    #re_acc.loc[idx["Invest", :, "csp_solar_tower", :], "perUnitBuild"] = [482, 372, 310, 264]  # Mio EUR per unit
+    #re_acc.loc[idx["Invest", :, "horizon", "csp_parabolic_trough", :], "perUnitBuild"] = [344.5, 274.7, 230.2, 196.0]  # Child 2019 - Mio EUR per unit
+    #re_acc.loc[idx["Invest", :, "horizon", "csp_solar_tower", :], "perUnitBuild"] = [482, 372, 310, 264]  # Mio EUR per unit
 
-    geoth_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 4970   #, 3610]   # data from: "Financial_Technical assumptions" Ashish 2023   - Mio EUR per unit
+    geoth_acc.loc[idx["Invest",["global"], ["horizon"],  :, :], "perUnitBuild"] = 4970   #, 3610]   # data from: "Financial_Technical assumptions" Ashish 2023   - Mio EUR per unit
 
-    geoth_acc.loc[idx["Invest", :, :, :], "amorTime"] = 100  # years
+    geoth_acc.loc[idx["Invest",["global"], ["horizon"],  :, :], "amorTime"] = 100  # years
 
-    geoth_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    geoth_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    geoth_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        geoth_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.016 # data from: "Financial_Technical assumptions" Ashish 2024
-    )  # Mio EUR per unit
+    geoth_acc.loc[idx["Invest",["global"], ["horizon"],  :, :], "useAnnuity"] = 1  # binary yes/no
+    geoth_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "interest"] = 0.06  # percent/100
+    # geoth_acc.loc[idx["OMFix", ["global"], ["horizon"],  :, :], "perUnitTotal"] = (
+    #     geoth_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "perUnitBuild"] * 0.016 # data from: "Financial_Technical assumptions" Ashish 2024
+    # )  # Mio EUR per unit
+
+    invest_vals = geoth_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"]
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],
+        names=geoth_acc.index.names
+    )
+    geoth_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.016
+
 
     m["Base"].parameter.add(geoth_acc, "accounting_converterunits")
 
@@ -624,6 +649,9 @@ def add_hydro(m):
     conv_cap.loc[idx[["WTO"], [2000], "Hydro"], "unitsBuild"] = 1.0873  # GW_el
     # do not build anything new
     conv_cap.loc[idx[:, :, :], "noExpansion"] = 1  # boolean
+    #define a finite upper limit, rotpo allow the  representation of  existing capacity
+    conv_cap["unitsUpperLimit"] = 100  # large number (or realistic upper bound)
+
     m["Base"].parameter.add(conv_cap, "converter_capacityparam")
 
 
@@ -644,16 +672,27 @@ def add_hydro(m):
 
     conv_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], hydro_techs, hydro_vintage]
+            [["Invest", "OMFix"], ["global"], ["horizon"],  hydro_techs, hydro_vintage]
         )
     )
-    conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 2560 # million EUR / unit
-    conv_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    conv_acc.loc[idx["Invest", :, :, :], "amorTime"] = 20  # years
-    conv_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    conv_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] *0.0300
-    )  # Mio EUR per unit
+    conv_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "perUnitBuild"] = 2560 # million EUR / unit
+    conv_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "useAnnuity"] = 1  # binary yes/no
+    conv_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "amorTime"] = 20  # years
+    conv_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "interest"] = 0.06  # percent/100
+    # conv_acc.loc[idx["OMFix", ["global"], ["horizon"],  :, :], "perUnitTotal"] = (
+    #     conv_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "perUnitBuild"]  *0.03
+    # )  # Mio EUR per unit
+
+    invest_vals = conv_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+        #names=conv_acc.index.names
+    )
+    conv_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.03
+
+
+
+
     m["Base"].parameter.add(conv_acc, "accounting_converterunits")
 
  
@@ -697,17 +736,28 @@ def add_hydro(m):
 
     stor_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], stor_techs, hydro_vintage]
+            [["Invest", "OMFix"], ["global"], ["horizon"], stor_techs, hydro_vintage]
         )
     )
-    stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 1650  # million EUR / unit, Breyer https://ars.els-cdn.com/content/image/1-s2.0-S0360544225005201-mmc1.pdf
+    
+    stor_acc.index.set_names(["indicator","regionscope","timescope","techs","years"], inplace=True)
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "perUnitBuild"] = 1650  # million EUR / unit, Breyer https://ars.els-cdn.com/content/image/1-s2.0-S0360544225005201-mmc1.pdf
 
-    stor_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    stor_acc.loc[idx["Invest", :, :, :], "amorTime"] = 20  # years
-    stor_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    stor_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.03
-    )  # Mio EUR per unit
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "useAnnuity"] = 1  # binary yes/no
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "amorTime"] = 20  # years
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "interest"] = 0.06  # percent/100
+
+    # stor_acc.loc[idx["OMFix", :, "horizon", :, :], "perUnitTotal"] = (
+    #     stor_acc.loc[idx["Invest", :, "horizon", :, :], "perUnitBuild"] * 0.03
+    # )  # Mio EUR per unit
+    
+    invest_vals = stor_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+        #names=conv_acc.index.names
+    )
+    stor_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.03 # 3% fixed O&M
+
     m["Base"].parameter.add(stor_acc, "accounting_storageunits")
 
 
@@ -749,7 +799,7 @@ def add_hydro_cascade(m):
     conv_cap.loc[idx[["OTG"], [2000], "Turb_Clyde"], "unitsBuild"] = 464 * 0.001 # GW_el   
     conv_cap.loc[idx[["OTG"], [2000], "Turb_Roxburgh"], "unitsBuild"] = 320 * 0.001   # GW_el   
 
-    conv_cap.loc[idx[:, :, :], "noExpansion"] = 1  # Prevent expansion. Boolean.
+    conv_cap.loc[idx[:, yrs_to_calc, :], "noExpansion"] = 1  # Prevent expansion. Boolean.
     m["Base"].parameter.add(conv_cap, "converter_capacityparam")
 
     # Turbine conversion coefficients (input-output relationships).
@@ -783,9 +833,17 @@ def add_hydro_cascade(m):
     conv_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # Use annuity method. binary yes/no
     conv_acc.loc[idx["Invest", :, :, :], "amorTime"] = 20  #  Amortization time (years).
     conv_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # Interest rate (6%)
-    conv_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] *0.0300
-    )  # Mio EUR per unit
+    
+    # conv_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
+    #     conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] *0.03
+    # )  # Mio EUR per unit
+    invest_vals = conv_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+        #names=conv_acc.index.names
+    )
+    conv_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.0300 # 3% fixed O&M
+
     m["Base"].parameter.add(conv_acc, "accounting_converterunits")
 
     
@@ -818,103 +876,128 @@ def add_hydro_cascade(m):
     # stor_res.loc[idx[["OTG"], [2000], :], "unitsBuild"] = 729.5595 # GWh_el
     # stor_res.loc[idx[["WTO"], [2000], :], "unitsBuild"] = 587.1371 # GWh_el
 
-    stor_res.loc[idx[:, :, :], "noExpansion"] = 1
+    stor_res.loc[idx[:, yrs_to_calc, :], "noExpansion"] = 1
     m["Base"].parameter.add(stor_res, "storage_reservoirparam")
 
     stor_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], stor_techs, hydro_vintage]
+            [["Invest", "OMFix"], ["global"], ["horizon"], stor_techs, hydro_vintage]
         )
     )
-    stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 1650  # million EUR / unit
-    stor_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    stor_acc.loc[idx["Invest", :, :, :], "amorTime"] = 20  # years
-    stor_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    stor_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.03
-    )  # Mio EUR per unit
-    m["Base"].parameter.add(stor_acc, "accounting_storageunits")
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "perUnitBuild"] = 1650  # million EUR / unit
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "useAnnuity"] = 1  # binary yes/no
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "amorTime"] = 20  # years
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "interest"] = 0.06  # percent/100
 
+    # stor_acc.loc[idx["OMFix", :, "horizon", :, :], "perUnitTotal"] = (
+    #     stor_acc.loc[idx["Invest", :, "horizon", :, :], "perUnitBuild"] * 0.03
+    # )  # Mio EUR per unit
+    invest_vals = stor_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+    )
+    stor_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.03 # 2% fixed O&M
+
+    m["Base"].parameter.add(stor_acc, "accounting_storageunits")
 
 
 # conventional
 
 def add_thermal(m):
     the_inst_csv = pd.read_csv(Path(path_brownfield).joinpath("power-plant-nz-database.csv"))
-    
-    the_vintage = [1950, 2030, 2050]
-    the_techs = ["BIO", "COAL", "DIE"]     
-    the_nodes = [n for n in m["Base"].set.nodesdata]    
-    the_activities = ["Powergen"]
 
+    # sets
+    the_vintage = [1950, 2030, 2050]                   # vintages (for techparam & coefficients)
+    the_techs   = ["BIO", "COAL", "DIE"]
+    the_nodes   = [n for n in m["Base"].set.nodesdata]
+    the_act     = ["Powergen"]
+    the_years   = list(m["Base"].set.yearssel)         # <-- use model years for accounting tables
+    idx = pd.IndexSlice
+
+    # --- converter_techparam (OK with vintages) ---
     the_tech = pd.DataFrame(
         index=pd.MultiIndex.from_product([the_techs, the_vintage])
     )
-    the_tech.loc[idx[:, :], "lifeTime"] = 30                               # lifeTIME same as gas turbines
-    the_tech.loc[idx[:, :], "activityUpperLimit"] = 1                      # UpperLimit same as gas turbines 
-    m["Base"].parameter.add(the_tech, "converter_techparam") 
+    the_tech.loc[idx[:, :], "lifeTime"] = 30
+    the_tech.loc[idx[:, :], "activityUpperLimit"] = 1
+    m["Base"].parameter.add(the_tech, "converter_techparam")
 
-    # fix: m["Base"].alltheyears or smth for the list - not years calculate
-    the_cap = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [the_nodes, range(1992, 2050), the_techs]
-        )
-    )
-
-    # fixed capactities     
+    # --- converter_capacityparam (your logic kept) ---
+    the_cap = pd.DataFrame(index=pd.MultiIndex.from_product([the_nodes, range(1992, 2050), the_techs]))
     df = the_inst_csv
-    
     filtered_df = df[(df['Type'] == 'Thermal') & (df['Primary_fuel'].isin(['Biogas', 'Biomass', 'Coal', 'Diesel', 'Waste heat', 'Wood', 'Wood waste']))]
     grouped_df = filtered_df.groupby(['Node', 'Year_built', 'Techs'])['Capacity_MW'].sum().reset_index()
-    grouped_df['Year_built'] = grouped_df['Year_built'].astype(int) 
-    
-    the_cap = (grouped_df
-               .set_index(["Node", "Year_built", "Techs"])
-               .rename(columns={"Capacity_MW": "unitsBuild"})
-               .div(1e3))
+    grouped_df['Year_built'] = grouped_df['Year_built'].astype(int)
+
+    the_cap = (
+        grouped_df
+        .set_index(["Node", "Year_built", "Techs"])
+        .rename(columns={"Capacity_MW": "unitsBuild"})
+        .div(1e3)
+    )
 
     the_cap_upper = pd.DataFrame(index=pd.MultiIndex.from_product([the_nodes, yrs_to_calc, the_techs]))
-    the_cap_upper.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean  
-    the_cap_upper.loc[idx[:, :, :], "unitsUpperLimit"] = 100  # boolean
+    the_cap_upper.loc[idx[:, [2020], :], "noExpansion"]    = 1
+    the_cap_upper.loc[idx[:, :, :],      "unitsUpperLimit"] = 100
     the_cap_full = pd.concat([the_cap, the_cap_upper], axis=1)
     m["Base"].parameter.add(the_cap_full, "converter_capacityparam")
 
-    
-    #MAAM: thermal generation can only convert primary fuel to electricity
+    # --- converter_coefficient (OK with vintages & activities) ---
     the_coef = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [the_techs, the_vintage, the_activities, ["Elec"]]
-        )
+        index=pd.MultiIndex.from_product([the_techs, the_vintage, the_act, ["Elec"]])
     )
-
-    the_coef.loc[idx[:, :, :, "Elec"], "coefficient"] = 1 # GW_el
+    the_coef.loc[idx[:, :, :, "Elec"], "coefficient"] = 1
     m["Base"].parameter.add(the_coef, "converter_coefficient")
 
-
+    # --- accounting_converterunits (ADD timescope="horizon" and use model years) ---
     the_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], the_techs, the_vintage]
+            [["Invest", "OMFix"], ["global"], ["horizon"], the_techs, the_years],
+            names=["indicator", "regionscope", "timescope", "techs", "years"]
         )
+    ).sort_index()
+
+    # broadcast values to all years
+    the_acc.loc[idx["Invest", "global", "horizon", "BIO", :],  "perUnitBuild"] = 2600
+    the_acc.loc[idx["Invest", "global", "horizon", "COAL", :], "perUnitBuild"] = 1600
+    the_acc.loc[idx["Invest", "global", "horizon", "DIE", :],  "perUnitBuild"] = 900
+
+    the_acc.loc[idx["Invest", "global", "horizon", :, :], "useAnnuity"] = 1
+    the_acc.loc[idx["Invest", "global", "horizon", :, :], "amorTime"]   = 30
+    the_acc.loc[idx["Invest", "global", "horizon", :, :], "interest"]   = 0.06
+
+    # the_acc.loc[idx["OMFix",  "global", "horizon", :, :], "perUnitTotal"] = (
+    #     the_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] * 0.033
+    # )
+    invest_vals = the_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+
     )
-    the_acc.loc[idx["Invest", :, "BIO", :], "perUnitBuild"] = [2600, 2300, 2300]  # million EUR / unit
-    the_acc.loc[idx["Invest", :, "COAL", :], "perUnitBuild"] = [1600, 1600, 1600] # million EUR / unit
-    the_acc.loc[idx["Invest", :, "DIE", :], "perUnitBuild"] = [900, 830, 830]    # million EUR / unit
-    the_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1                   # binary yes/no
-    the_acc.loc[idx["Invest", :, :, :], "amorTime"] = 30                    # years
-    the_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06                  # percent/100
-    the_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        the_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.033
-    )  # Mio EUR per unit
+    the_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.033 # 3.3% fixed O&M
+
+
     m["Base"].parameter.add(the_acc, "accounting_converterunits")
 
-    # # Emit carbon from combustion
-    the_emission = pd.DataFrame(index=pd.MultiIndex.from_product([["CO2_emission", "FuelCost"], ["global"], ["BIO", "COAL","DIE"], the_vintage, the_activities]))
-    the_emission.loc[idx["CO2_emission", :, "BIO", :, :], "perActivity"] = 0 #np.round(1 / np.array([0.0001, 0.0001, 0.0001]), 3) * 0.0001 # kt_CO2
-    the_emission.loc[idx["CO2_emission", :, "COAL", :, :], "perActivity"] = np.round(1 / np.array([0.010, 0.010, 0.010]), 3) * 0.3406 # kt_CO2
-    the_emission.loc[idx["CO2_emission", :, "DIE", :, :], "perActivity"] = np.round(1 / np.array([0.262, 0.262, 0.262]), 3) * 0.2668 # kt_CO2
-    the_emission.loc[idx["FuelCost", :, "BIO", :, :], "perActivity"] = np.round(1 / np.array([0.0001, 0.0001, 0.0001]), 3) * 0.03   # m EUR
-    the_emission.loc[idx["FuelCost", :, "COAL", :, :], "perActivity"] = np.round(1 / np.array([0.010, 0.010, 0.010]), 3) * 0.15#  np.round(np.array([0.015, 0.016, 0.021]), 3)  # m EUR
-    the_emission.loc[idx["FuelCost", :, "DIE", :, :], "perActivity"] =  np.round(1 / np.array([0.262, 0.262, 0.262]), 3) *0.58 
+    # --- accounting_converteractivity (ADD timescope="horizon" and use model years) ---
+    the_emission = pd.DataFrame(
+        index=pd.MultiIndex.from_product(
+            [["CO2_emission", "FuelCost"], ["global"], ["horizon"], the_techs, the_years, the_act],
+            names=["indicator","regionscope","timescope","techs","years","activities"]
+        )
+    ).sort_index()
+
+    # Broadcast per-activity values to all years (was tied to your 3-vintage vector before)
+    # CO2 factors (kt_CO2 per unit of activity)
+    the_emission.loc[idx["CO2_emission","global","horizon","BIO", :, "Powergen"], "perActivity"] = 0.0
+    the_emission.loc[idx["CO2_emission","global","horizon","COAL",:, "Powergen"], "perActivity"] = 0.3406 / 0.010   # = 34.06
+    the_emission.loc[idx["CO2_emission","global","horizon","DIE", :, "Powergen"], "perActivity"] = 0.2668 / 0.262   # ≈ 1.018
+
+    # Fuel costs (m EUR per unit of activity)
+    the_emission.loc[idx["FuelCost","global","horizon","BIO", :, "Powergen"], "perActivity"] = 0.03   / 0.0001  # = 300
+    the_emission.loc[idx["FuelCost","global","horizon","COAL",:, "Powergen"], "perActivity"] = 0.15   / 0.010   # = 15
+    the_emission.loc[idx["FuelCost","global","horizon","DIE", :, "Powergen"], "perActivity"] = 0.58   / 0.262   # ≈ 2.214
+
     m["Base"].parameter.add(the_emission, "accounting_converteractivity")
 
 def add_gas_turbines(m):    
@@ -977,30 +1060,39 @@ def add_gas_turbines(m):
 
     gt_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], gt_techs, gt_vintage]
+            [["Invest", "OMFix"], ["global"], ["horizon"],  gt_techs, gt_vintage]
         )
     )
-    gt_acc.loc[idx["Invest", :, "GT", :], "perUnitBuild"] = [900, 830]  # million EUR / unit
-    gt_acc.loc[idx["Invest", :, "CCGT", :], "perUnitBuild"] = [775, 775]  # million EUR / unit
-    gt_acc.loc[idx["Invest", :, "OCGT", :], "perUnitBuild"] = [475, 475]  # million EUR / unit  - data: LUT Breyer "Financial_Technical assumptions-newversion.docx"
-    #gt_acc.loc[idx["Invest", :, "GT_H2", :], "perUnitBuild"] = [900, 830]  # million EUR / unit
-    #gt_acc.loc[idx["Invest", :, "CCGT_H2", :], "perUnitBuild"] = [600, 560]  # million EUR / unit
-    gt_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    gt_acc.loc[idx["Invest", :, :, :], "amorTime"] = 30  # years
-    gt_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    gt_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        gt_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.0193
-    )  # Mio EUR per unit
+    gt_acc.loc[idx["Invest", ["global"], ["horizon"],  "GT", :], "perUnitBuild"] = [900, 830]  # million EUR / unit
+    gt_acc.loc[idx["Invest", ["global"], ["horizon"],  "CCGT", :], "perUnitBuild"] = [775, 775]  # million EUR / unit
+    gt_acc.loc[idx["Invest", ["global"], ["horizon"],  "OCGT", :], "perUnitBuild"] = [475, 475]  # million EUR / unit  - data: LUT Breyer "Financial_Technical assumptions-newversion.docx"
+    #gt_acc.loc[idx["Invest", ["global"], ["horizon"],  "GT_H2", :], "perUnitBuild"] = [900, 830]  # million EUR / unit
+    #gt_acc.loc[idx["Invest", ["global"], ["horizon"],  "CCGT_H2", :], "perUnitBuild"] = [600, 560]  # million EUR / unit
+    gt_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "useAnnuity"] = 1  # binary yes/no
+    gt_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "amorTime"] = 30  # years
+    gt_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "interest"] = 0.06  # percent/100
+    # gt_acc.loc[idx["OMFix", ["global"], ["horizon"],  :, :], "perUnitTotal"] = (
+    #     gt_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "perUnitBuild"] * 0.0193
+    # )  # Mio EUR per unit
+
+    invest_vals = gt_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+        #names=conv_acc.index.names
+    )
+    gt_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.0193 # 
+    
+    
     m["Base"].parameter.add(gt_acc, "accounting_converterunits")
 
     # # Emit carbon from combustion
-    gt_emission = pd.DataFrame(index=pd.MultiIndex.from_product([["CO2_emission", "FuelCost"], ["global"], ["GT", "CCGT","OCGT"], gt_vintage, gt_activities]))
-    gt_emission.loc[idx["CO2_emission", :, "GT", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3) * 0.2016 # kt_CO2
-    gt_emission.loc[idx["CO2_emission", :, "CCGT", :, :], "perActivity"] = np.round(1 / np.array([0.58, 0.61]), 3) * 0.2016 # kt_CO2
-    gt_emission.loc[idx["CO2_emission", :, "OCGT", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3) * 0.2016 # kt_CO2 - data: REMix Tutorial 202, number for 2020 used for 2000 and 2030
-    gt_emission.loc[idx["FuelCost", :, "GT", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3) * np.array([0.21, 0.31]) # mEUR
-    gt_emission.loc[idx["FuelCost", :, "CCGT", :, :], "perActivity"] = np.round(1 / np.array([0.58, 0.61]), 3) * np.array([0.21, 0.31]) # mEUR
-    gt_emission.loc[idx["FuelCost", :, "OCGT", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3) * np.array([0.21, 0.31]) # mEUR
+    gt_emission = pd.DataFrame(index=pd.MultiIndex.from_product([["CO2_emission", "FuelCost"], ["global"], ["horizon"],  ["GT", "CCGT","OCGT"], gt_vintage, gt_activities]))
+    gt_emission.loc[idx["CO2_emission", ["global"], ["horizon"],  "GT", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3) * 0.2016 # kt_CO2
+    gt_emission.loc[idx["CO2_emission", ["global"], ["horizon"],  "CCGT", :, :], "perActivity"] = np.round(1 / np.array([0.58, 0.61]), 3) * 0.2016 # kt_CO2
+    gt_emission.loc[idx["CO2_emission", ["global"], ["horizon"],  "OCGT", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3) * 0.2016 # kt_CO2 - data: REMix Tutorial 202, number for 2020 used for 2000 and 2030
+    gt_emission.loc[idx["FuelCost", ["global"], ["horizon"],  "GT", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3) * np.array([0.21, 0.31]) # mEUR
+    gt_emission.loc[idx["FuelCost", ["global"], ["horizon"],  "CCGT", :, :], "perActivity"] = np.round(1 / np.array([0.58, 0.61]), 3) * np.array([0.21, 0.31]) # mEUR
+    gt_emission.loc[idx["FuelCost", ["global"], ["horizon"],  "OCGT", :, :], "perActivity"] = np.round(1 / np.array([0.41, 0.43]), 3) * np.array([0.21, 0.31]) # mEUR
     # Emit carbon from combustion
     # gt_emission = pd.DataFrame(index=pd.MultiIndex.from_product([["CO2_emission", "FuelCost"], ["global"], ["GT", "CCGT","OCGT"], gt_vintage, gt_activities]))
     # gt_emission.loc[idx["CO2_emission", :, "GT", :, :], "perActivity"] = np.round(1 / np.array([0.41]), 3) * 0.2016 # kt_CO2
@@ -1043,20 +1135,47 @@ def add_electrolyser(m):
     eltr_coef.loc[idx[:, :, :, "H2"], "coefficient"] = [0.665, 0.79, 0.79, 0.85] # DEA2022 AEC 1MW comm&indust for 2020, Will for the others
     m["Base"].parameter.add(eltr_coef, "converter_coefficient")
 
-    # accounting
-    electrolyser_acc = pd.DataFrame(
-        index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], ["Electrolyser"], eltr_vintage])
-        ).sort_index()
+    # # accounting
+    # electrolyser_acc = pd.DataFrame(
+    #     index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], ["Electrolyser"], eltr_vintage])
+    #     ).sort_index()
 
-    electrolyser_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = [750, 570, 450, 350]   #  DEA2022 AEC 1MW comm&indust - Mio EUR per unit
-    electrolyser_acc.loc[idx["Invest", :, :, :], "amorTime"] = [25, 30, 32, 35]  # years
-    electrolyser_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    electrolyser_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    electrolyser_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        electrolyser_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.014
-        )  # Mio EUR per unit
+    # electrolyser_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = [750, 570, 450, 350]   #  DEA2022 AEC 1MW comm&indust - Mio EUR per unit
+    # electrolyser_acc.loc[idx["Invest", :, :, :], "amorTime"] = [25, 30, 32, 35]  # years
+    # electrolyser_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
+    # electrolyser_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
+    # electrolyser_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
+    #     electrolyser_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.014
+    #     )  # Mio EUR per unit
+
+    # m["Base"].parameter.add(electrolyser_acc, "accounting_converterunits")
+    # accounting (v13 shape; keep your vintage list but treat it as "years")
+    electrolyser_acc = pd.DataFrame(
+        index=pd.MultiIndex.from_product(
+            [["Invest", "OMFix"], ["global"], ["horizon"], ["Electrolyser"], eltr_vintage],
+            names=["indicator","regionscope","timescope","techs","years"]
+        )
+    ).sort_index()
+
+    electrolyser_acc.loc[idx["Invest","global","horizon","Electrolyser", :], "perUnitBuild"] = [750, 570, 450, 350]  # Mio EUR / unit
+    electrolyser_acc.loc[idx["Invest","global","horizon","Electrolyser", :], "amorTime"]     = [25, 30, 32, 35]      # years
+    electrolyser_acc.loc[idx["Invest","global","horizon","Electrolyser", :], "useAnnuity"]  = 1                      # binary yes/no
+    electrolyser_acc.loc[idx["Invest","global","horizon","Electrolyser", :], "interest"]    = 0.06                   # percent/100
+
+    # electrolyser_acc.loc[idx["OMFix","global","horizon","Electrolyser", :], "perUnitTotal"] = (
+    #     electrolyser_acc.loc[idx["Invest","global","horizon","Electrolyser", :], "perUnitBuild"] * 0.014
+    # )  # Mio EUR per unit
+    invest_vals = electrolyser_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+        #names=conv_acc.index.names
+    )
+    electrolyser_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.014 # 1.4% fixed O&M
+    
+    
 
     m["Base"].parameter.add(electrolyser_acc, "accounting_converterunits")
+
 
 def add_H2_CCGT(m):
     H2_CCGT_vintage = [2030, 2035, 2040, 2045, 2050]
@@ -1089,16 +1208,23 @@ def add_H2_CCGT(m):
 
     # accounting
     H2_CCGT_acc = pd.DataFrame(
-        index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], ["H2_CCGT"], H2_CCGT_vintage])
+        index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"],["horizon"], ["H2_CCGT"], H2_CCGT_vintage])
         ).sort_index()
 
-    H2_CCGT_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 100 #853   #  
-    H2_CCGT_acc.loc[idx["Invest", :, :, :], "amorTime"] = 35  # years
-    H2_CCGT_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    H2_CCGT_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    H2_CCGT_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        H2_CCGT_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.025
-        )  # Mio EUR per unit
+    H2_CCGT_acc.loc[idx["Invest", ["global"],["horizon"], :, :], "perUnitBuild"] = 100 #853   #  
+    H2_CCGT_acc.loc[idx["Invest", ["global"],["horizon"], :, :], "amorTime"] = 35  # years
+    H2_CCGT_acc.loc[idx["Invest", ["global"],["horizon"], :, :], "useAnnuity"] = 1  # binary yes/no
+    H2_CCGT_acc.loc[idx["Invest", ["global"],["horizon"], :, :], "interest"] = 0.06  # percent/100
+    # H2_CCGT_acc.loc[idx["OMFix", ["global"],["horizon"], :, :], "perUnitTotal"] = (
+    #     H2_CCGT_acc.loc[idx["Invest", ["global"],["horizon"], :, :], "perUnitBuild"] * 0.025
+    #     )  # Mio EUR per unit
+    invest_vals = H2_CCGT_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+        #names=conv_acc.index.names
+    )
+    H2_CCGT_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.025 # 2.5% fixed O&M
+
 
     m["Base"].parameter.add(H2_CCGT_acc, "accounting_converterunits")
 
@@ -1133,17 +1259,23 @@ def add_H2_FC(m):
 
     # accounting
     H2_FC_acc = pd.DataFrame(
-        index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], ["H2_FC"], H2_FC_vintage])
+        index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], ["horizon"],  ["H2_FC"], H2_FC_vintage])
         ).sort_index()
 
-    H2_FC_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 100 #[2980.992, 1468.139, 773.195, 733.604, 694.012, 654.421, 614.830]   #  
-    H2_FC_acc.loc[idx["Invest", :, :, :], "amorTime"] = 35  # years
-    H2_FC_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    H2_FC_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    H2_FC_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        H2_FC_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.05
-        )  # Mio EUR per unit
-
+    H2_FC_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "perUnitBuild"] = 100 #[2980.992, 1468.139, 773.195, 733.604, 694.012, 654.421, 614.830]   #  
+    H2_FC_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "amorTime"] = 35  # years
+    H2_FC_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "useAnnuity"] = 1  # binary yes/no
+    H2_FC_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "interest"] = 0.06  # percent/100
+    # H2_FC_acc.loc[idx["OMFix", ["global"], ["horizon"],  :, :], "perUnitTotal"] = (
+    #     H2_FC_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "perUnitBuild"] * 0.05
+    #     )  # Mio EUR per unit
+    invest_vals = H2_FC_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+        #names=conv_acc.index.names
+    )
+    H2_FC_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.05 # 5% fixed O&M
+    
     m["Base"].parameter.add(H2_FC_acc, "accounting_converterunits")
 
 def add_dac(m):
@@ -1186,9 +1318,16 @@ def add_dac(m):
     dac_acc.loc[idx["Invest", :, :, :], "amorTime"] = [20]  # years
     dac_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
     dac_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    dac_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        dac_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.04
-    )  # Mio EUR per unit
+    # dac_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
+    #     dac_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.04
+    # )  # Mio EUR per unit
+    invest_vals = dac_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+        #names=conv_acc.index.names
+    )
+    dac_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.04 # 4% fixed O&M
+    
 
     m["Base"].parameter.add(dac_acc, "accounting_converterunits")
 
@@ -1240,9 +1379,17 @@ def add_methanizer(m):
     methanizer_acc.loc[idx["Invest", :, :, :], "amorTime"] = [20, 25, 30, 30]  # years
     methanizer_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
     methanizer_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    methanizer_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        methanizer_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.04
-    )  # Mio EUR per unit
+    # methanizer_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
+    #     methanizer_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.04
+    # )  # Mio EUR per unit
+
+    invest_vals = methanizer_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+        #names=conv_acc.index.names
+    )
+    methanizer_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.04 # 4% fixed O&M
+    
 
     m["Base"].parameter.add(methanizer_acc, "accounting_converterunits")
 
@@ -1289,9 +1436,16 @@ def add_methanol_syn(m):
     methanol_syn_acc.loc[idx["Invest", :, :, :], "amorTime"] = 30  # years
     methanol_syn_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
     methanol_syn_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    methanol_syn_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        methanol_syn_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.04
-    )  # Mio EUR per unit
+    # methanol_syn_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
+    #     methanol_syn_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.04
+    # )  # Mio EUR per unit
+
+    invest_vals = methanol_syn_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+        #names=conv_acc.index.names
+    )
+    methanol_syn_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.04 # 4% fixed O&M
 
     m["Base"].parameter.add(methanol_syn_acc, "accounting_converterunits")
 
@@ -1344,9 +1498,15 @@ def add_ftropsch_syn(m):
     ftropsch_syn_acc.loc[idx["Invest", :, :, :], "amorTime"] = [30, 30]  # years
     ftropsch_syn_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
     ftropsch_syn_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    ftropsch_syn_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        ftropsch_syn_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.04
-    )  # Mio EUR per unit
+    # ftropsch_syn_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
+    #     ftropsch_syn_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.04
+    #ftropsch_syn  # Mio EUR per unit
+    invest_vals = ftropsch_syn_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+        #names=conv_acc.index.names
+    )
+    ftropsch_syn_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.04 # 4% fixed O&M
 
     m["Base"].parameter.add(ftropsch_syn_acc, "accounting_converterunits")
 
@@ -1386,17 +1546,29 @@ def add_lithium_batteries(m):
 
     conv_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], battery_techs, battery_vintage]
+            [["Invest", "OMFix"], ["global"],["horizon"], battery_techs, battery_vintage]
         )
+    ) 
+    conv_acc.loc[idx["Invest", ["global"],["horizon"], :, :], "perUnitBuild"] = [117, 55, 37, 30]  # million EUR / unit
+    conv_acc.loc[idx["Invest", ["global"],["horizon"], :, :], "useAnnuity"] = 1  # binary yes/no
+    conv_acc.loc[idx["Invest", ["global"],["horizon"], :, :], "amorTime"] = 20  # years
+    conv_acc.loc[idx["Invest", ["global"],["horizon"], :, :], "interest"] = 0.06  # percent/100
+    # conv_acc.loc[idx["OMFix", ["global"],["horizon"], :, :], "perUnitTotal"] = (
+    #     conv_acc.loc[idx["Invest", ["global"],["horizon"], :, :], "perUnitBuild"] * 0.014
+    # )  # Mio EUR per unit
+    invest_vals = conv_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+        #names=conv_acc.index.names
     )
-    conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = [117, 55, 37, 30]  # million EUR / unit
-    conv_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    conv_acc.loc[idx["Invest", :, :, :], "amorTime"] = 20  # years
-    conv_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    conv_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.014
-    )  # Mio EUR per unit
+    conv_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.014 # 1.4% fixed O&M
+
     m["Base"].parameter.add(conv_acc, "accounting_converterunits")
+
+
+
+
+
 
 
     stor_tech = pd.DataFrame(
@@ -1425,16 +1597,23 @@ def add_lithium_batteries(m):
 
     stor_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], battery_techs, battery_vintage]
+            [["Invest", "OMFix"], ["global"], ["horizon"], battery_techs, battery_vintage]
         )
     )
-    stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = [i * 4 for i in [234, 110, 76, 61]]  # million EUR / unit
-    stor_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    stor_acc.loc[idx["Invest", :, :, :], "amorTime"] = 20  # years
-    stor_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    stor_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.014
-    )  # Mio EUR per unit
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "perUnitBuild"] = [i * 4 for i in [234, 110, 76, 61]]  # million EUR / unit
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "useAnnuity"] = 1  # binary yes/no
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "amorTime"] = 20  # years
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "interest"] = 0.06  # percent/100
+    # stor_acc.loc[idx["OMFix", :, "horizon", :, :], "perUnitTotal"] = (
+    #     stor_acc.loc[idx["Insvest", :, "horizon", :, :], "perUnitBuild"] * 0.014
+    # )  # Mio EUR per unit
+    invest_vals = stor_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+        #names=conv_acc.index.names
+    )
+    stor_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.014 # 1.4% fixed O&M
+
     m["Base"].parameter.add(stor_acc, "accounting_storageunits")
 
 def add_h2_storage(m):
@@ -1478,17 +1657,24 @@ def add_h2_storage(m):
 
     conv_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], h2_stor_techs, yrs_h2]
+            [["Invest", "OMFix"], ["global"], ["horizon"], h2_stor_techs, yrs_h2]
         )
     )
     #
-    conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 5.14  # million EUR / unit
-    conv_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    conv_acc.loc[idx["Invest", :, :, :], "amorTime"] = 40  # years
-    conv_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    conv_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.04
-    )  # Mio EUR per unit
+    conv_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "perUnitBuild"] = 5.14  # million EUR / unit
+    conv_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "useAnnuity"] = 1  # binary yes/no
+    conv_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "amorTime"] = 40  # years
+    conv_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "interest"] = 0.06  # percent/100
+    # conv_acc.loc[idx["OMFix", ["global"], ["horizon"],  :, :], "perUnitTotal"] = (
+    #     conv_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "perUnitBuild"] * 0.04
+    # )  # Mio EUR per unit
+    invest_vals = conv_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+        #names=conv_acc.index.names
+    )
+    conv_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.04 # 4% fixed O&M
+
     m["Base"].parameter.add(conv_acc, "accounting_converterunits")
 
 
@@ -1518,18 +1704,25 @@ def add_h2_storage(m):
 
     stor_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], h2_stor_techs, yrs_h2]
+            [["Invest", "OMFix"], ["global"], ["horizon"], h2_stor_techs, yrs_h2]
         )
     )
    
      #CAPEX (628.14 EUR / kgH2 * 210000 kgH2/unit ) /1M = 131.91 M EUR / unit
-    stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 131.91  # million EUR / unit
-    stor_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # binary yes/no
-    stor_acc.loc[idx["Invest", :, :, :], "amorTime"] = 40  # years 
-    stor_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # percent/100
-    stor_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-        stor_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] * 0.03
-    )  # Mio EUR per unit
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "perUnitBuild"] = 131.91  # million EUR / unit
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "useAnnuity"] = 1  # binary yes/no
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "amorTime"] = 40  # years 
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "interest"] = 0.06  # percent/100
+    # stor_acc.loc[idx["OMFix", :, "horizon", :, :], "perUnitTotal"] = (
+    #     stor_acc.loc[idx["Invest", :, "horizon", :, :], "perUnitBuild"] * 0.03
+    # )  # Mio EUR per unit
+    invest_vals = stor_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
+    invest_vals.index = pd.MultiIndex.from_tuples(
+        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
+        #names=conv_acc.index.names
+    )
+    stor_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.03 # 3% fixed O&M
+
     m["Base"].parameter.add(stor_acc, "accounting_storageunits")
 
 # co2 constrains
@@ -1698,14 +1891,16 @@ def add_network(m):
 
     transfer_indicators = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [cost_indicators, area, transport_techs, m["Base"].set.yearssel]
+            [cost_indicators, area, ["horizon"], transport_techs, m["Base"].set.yearssel]
         )
     )
-    transfer_indicators.loc[idx["Invest", "global"], "perLinkBuild"] = 180
-    transfer_indicators.loc[idx["Invest", "global"], "interest"] = 0.06
-    transfer_indicators.loc[idx["Invest", "global"], "amorTime"] = 40
-    transfer_indicators.loc[idx["Invest", "global"], "useAnnuity"] = 1
-    transfer_indicators.loc[idx["OMFix", "global"], "perLinkTotal"] = 1.8
+    
+    transfer_indicators.index.set_names(["indicator","regionscope","timescope","techs","years"], inplace=True)
+    transfer_indicators.loc[idx["Invest", "global", "horizon"], "perLinkBuild"] = 180
+    transfer_indicators.loc[idx["Invest", "global", "horizon"], "interest"] = 0.06
+    transfer_indicators.loc[idx["Invest", "global", "horizon"], "amorTime"] = 40
+    transfer_indicators.loc[idx["Invest", "global", "horizon"], "useAnnuity"] = 1
+    transfer_indicators.loc[idx["OMFix", "global", "horizon"], "perLinkTotal"] = 1.8
     transfer_indicators = transfer_indicators.fillna(0)
 
     m["Base"].parameter.add(transfer_indicators, "accounting_transferlinks")
@@ -1716,27 +1911,25 @@ def add_network(m):
     # ""accounting_transferperlength""
     indicators_distance = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [cost_indicators, area, transport_techs, m["Base"].set.yearssel, link_types]
+            [cost_indicators, area, ["horizon"], transport_techs, m["Base"].set.yearssel, link_types]
         )
     )
-    indicators_distance.loc[
-        idx["Invest", "global", :, :, "land"], "perLengthBuild"
+    
+    indicators_distance.index.set_names(["indicator","regionscope","timescope","techs","years","linktype"], inplace=True)
+    indicators_distance.loc[idx["Invest", "global", "horizon", :, :, "land"], "perLengthBuild"
     ] = 0.544
-    indicators_distance.loc[idx["Invest", "global", :, :, "land"], "interest"] = 0.06
-    indicators_distance.loc[idx["Invest", "global", :, :, "land"], "amorTime"] = 40
-    indicators_distance.loc[idx["Invest", "global", :, :, "land"], "useAnnuity"] = 1
-    indicators_distance.loc[
-        idx["OMFix", "global", :, :, "land"], "perLengthTotal"
+    indicators_distance.loc[idx["Invest", "global", "horizon", :, :, "land"], "interest"] = 0.06
+    indicators_distance.loc[idx["Invest", "global", "horizon", :, :, "land"], "amorTime"] = 40
+    indicators_distance.loc[idx["Invest", "global", "horizon", :, :, "land"], "useAnnuity"] = 1
+    indicators_distance.loc[idx["OMFix", "global", "horizon", :, :, "land"], "perLengthTotal"
     ] = 0.00544
 
-    indicators_distance.loc[
-        idx["Invest", "global", :, :, "sea"], "perLengthBuild"
+    indicators_distance.loc[idx["Invest", "global", "horizon", :, :, "sea"], "perLengthBuild"
     ] = 0.975
-    indicators_distance.loc[idx["Invest", "global", :, :, "sea"], "interest"] = 0.06
-    indicators_distance.loc[idx["Invest", "global", :, :, "sea"], "amorTime"] = 40
-    indicators_distance.loc[idx["Invest", "global", :, :, "sea"], "useAnnuity"] = 1
-    indicators_distance.loc[
-        idx["OMFix", "global", :, :, "sea"], "perLengthTotal"
+    indicators_distance.loc[idx["Invest", "global", "horizon", :, :, "sea"], "interest"] = 0.06
+    indicators_distance.loc[idx["Invest", "global", "horizon", :, :, "sea"], "amorTime"] = 40
+    indicators_distance.loc[idx["Invest", "global", "horizon", :, :, "sea"], "useAnnuity"] = 1
+    indicators_distance.loc[idx["OMFix", "global", "horizon", :, :, "sea"], "perLengthTotal"
     ] = 0.00975
     indicators_distance = indicators_distance.fillna(0)
 
