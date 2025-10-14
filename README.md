@@ -54,6 +54,7 @@ Distances are approximated as **Euclidean × 1.2** to account for real-world rou
 
 ### Structure layout
 
+```
 remix_nz/
 ├── input/                         # Raw input data organized by type
 │   ├── brownfield/
@@ -75,7 +76,7 @@ remix_nz/
 │
 ├── .gitignore                     # Git ignore rules
 └── README.md                      # Project documentation
-
+```
 
 ### Building and running the model
 
