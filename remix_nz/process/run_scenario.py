@@ -1,39 +1,39 @@
 # run_remix.py
 import os, time
 from pathlib import Path
+import pandas as pd
 from remix.framework.api.instance import Instance
 
+# Notes:
+#  1. RUN_TYPE='opt'        normal full optimization.
+#  2. RUN_TYPE='scenario'   optimization using overrides from data/<scenario_name>/.
+#  3. RUN_TYPE='dispatch'   dispatch-only simulation using fixed capacities from a GDX file.
+
+# #### If the model is infeasible or a run crashes
+# If you build a model on your own, it can always happen that it gets infeasible or the execution stops out of
+# some other reason. In that case, you can refer to the `run_remix.lst` file and look for the error marker `****`.
+# You can open that file in an editor and look for the error message.
+# Alternatively, you can also use the commandline tool grep to search for the pattern "**** Exec Error"  in the file to see what is wrong.
+
 group_name = "hadi"
-case_name  = "pypsa-low" #"h2-domestic_2020-2030-2050"           # this is the *base* scenario directory under project/{group_name}/{case_name}/data
-base_case  = "pypsa" 
-# optional: list of sub-scenarios *inside* the base data folder to run (each subfolder overrides files from the base)
-scenarios = [
-    None,              # None = run the base data folder itself (no overrides)
-    #"low",#"wind",            # e.g. data/wind/ contains a lower CAPEX file for wind
-    # "batt-cheap",
-    # "no-h2",
-]
+base_case  = "pypsa"       # base case folder under ../project/{group_name}/{base_case}/data
+low_case   = "pypsa-low"   # second case folder for dispatch run
 
-# Paths 
-data_dir    = Path(f"../project/{group_name}/{case_name}/data")
-results_dir = Path(f"../project/{group_name}/{case_name}/result")
-results_dir.mkdir(parents=True, exist_ok=True)
-fixed_caps_gdx = results_dir/f"{case_name}.gdx"
+# --- Folder setup -------------------------------------------------------------
+base_dir = Path(f"../project/{group_name}/{base_case}")
+low_dir  = Path(f"../project/{group_name}/{low_case}")
 
-if not data_dir.exists():
-    raise IOError(f"Build step missing: {data_dir} not found")
+base_data   = base_dir / "data"
+base_result = base_dir / "result"
+low_data    = low_dir / "data"
+low_result  = low_dir / "result"
 
-# one Instance is enough; we pass scendir per run -
-m = Instance(index_names=False, datadir=data_dir)
+base_result.mkdir(parents=True, exist_ok=True)
+low_result.mkdir(parents=True, exist_ok=True)
 
-# Small helper for a nice label in the result filename
-def tag(scn):
-    return "base" if (scn is None or str(scn).strip() == "") else str(scn).replace("/", "_")
-
-# run options (see docs) 
-run_args = dict(
-    resultdir = results_dir,           # where remix.gdx will be written
-    solver    = "gurobi", #"cplex",              # cplex/highs/mosek/xpress/scip also supported
+# shared run options
+run_opts = dict(
+    solver    = "gurobi", #"cplex",
     threads   = 8,
     keep      = 1,                     # keep scratch folder “/225a” with exported .csvs for debugging
     lo        = 4,                     # write a .log file next to the .lst
@@ -41,54 +41,87 @@ run_args = dict(
     roundts   = 1,                     # round profile files to avoid GAMS line length/precision issues
     timeres   = 1,                     # hourly; use 24 for daily aggregation, etc.
     postcalc  = 1,                     # run post-processing
-    iis     = 1,                     # write IIS .gdx on infeasibility (enable when needed)
-    # equlist = 1,                     # huge listing of all equations (only for tiny models)
-    # gdx     = "default",             # extra symbol dump for deep debugging
-    # solvermethod = 1,                # 1=barrier (IPM), 2=simplex, 4=dual, etc.
-    # scaletimefrac = 1,               # scale sourcesink annual sums/indicators if using partial year (timestart/timeend)
-    # timestart = 1, timeend = 8760,   # limit time window (e.g. for short debug runs)
-    fixedcapsfromgdx = "../project/{group_name}/{base_case}/{base_case}.gdx",  # read fixed capacities from a previous run (path relative to run dir)
-    pathopt   = "myopic",               # keep if you use myopic/rolling runs
+    pathopt   = "myopic",              # keep if you use myopic/rolling runs
 )
 
-# Run base and any scenario overrides 
-m = Instance(index_names=False, datadir=data_dir)
+os.chdir(Path(__file__).parent.resolve())
+
+
+# ------------------------------------------------------------------------------
+# Helper functions
+# ------------------------------------------------------------------------------
+
+def run_opt_case(data_dir, result_dir, result_name):
+    """Normal optimization run"""
+    print(f"\n=== Running NORMAL optimization for case={data_dir.name} ===")
+    m = Instance(index_names=False, datadir=data_dir)
+
+    # FIX: do NOT pass resultdir twice — use run_opts.copy() and inject the directory there
+    opts = run_opts.copy()
+    opts.update(dict(resultdir=result_dir, resultfile=result_name))
+
+    rc = m.run(**opts)
+    if rc != 0:
+        print(f"\nREMix returned non-zero code {rc}")
+        raise SystemExit(rc)
+    print(f"✔ Optimization completed successfully.")
+    return result_dir / f"{result_name}.gdx"
+
+
+def run_dispatch_case(data_dir, result_dir, result_name, fixed_gdx, freeze_expansion=True):
+    """Dispatch-only run"""
+    print(f"\n=== Running DISPATCH-ONLY for case={data_dir.name} ===")
+    print(f"      Using capacities from {fixed_gdx}")
+
+    m = Instance(index_names=False, datadir=data_dir)
+
+    if freeze_expansion:
+        try:
+            nodes = list(m.set.nodesdata)
+            years = list(m.set.yearssel)
+            techs = list(m.set.converters)
+            lock = pd.DataFrame(
+                index=pd.MultiIndex.from_product([nodes, years, techs],
+                                                 names=["region","years","technology"]),
+                columns=["noExpansion"]
+            )
+            lock["noExpansion"] = 1
+            m.parameter.add(lock, "converter_capacityparam")
+            print("     Expansion frozen (noExpansion=1 for all converters)")
+        except Exception as e:
+            print(f"   ! Couldn’t apply noExpansion programmatically: {e}")
+
+    opts = run_opts.copy()
+    opts.update(dict(resultdir=result_dir, resultfile=result_name, fixedcapsfromgdx=str(fixed_gdx.as_posix())))
+
+    rc = m.run(**opts)
+    if rc != 0:
+        print(f"\nREMix returned non-zero code {rc}")
+        raise SystemExit(rc)
+    print(f"✔ Dispatch completed successfully.")
+
+
+
 t0 = time.perf_counter()
 
-for scn in scenarios:
-    label = tag(scn)
-    print(f"\n=== Running case={case_name} scenario={label} ===")
+# 1 Run base optimization
+opt_gdx = run_opt_case(base_data, base_result, f"{base_case}_opt")
 
-    run_kwargs = dict(run_args)
-    run_kwargs["resultfile"] = f"{case_name}_{label}"
-
-    # Scenario handling
-    if scn is not None:
-        scn_path = data_dir / scn
-        if not scn_path.exists():
-            raise IOError(f"Scenario folder not found: {scn_path}")
-        run_kwargs["scendir"] = str(scn)  # override only the files in data/<scenario>
-
-        # if this scenario is "low", import fixed capacities from base results
-        if scn == "low":
-            if not fixed_caps_gdx.exists():
-                raise FileNotFoundError(f"Missing fixed capacity GDX: {fixed_caps_gdx}")
-            run_kwargs["fixedcapsfromgdx"] = str(fixed_caps_gdx.as_posix())
-            print(f"   Using fixed capacities from {fixed_caps_gdx}")
-
-    # Run REMix
-    rc = m.run(**run_kwargs)
-    if rc != 0:
-        print(f"REMix returned non-zero code {rc} for scenario={label}")
+# 2 Run dispatch using capacities from base run
+run_dispatch_case(low_data, low_result, f"{low_case}_dispatch", fixed_gdx=opt_gdx)
 
 t1 = time.perf_counter()
-print(f"\nAll runs finished in {time.strftime('%Hh %Mm %Ss', time.gmtime(t1 - t0))}")
-print("Results written to:", results_dir)
+print(f"\n✔ All runs completed successfully.")
+print(f"Total runtime: {time.strftime('%Hh %Mm %Ss', time.gmtime(t1 - t0))}")
+print("Results written to:")
+print(f"   Base case : {base_result}")
+print(f"   Low case  : {low_result}")
+
+
 
 # ---- Notes -------------------------------------------------------------------
-# - Put only modified files under: ../project/{group_name}/{case_name}/data/<scenario>/
+# - Put only modified files under: ../project/{group_name}/{case_name}/data/<scenario>/ 
 # - REMix loads base files from data/ and overrides with any file found in data/<scenario>/.
-# - Keep keep=1 & lo=4 to retain exported CSVs and a detailed .log for debugging.
 
 # #### Explanation for command line arguments to GAMS function call
 # `lo=3` : log option of GAMS; ensures that the output from GAMS will be visible in the terminal (`lo=4`
@@ -106,17 +139,8 @@ print("Results written to:", results_dir)
 # `roundts` : instruction to automatically round after-comma digits in large time series files where necessary to successfully read them in; REMix default: 0
 # `keep` : keeps temporary folder with `*.csv` files built during the model run, might be interesting for debugging purposes; REMix default: 0
 
-
-#solver arguments
+# solver arguments
 # `crossover` : Run the optimization with crossover (1) or without crossover (0, default)
 # `datacheck` : will make CPLEX give out warnings about disproportionate values (which lead to numerical difficulties = non-optimal solutions) at the beginning of the optimization, default 0
-#`iis` : *.gdx file with all infeasible equations (if any), default 0
-#`names` : Write out actual variable names into *.lst file in case of error, default 0
-#`barcolnz` : .Number of non-zero entries above which CPLEX solver will treat columns as dense, default 0 (which means parameter is determined dynamically)
 
-
-# #### If the model is infeasible or a run crashes
-# If you build a model on your own, it can always happen that it gets infeasible or the execution stops out of
-# some other reason. In that case, you can refer to the `run_remix.lst` file and look for the error marker `****`.
-# You can open that file in an editor and look for the error message.
-# Alternatively, you can also use the commandline tool grep to search for the pattern "**** Exec Error"  in the file to see what is wrong.
+# `barcolnz` : Number of non-zero entries above which CPLEX solver will treat columns as dense, default 0 (which means parameter is determined dynamically)

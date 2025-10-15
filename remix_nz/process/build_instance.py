@@ -31,7 +31,7 @@ dlr=["h2-domestic"]
 europe=["h2-lut-domestic", "h2-lut-exports", "h2-lut-exports-v2", "h2-pypsa","h2-pypsa-exports-domestic", "h2-pypsa-exports-20","h2-pypsa-exports-40","h2-pypsa-exports-200"]
 paper2=["no-h2"]
 madison=["base_input"]
-hadi=["pypsa-low", "pypsa-af", "pypsa-1y"]
+hadi=["pypsa", "pypsa-af", "pypsa-1y"]
 
 scenario_dict = {       
     "will": [will_h2, [2020, 2030, 2050]],
@@ -58,7 +58,7 @@ path_brownfield = f"{path_input}/brownfield"  # info hydro and existing power pl
 demand_file=files_lst[indx] 
 case_name=f"{demand_file}_{yrs_str}"
 # FIXME: modify 
-case_name=f"pypsa-low"#"separate-demand"
+case_name=f"pypsa"#"separate-demand"
 data_dir = Path(f"../project/{group_name}/{case_name}/data")
 data_dir.mkdir(parents=True, exist_ok=True)
 results_dir = Path(f"../project/{group_name}/{case_name}/result")
@@ -225,7 +225,7 @@ def add_demand(m):
     file_paths = {
         "Elec": f"C:/Local/REMix/remix_nz/input/demand/{group_name}/{case_name}.csv", #"../input/demand/dlr/separate-elec.csv",
         "H2": f"C:/Local/REMix/remix_nz/input/demand/{group_name}/{case_name}-h2.csv",
-        "HydroInflow": f"C:/Local/REMix/remix_nz/input/demand/{group_name}/separate-inflows-zeros.csv", #"../input/demand/dlr/separate-inflows.csv",
+        "HydroInflow": f"C:/Local/REMix/remix_nz/input/demand/{group_name}/separate-inflows.csv", #"../input/demand/dlr/separate-inflows.csv",
     }
 
     # Commodity renaming rules
