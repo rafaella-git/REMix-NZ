@@ -31,7 +31,7 @@ dlr=["h2-domestic"]
 europe=["h2-lut-domestic", "h2-lut-exports", "h2-lut-exports-v2", "h2-pypsa","h2-pypsa-exports-domestic", "h2-pypsa-exports-20","h2-pypsa-exports-40","h2-pypsa-exports-200"]
 paper2=["no-h2"]
 madison=["base_input"]
-hadi=["pypsa", "pypsa-af", "pypsa-1y"]
+hadi=["pypsa-low", "pypsa-af", "pypsa-1y"]
 
 scenario_dict = {       
     "will": [will_h2, [2020, 2030, 2050]],
@@ -58,7 +58,7 @@ path_brownfield = f"{path_input}/brownfield"  # info hydro and existing power pl
 demand_file=files_lst[indx] 
 case_name=f"{demand_file}_{yrs_str}"
 # FIXME: modify 
-case_name=f"pypsa"#"separate-demand"
+case_name=f"pypsa-low"
 data_dir = Path(f"../project/{group_name}/{case_name}/data")
 data_dir.mkdir(parents=True, exist_ok=True)
 results_dir = Path(f"../project/{group_name}/{case_name}/result")
@@ -220,15 +220,23 @@ def add_demandsep(m, file_path, fuel_type, rename_commodity, slack=False, slack_
     m["Base"].set.add(list(ts_fuel.index.get_level_values(1)), "years")
 
 def add_demand(m):
+    """
+    Add demand and inflow profiles to the REMix model.
 
-    # Mapping of fuel types to their CSV file paths
+    Electricity and hydrogen are treated as energy demands (sinks),
+    while hydropower inflows are treated as a physical source (Water_in).
+    Inflows are currently provided as negative values in the CSV,
+    so they are multiplied by -1 to become positive in the model.
+    """
+
+    # File paths for input time series (hourly data in GWh)
     file_paths = {
-        "Elec": f"C:/Local/REMix/remix_nz/input/demand/{group_name}/{case_name}.csv", #"../input/demand/dlr/separate-elec.csv",
+        "Elec": f"C:/Local/REMix/remix_nz/input/demand/{group_name}/{case_name}.csv",
         "H2": f"C:/Local/REMix/remix_nz/input/demand/{group_name}/{case_name}-h2.csv",
-        "HydroInflow": f"C:/Local/REMix/remix_nz/input/demand/{group_name}/separate-inflows.csv", #"../input/demand/dlr/separate-inflows.csv",
+        "Water_in": f"C:/Local/REMix/remix_nz/input/demand/{group_name}/separate-inflows.csv",
     }
 
-    # Commodity renaming rules
+    # Commodity renaming rules for consistency across inputs
     rename_commodity = {
         "Electricity": "Elec",
         "Hydrogen": "H2",
@@ -240,73 +248,89 @@ def add_demand(m):
         "Renewable Fuels": "REfuel",
     }
 
-    # Slack settings for specific commodities
+    # Slack configuration for different commodities
+    # Slack allows unmet demand or excess supply with an associated cost.
+    # Hydropower inflows (Water_in) are fixed and do not use slack.
     slack_settings = {
         "Elec": {"enabled": True, "cost": 10},
         "H2": {"enabled": True, "cost": 10},
-        "HydroInflow": {"enabled": False, "cost": 0}
+        "Water_in": {"enabled": False, "cost": 0},
     }
 
-    # Iterate through the commodities and process each
+    # Process each commodity type
     for commodity_type, file_path in file_paths.items():
-        print(f"Processing demand for {commodity_type}...")
+        print(f"Processing demand or inflow for {commodity_type}...")
 
-        # Load and process the commodity input profile data
-        ts_commodity = -1 * pd.read_csv(file_path, index_col=[0, 1, 2, 3]).rename(index=rename_commodity)
+        # Load time series from CSV
+        # The index must contain (node, year, sector, commodity)
+        ts_commodity = pd.read_csv(file_path, index_col=[0, 1, 2, 3]).rename(index=rename_commodity)
+
+        # Apply sign convention:
+        # - Electricity and hydrogen demands are negative (energy withdrawn)
+        # - Hydropower inflows are read as negative in the CSV, so multiplied by -1 to become positive
+        ts_commodity *= -1
+
+        # Add an additional level "type" = "fixed" for REMix profiles
         ts_commodity["type"] = "fixed"
         ts_commodity_fixed = ts_commodity.set_index("type", append=True).round(3)
+
+        # Add time series profile to model
         m["Base"].profile.add(ts_commodity_fixed, "sourcesink_profile")
 
-        # Add configuration for fixed profile
+        # Configuration flag for fixed profiles
         ts_commodity_cfg = pd.DataFrame(index=ts_commodity.index)
         ts_commodity_cfg["usesFixedProfile"] = 1
-        ts_commodity_cfg = ts_commodity_cfg.loc[ts_commodity.select_dtypes(include="number").sum(axis=1) != 0]
 
+        # Remove entries where all values are zero
+        ts_commodity_cfg = ts_commodity_cfg.loc[
+            ts_commodity.select_dtypes(include="number").sum(axis=1) != 0
+        ]
+
+        # Add configuration to model
         m["Base"].parameter.add(ts_commodity_cfg, "sourcesink_config")
 
-        # Add slack configuration if applicable
+        # If slack is enabled, configure additional parameters
         if slack_settings[commodity_type]["enabled"]:
-            # slack_annual = ts_commodity_cfg.loc[idx[:, :, "Wholesale", commodity_type], idx[:]]
-            # slack_annual = slack_annual.rename(index={"Wholesale": "Slack"}, columns={"usesFixedProfile": "upper"})
-
+            # Define which sectors can use slack
             sectors = ["Wholesale", "Transport", "Other", "Heat"]
-            # Filter relevant rows
+
+            # Filter only relevant entries
             mask = (
-                ts_commodity_cfg.index.get_level_values(2).isin(sectors) &
-                (ts_commodity_cfg.index.get_level_values(3) == commodity_type)
+                ts_commodity_cfg.index.get_level_values(2).isin(sectors)
+                & (ts_commodity_cfg.index.get_level_values(3) == commodity_type)
             )
             slack_annual = ts_commodity_cfg.loc[mask].copy()
 
-            # Replace level 2 (sector) with "Slack"
+            # Replace the 'sector' index level with 'Slack' to create a new slack sector
             new_index = [
-                (i[0], i[1], "Slack", i[3])
-                for i in slack_annual.index
+                (i[0], i[1], "Slack", i[3]) for i in slack_annual.index
             ]
-            slack_annual.index = pd.MultiIndex.from_tuples(new_index, names=ts_commodity_cfg.index.names)
+            slack_annual.index = pd.MultiIndex.from_tuples(
+                new_index, names=ts_commodity_cfg.index.names
+            )
 
-            # Rename column
+            # Upper limit for slack flows (infinite)
             slack_annual.rename(columns={"usesFixedProfile": "upper"}, inplace=True)
-
             slack_annual["upper"] = np.inf
             m["Base"].parameter.add(slack_annual, "sourcesink_annualsum")
 
+            # Configuration for slack parameters
             slack_cfg = slack_annual.rename(columns={"upper": "usesUpperSum"}).replace(np.inf, 1)
             slack_cfg["usesLowerProfile"] = 1
             m["Base"].parameter.add(slack_cfg, "sourcesink_config")
 
+            # Cost for slack (penalty for unmet demand)
             slack_cost_df = pd.DataFrame(
-                index=pd.MultiIndex.from_product([["SlackCost"], ["global"], m["Base"].set.years, ["Slack"], [commodity_type]])
+                index=pd.MultiIndex.from_product(
+                    [["SlackCost"], ["global"], m["Base"].set.years, ["Slack"], [commodity_type]]
+                )
             )
             slack_cost_df["perFlow"] = slack_settings[commodity_type]["cost"]
             m["Base"].parameter.add(slack_cost_df, "accounting_sourcesinkflow")
-        
-        
 
-
-        # Update region and year scope
+        # Update model sets with node and year information
         m["Base"].set.add(list(ts_commodity.index.get_level_values(0)), "nodesdata")
         m["Base"].set.add(list(ts_commodity.index.get_level_values(1)), "years")
-
 
 
 
@@ -2021,11 +2045,11 @@ if __name__ == "__main__":
     #     rename_commodity=rename_commodity
     # )
 
-    # # Add demand for HydroInflow
+    # # Add demand for Water_in
     # add_demand(
     #     m=m,
     #     file_path="C:/Local/REMix/remix_nz/input/demand/dlr/separate-inflows.csv",
-    #     fuel_type="HydroInflow",
+    #     fuel_type="Water_in",
     #     rename_commodity=rename_commodity
     # )
 
