@@ -3,23 +3,14 @@
 # ## Part A: setting up the model
 
 # Import dependencies
-import os
 import time
-import json
 import numpy as np
 import pandas as pd
 from pathlib import Path
-import matplotlib.pyplot as plt
-import seaborn as sns
 from remix.framework.api.instance import Instance
-from remix.framework.tools.plots import plot_network, plot_choropleth
-import networkx as nx
-import gams.transfer as gt
 from IPython.display import display
-from datetime import datetime
 idx = pd.IndexSlice
-import glob
-from collections import defaultdict, deque
+
 
 # %% [markdown]
 # ### Define the years to run the optimisation and the demand file
@@ -36,11 +27,11 @@ yrs_to_calc = [2020, 2025, 2030, 2035, 2040, 2045, 2050]
 yrs_str = "-".join(map(str, yrs_sel))
 case_name = f"{base_scenario}_{yrs_str}"
 
-# optional sub-scenarios that tweak selected data
+# (optional) sub-scenarios
 sub_scenarios = {
-    "wind+": "modify_wind_prices",
-    #"H2-low-eff": "modify_electrolyser_efficiency",
-    "dry-year": "modify_inflow_profile",
+#     "wind+": "modify_wind_prices",
+#     #"H2-low-eff": "modify_electrolyser_efficiency",
+#     "dry-year": "modify_inflow_profile",
 }
 
 # input and output paths
@@ -108,16 +99,16 @@ def add_demand(m):
     so they are multiplied by -1 to become positive in the model.
     """
     # conditional hydro inflow (hydro scheme or without cascade)
-    if "cascade" in scenario.lower():
+    if "cascade" in base_scenario.lower():
         inflow_file = f"{path_input}/brownfield/hydro/inflows_remix-nz/regional-hydro-inflow.csv"
     else:
         inflow_file = f"{path_input}/brownfield/hydro/inflows_remix-nz/inflow_2012-to-2020_2014-to-2030.csv"
 
     # File paths for input time series (hourly data in GWh)
     file_paths = {
-        "Elec": f"{path_demand}/{case_name}.csv",
-        "H2": f"{path_demand}/{case_name}-h2.csv",
-        "HydroInflow": f"{inflow_file}",
+        "Elec":  str(path_demand / f"{base_scenario}.csv"),
+        "H2": str(path_demand / f"{base_scenario}-h2.csv"),
+        "HydroInflow": str(inflow_file),
     }
 
     # Commodity renaming rules for consistency across inputs
@@ -245,11 +236,6 @@ def load_feedin_csv(year, aggregate=False, norm=True):
         )
         ts = ts.stack(["year", "t_model"])
 
-    # TODO: Add solar multiple to endask / or model solar field and heat receiver separately
-    # FIXME: Remove dirty hack
-    # C: COMMENTED BECAUSE THERE IS NO CSP YET
-    #ts.loc[idx[:, ["csp_parabolic_trough"], :, :]] = ts.loc[idx[:, ["csp_parabolic_trough"], :, :]] * 1.6
-    #ts.loc[idx[:, ["csp_solar_tower"], :, :]] = ts.loc[idx[:, ["csp_solar_tower"], :, :]] * 2.25
     ts[ts > 1] = 1
     return ts.round(3)
 
@@ -349,7 +335,7 @@ def add_renewables(m):
         )
     )
     re_coef.loc[idx[wind_techs + pv_techs, :, "Powergen", "Elec"], "coefficient"] = 1
-    re_coef.loc[idx[csp_techs, :, "Heatgen", "Heat_CSP"], "coefficient"] = 1
+    re_coef = re_coef.replace(0, np.nan).dropna(how="all")
     m["Base"].parameter.add(re_coef, "converter_coefficient")
 
     re_acc = pd.DataFrame(
@@ -390,7 +376,7 @@ def add_renewables(m):
     )
     re_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.02 # 2% fixed O&M
 
-
+    re_acc = re_acc.replace(0, np.nan).dropna(how="all")
     m["Base"].parameter.add(re_acc, "accounting_converterunits")  
 
 def add_geothermal(m):
@@ -485,15 +471,9 @@ def add_geothermal(m):
         index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], ["horizon"],  geoth_techs, geoth_vintage])
     ).sort_index()
 
-    # TODO: Update costs for renewable technologies
-    # CSP own assumptions based on: https://aip.scitation.org/doi/pdf/10.1063/5.0028883, https://elib.dlr.de/186998/1/SolarPACES_2021_Paper_Dersch_R1.pdf
-    #re_acc.loc[idx["Invest", :, "horizon", "csp_parabolic_trough", :], "perUnitBuild"] = [344.5, 274.7, 230.2, 196.0]  # Child 2019 - Mio EUR per unit
-    #re_acc.loc[idx["Invest", :, "horizon", "csp_solar_tower", :], "perUnitBuild"] = [482, 372, 310, 264]  # Mio EUR per unit
 
     geoth_acc.loc[idx["Invest",["global"], ["horizon"],  :, :], "perUnitBuild"] = 4970   #, 3610]   # data from: "Financial_Technical assumptions" Ashish 2023   - Mio EUR per unit
-
     geoth_acc.loc[idx["Invest",["global"], ["horizon"],  :, :], "amorTime"] = 100  # years
-
     geoth_acc.loc[idx["Invest",["global"], ["horizon"],  :, :], "useAnnuity"] = 1  # binary yes/no
     geoth_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "interest"] = 0.06  # percent/100
     # geoth_acc.loc[idx["OMFix", ["global"], ["horizon"],  :, :], "perUnitTotal"] = (
@@ -618,20 +598,13 @@ def add_hydro(m):
     m["Base"].parameter.add(stor_acc, "accounting_storageunits")
 
 def add_hydro_scheme(m):
+    """
+    Build detailed hydropower cascade for New Zealand.
+    Flow structure: inflow (*_in) -> [reservoir if present] -> turbine -> next *_in -> ... -> Water_out.
+    Includes lake storage, per-plant capacities, and turbine-specific coefficients.
+    """
 
-    # Flow (per scheme):
-    #   exogenous inflow ( * _in ) --> [Reservoir if present] --> Turbine (Power_gen or Spill)
-    #     --> downstream inflow commodity ( * _in ) --> ... --> Water_out (Ocean sink)
-
-    # Design choices:
-    #   - Turbine tech names exactly match JADE/CSV (e.g., Tekapo_A, Benmore, Karapiro).
-    #   - Water commodities are the JADE inflow names (Tekapo_in, Benmore_in, ...).
-    #   - Every spill also routes to the defined downstream commodity (no dead-end spill).
-    #   - Reservoir energy (GWh) is computed from JADE volumes (Mm³) using the *downstream*
-    #     turbine’s specific power (MW per cumec). Initial level is set as a fraction.
-    #   - No expansion allowed (turbines & reservoirs).
-
-    #  years / nodes
+    # years nodes
     try:
         years = list(m["Base"].set.yearssel)
         if not years:
@@ -640,50 +613,46 @@ def add_hydro_scheme(m):
         years = [2000]
     y0 = years[0]
 
-    # ---- turbines: (inflow(s)) -> tech -> outflow -----------------------------
-    # Columns: inflow_list, tech, outflow, scheme, region, cap_MW, sp_MW_per_cumec, spill_max_m3s
     turbines = pd.DataFrame([
         # Waitaki (CAN)
-        ("Tekapo_in",           "Tekapo_A",     "Tekapo_A_out",   "Waitaki", "CAN",  27, 0.2322,  600),
-        ("Tekapo_A_out",        "Tekapo_B",     "Pukaki_in",      "Waitaki", "CAN", 154, 1.2847,  None),
-        ("Pukaki_in, Ohau_in",  "Ohau_A",       "Ohau_A_out",     "Waitaki", "CAN", 264, 0.5005,  0),
-        ("Ohau_A_out",          "Ohau_B",       "Ohau_BC_canal",  "Waitaki", "CAN", 212, 0.4167,  560),
-        ("Ohau_BC_canal",       "Ohau_C",       "Benmore_in",     "Waitaki", "CAN", 212, 0.4167,  None),
-        ("Benmore_in",          "Benmore",      "Aviemore_in",    "Waitaki", "CAN", 540, 0.8177,  3400),
-        ("Aviemore_in",         "Aviemore",     "Waitaki_in",     "Waitaki", "CAN", 220, 0.3101,  5400),
-        ("Waitaki_in",          "Waitaki",      "Water_out",      "Waitaki", "CAN", 105, 0.1622,  5380),
+        ("Tekapo_in",           "Tekapo_A",     "Tekapo_A_out",   "Waitaki", "CAN",  27, 0.2322),
+        ("Tekapo_A_out",        "Tekapo_B",     "Pukaki_in",      "Waitaki", "CAN", 154, 1.2847),
+        ("Pukaki_in, Ohau_in",  "Ohau_A",       "Ohau_A_out",     "Waitaki", "CAN", 264, 0.5005),
+        ("Ohau_A_out",          "Ohau_B",       "Ohau_BC_canal",  "Waitaki", "CAN", 212, 0.4167),
+        ("Ohau_BC_canal",       "Ohau_C",       "Benmore_in",     "Waitaki", "CAN", 212, 0.4167),
+        ("Benmore_in",          "Benmore",      "Aviemore_in",    "Waitaki", "CAN", 540, 0.8177),
+        ("Aviemore_in",         "Aviemore",     "Waitaki_in",     "Waitaki", "CAN", 220, 0.3101),
+        ("Waitaki_in",          "Waitaki",      "Water_out",      "Waitaki", "CAN", 105, 0.1622),
 
         # Waikato (WTO)
-        ("Aratiatia_in",        "Aratiatia",    "Ohakuri_in",     "Waikato", "WTO",  78, 0.2841,  None),
-        ("Ohakuri_in",          "Ohakuri",      "Atiamuri_in",    "Waikato", "WTO", 112, 0.2841,  None),
-        ("Atiamuri_in",         "Atiamuri",     "Whakamaru_in",   "Waikato", "WTO",  84, 0.1957,  None),
-        ("Whakamaru_in",        "Whakamaru",    "Maraetai_in",    "Waikato", "WTO", 124, 0.3165,  None),
-        ("Maraetai_in",         "Maraetai",     "Waipapa_in",     "Waikato", "WTO", 352, 0.5263,  None),
-        ("Waipapa_in",          "Waipapa",      "Arapuni_in",     "Waikato", "WTO",  54, 0.1385,  None),
-        ("Arapuni_in",          "Arapuni",      "Karapiro_in",    "Waikato", "WTO", 192, 0.4619,  None),
-        ("Karapiro_in",         "Karapiro",     "Water_out",      "Waikato", "WTO",  96, 0.2639,  None),
+        ("Aratiatia_in",        "Aratiatia",    "Ohakuri_in",     "Waikato", "WTO",  78, 0.2841),
+        ("Ohakuri_in",          "Ohakuri",      "Atiamuri_in",    "Waikato", "WTO", 112, 0.2841),
+        ("Atiamuri_in",         "Atiamuri",     "Whakamaru_in",   "Waikato", "WTO",  84, 0.1957),
+        ("Whakamaru_in",        "Whakamaru",    "Maraetai_in",    "Waikato", "WTO", 124, 0.3165),
+        ("Maraetai_in",         "Maraetai",     "Waipapa_in",     "Waikato", "WTO", 352, 0.5263),
+        ("Waipapa_in",          "Waipapa",      "Arapuni_in",     "Waikato", "WTO",  54, 0.1385),
+        ("Arapuni_in",          "Arapuni",      "Karapiro_in",    "Waikato", "WTO", 192, 0.4619),
+        ("Karapiro_in",         "Karapiro",     "Water_out",      "Waikato", "WTO",  96, 0.2639),
 
         # Clutha (OTG)
-        ("Dunstan_in",          "Clyde_220kV",  "Roxburgh_in",    "Clutha",  "OTG", 464, 0.5181,  4140),
-        ("Roxburgh_in",         "Roxburgh",     "Water_out",      "Clutha",  "OTG", 320, 0.4016,  6000),
+        ("Dunstan_in",          "Clyde_220kV",  "Roxburgh_in",    "Clutha",  "OTG", 464, 0.5181),
+        ("Roxburgh_in",         "Roxburgh",     "Water_out",      "Clutha",  "OTG", 320, 0.4016),
 
         # Manapouri (OTG)
-        ("Manapouri_in",        "Manapouri",    "Water_out",      "Manapouri","OTG", 842, 1.5314, None),
+        ("Manapouri_in",        "Manapouri",    "Water_out",      "Manapouri","OTG", 842, 1.5314),
 
         # Waikaremoana (HBY)
-        ("Waikaremoana_in",     "Waikaremoana", "Water_out",      "Waikaremoana","HBY", 140, 3.535, 44),
+        ("Waikaremoana_in",     "Waikaremoana", "Water_out",      "Waikaremoana","HBY", 140, 3.535),
 
         # Singles (CEN, CAN, NEL)
-        ("Rangipo_in",          "Rangipo",      "Water_out",      "Rangipo",   "CEN", 120, 1.96,   None),
-        ("Tokaanu_in",          "Tokaanu",      "Water_out",      "Tokaanu",   "CEN", 240, 1.75,   None),
-        ("Matahina_in",         "Matahina",     "Water_out",      "Matahina",  "CEN",  80, 0.595,  None),
-        ("Mangahao_in",         "Mangahao",     "Water_out",      "Mangahao",  "CEN",  37, 2.53,   None),
-        ("Coleridge_in",        "Coleridge",    "Water_out",      "Coleridge", "CAN",  39, 1.009,  None),
-        ("Cobb_in",             "Cobb",         "Water_out",      "Cobb",      "NEL",  32, 4.405,  None),
-    ], columns=["inflow_list","tech","outflow","scheme","region","cap_MW","sp_MW_per_cumec","spill_max_m3s"])
+        ("Rangipo_in",          "Rangipo",      "Water_out",      "Rangipo",   "CEN", 120, 1.96),
+        ("Tokaanu_in",          "Tokaanu",      "Water_out",      "Tokaanu",   "CEN", 240, 1.75),
+        ("Matahina_in",         "Matahina",     "Water_out",      "Matahina",  "CEN",  80, 0.595),
+        ("Mangahao_in",         "Mangahao",     "Water_out",      "Mangahao",  "CEN",  37, 2.53),
+        ("Coleridge_in",        "Coleridge",    "Water_out",      "Coleridge", "CAN",  39, 1.009),
+        ("Cobb_in",             "Cobb",         "Water_out",      "Cobb",      "NEL",  32, 4.405),
+    ], columns=["inflow_list","tech","outflow","scheme","region","cap_MW","sp_MW_per_cumec"])
 
-    # ---- reservoirs: store the *_in commodity above them ----------------------
-    # Columns: reservoir, stores_commodity, region, Ini_Storage_Mm3, Max_Level_Mm3
     reservoirs = pd.DataFrame([
         ("Lake_Tekapo",               "Tekapo_in",        "CAN",  508.797,  632.40),
         ("Lake_Pukaki",               "Pukaki_in",        "CAN", 2250.192, 2425.45),
@@ -694,21 +663,16 @@ def add_hydro_scheme(m):
         ("Lake_Waikaremoana",         "Waikaremoana_in",  "HBY",  120.969,  157.10),
     ], columns=["reservoir","stores_commodity","region","Ini_Storage_Mm3","Max_Level_Mm3"])
 
-    # All nodes touched by scheme
     nodes = sorted(turbines["region"].unique())
-    # make sure they are present in nodesdata set
     m["Base"].set.add(list(set(m["Base"].set.nodesdata) | set(nodes)), "nodesdata")
 
-    # ---- helper: convert Mm3 to GWh using downstream turbine Specific Power ---------------
-    # We need: (MW / cumec) * (cumec-hours) / 1000 = GWh
-    # 1 m³ = 1/3600 cumec-hour  -> (Mm3 * 1e6) / 3600 = cumec-hours
+    #helper: convert volume to GWh
     def mm3_to_gwh(volume_mm3, sp_mw_per_cumec):
         if volume_mm3 is None or sp_mw_per_cumec is None or np.isnan(sp_mw_per_cumec):
             return 0.0
-        cumec_hours = (volume_mm3 * 1e6) / 3600.0
-        return (sp_mw_per_cumec * cumec_hours) / 1000.0  # -> GWh
+        return (sp_mw_per_cumec * (volume_mm3 * 1e6 / 3600.0)) / 1000.0
 
-    # map commodity -> downstream specific power (from first turbine that consumes it)
+    #map Specific Power (SP) downstream
     sp_downstream = {}
     for _, r in turbines.iterrows():
         for c in [s.strip() for s in r["inflow_list"].split(",") if s.strip()]:
@@ -716,98 +680,105 @@ def add_hydro_scheme(m):
 
     reservoirs["E_max_GWh"]  = reservoirs.apply(lambda r: mm3_to_gwh(r["Max_Level_Mm3"],  sp_downstream.get(r["stores_commodity"], np.nan)), axis=1)
     reservoirs["E_init_GWh"] = reservoirs.apply(lambda r: mm3_to_gwh(r["Ini_Storage_Mm3"], sp_downstream.get(r["stores_commodity"], np.nan)), axis=1)
-    reservoirs["InitFrac"] = ((reservoirs["E_init_GWh"] / reservoirs["E_max_GWh"]).replace([np.inf, -np.inf], 0).fillna(0))
+    reservoirs["InitFrac"] = (reservoirs["E_init_GWh"] / reservoirs["E_max_GWh"]).fillna(0).clip(0,1)
 
-    # ---- converter_techparam (per-turbine) -----------------------------------
+    # converter techs
     hydro_vintage = [1950]
-    hydro_activities = ["Power_gen", "Spill"]
+    hydro_eff = 1 # this can be calibrated if needed
+    hydro_acts = ["Power_gen", "Spill", "Power_gen_b"]
     techs = turbines["tech"].tolist()
 
     conv_tech = pd.DataFrame(index=pd.MultiIndex.from_product([techs, hydro_vintage]))
-    conv_tech.loc[idx[:, :], "lifeTime"] = 100
-    conv_tech.loc[idx[:, :], "activityUpperLimit"] = 1
+    conv_tech["lifeTime"] = 100
+    conv_tech["activityUpperLimit"] = 1
     m["Base"].parameter.add(conv_tech, "converter_techparam")
 
-    # ---- converter_capacityparam (fixed GW, no expansion) ---------------------
+    # capacities
     cap = pd.DataFrame(index=pd.MultiIndex.from_product([nodes, years, techs]))
     for _, r in turbines.iterrows():
-        cap.loc[(r["region"], y0, r["tech"]), "unitsBuild"] = r["cap_MW"] / 1000.0  # GW
-    cap.loc[idx[:, :, :], "noExpansion"] = 1
-    cap.loc[idx[:, :, :], "unitsUpperLimit"] = 100  # harmless upper cap
+        cap.loc[(r["region"], y0, r["tech"]), "unitsBuild"] = r["cap_MW"] / 1000 # to make it GW
+    cap["noExpansion"] = 1 # true
+    cap["unitsUpperLimit"] = 100
     m["Base"].parameter.add(cap, "converter_capacityparam")
 
-    # ---- converter_coefficient (cascade + routed spill) -----------------------
-    # Collect all water commodities that appear anywhere (inflows and outflows) + Elec
+    # coefficients 
     all_inflows = set()
     for s in turbines["inflow_list"]:
         all_inflows |= {x.strip() for x in s.split(",") if x.strip()}
     all_outflows = set(turbines["outflow"].tolist())
-    commodities = sorted(list(all_inflows | all_outflows | {"Elec"}))
+    comms = sorted(all_inflows | all_outflows | {"Elec"})
 
-    hydro_eff = 0.95
-    conv_coef = pd.DataFrame(
-        index=pd.MultiIndex.from_product([techs, hydro_vintage, hydro_activities, commodities])
-    )
+    coef = pd.DataFrame(index=pd.MultiIndex.from_product([techs, hydro_vintage, hydro_acts, comms]))
+    coef["coefficient"] = 0.0
+    coef = coef.sort_index()  
 
-    # default zero; then fill explicit entries
-    conv_coef["coefficient"] = 0.0
 
     for _, r in turbines.iterrows():
-        inflows = [c.strip() for c in r["inflow_list"].split(",") if c.strip()]
-        # Power generation: +Elec, -inflows, +outflow (all with hydro_eff on the water leg)
-        conv_coef.loc[(r["tech"], 1950, "Power_gen", "Elec"), "coefficient"] = 1.0
+        inflows = [x.strip() for x in r["inflow_list"].split(",") if x.strip()]
+
+        # normal Power_gen activity
+        if r["tech"] != "Ohau_A":
+            coef.loc[(r["tech"], 1950, "Power_gen", "Elec"), "coefficient"] = 1
+            for c_in in inflows:
+                coef.loc[(r["tech"], 1950, "Power_gen", c_in), "coefficient"] = -hydro_eff
+            coef.loc[(r["tech"], 1950, "Power_gen", r["outflow"]), "coefficient"] = hydro_eff
+
+        # special case Ohau_A: split into Power_gen and Power_gen_b
+        else:
+            # one activity per inflow
+            for c_in in inflows:
+                if c_in == "Pukaki_in":
+                    act = "Power_gen"
+                elif c_in == "Ohau_in":
+                    act = "Power_gen_b"
+                else:
+                    act = "Power_gen"
+                coef.loc[(r["tech"], 1950, act, "Elec"), "coefficient"] = 1
+                coef.loc[(r["tech"], 1950, act, c_in), "coefficient"] = -hydro_eff
+                coef.loc[(r["tech"], 1950, act, r["outflow"]), "coefficient"] = hydro_eff
+
+        # spill (applies to all inflows)
         for c_in in inflows:
-            conv_coef.loc[(r["tech"], 1950, "Power_gen", c_in), "coefficient"] = -hydro_eff
-        conv_coef.loc[(r["tech"], 1950, "Power_gen", r["outflow"]), "coefficient"] = hydro_eff
+            coef.loc[(r["tech"], 1950, "Spill", c_in), "coefficient"] = -1
+        coef.loc[(r["tech"], 1950, "Spill", r["outflow"]), "coefficient"] = 1
 
-        # Spill: water still moves downstream commodity (unit water)
-        for c_in in inflows:
-            conv_coef.loc[(r["tech"], 1950, "Spill", c_in), "coefficient"] = -1.0
-        conv_coef.loc[(r["tech"], 1950, "Spill", r["outflow"]), "coefficient"] = 1.0
+    # drop zero entries before writing
+    coef = coef[coef["coefficient"] != 0]
+    m["Base"].parameter.add(coef, "converter_coefficient")
 
-    m["Base"].parameter.add(conv_coef, "converter_coefficient")
-
-    # ---- storage_* tables (reservoirs store *_in commodity) ------------
+    # reservoirs as storage
     stor_techs = [f"Stor_{r}" for r in reservoirs["reservoir"]]
     stor_tech = pd.DataFrame(index=pd.MultiIndex.from_product([stor_techs, hydro_vintage]))
-    stor_tech.loc[idx[:, :], "lifeTime"] = 100
-    stor_tech.loc[idx[:, :], "levelUpperLimit"] = 1.0
-    stor_tech.loc[idx[:, :], "levelLowerLimit"] = 0.0
+    stor_tech = stor_tech.sort_index()
+    stor_tech["lifeTime"] = 100
+    stor_tech["levelUpperLimit"] = 1
     m["Base"].parameter.add(stor_tech, "storage_techparam")
 
-    size_idx = []
-    for _, r in reservoirs.iterrows():
-        size_idx.append((f"Stor_{r['reservoir']}", 1950, r["stores_commodity"]))
-    stor_size = pd.DataFrame(index=pd.MultiIndex.from_tuples(size_idx, names=["techs","years","commodities"]))
-    stor_size["size"] = 1.0
-    stor_size["selfdischarge"] = 0.0
+    stor_size_idx = [(f"Stor_{r.reservoir}", 1950, r.stores_commodity) for _, r in reservoirs.iterrows()]
+    stor_size = pd.DataFrame(index=pd.MultiIndex.from_tuples(stor_size_idx, names=["techs","years","commodities"]))
+    stor_size["size"] = 1
+    stor_size["selfdischarge"] = 0
     m["Base"].parameter.add(stor_size, "storage_sizeparam")
 
     stor_units = pd.DataFrame(index=pd.MultiIndex.from_product([nodes, years, stor_techs]))
     for _, r in reservoirs.iterrows():
-        tech_name = f"Stor_{r['reservoir']}"
-        stor_units.loc[(r["region"], y0, tech_name), "unitsBuild"]   = float(r["E_max_GWh"])
-        stor_units.loc[(r["region"], y0, tech_name), "initialLevel"] = float(r["InitFrac"])
-    stor_units.loc[idx[:, :, :], "noExpansion"] = 1
+        tech = f"Stor_{r.reservoir}"
+        stor_units.loc[(r.region, y0, tech), "unitsBuild"] = r.E_max_GWh
+        stor_units.loc[(r.region, y0, tech), "initialLevel"] = r.InitFrac
+    stor_units["noExpansion"] = 1
     m["Base"].parameter.add(stor_units, "storage_reservoirparam")
 
-    # ---- ocean sink -----------------------------
-    ocean_cfg = pd.DataFrame(
-        index=pd.MultiIndex.from_product([nodes, years, ["Ocean"], ["Water_out"]])
-    )
+    # ocean sink
+    ocean_cfg = pd.DataFrame(index=pd.MultiIndex.from_product([nodes, years, ["Ocean"], ["Water_out"]]))
     ocean_cfg["usesUpperProfile"] = 1
     m["Base"].parameter.add(ocean_cfg, "sourcesink_config")
 
-    # ---- prints --------------------------------------
+    # prints
     print("\nHydro scheme loaded.")
     print(f"  Turbines: {len(techs)} | Reservoirs: {len(reservoirs)} | Regions: {', '.join(nodes)}")
     print("  Reservoir energy [GWh] (init %):")
     for _, r in reservoirs.iterrows():
-        emx = float(r["E_max_GWh"])
-        init_pct = 100.0 * float(r["InitFrac"]) if emx > 0 else 0.0
-        print(f"   - {r['reservoir']:<26s} {emx:6.1f} GWh  (init {init_pct:5.1f}%)")
-
-
+        print(f"   - {r.reservoir:<26s} {r.E_max_GWh:6.1f} GWh  (init {100*r.InitFrac:5.1f}%)")
 
 # conventional
 
@@ -2063,4 +2034,4 @@ if __name__ == "__main__":
     # print(f"Scenario 'H2-cheaper' completed in {time.time() - start_scn:.1f} seconds.\n")
 
     total_time = time.time() - start_base
-    print(f"All scenarios finished in {total_time/60:.1f} minutes total.")
+    print(f"All scenarios built in {total_time/60:.1f} minutes total.")
