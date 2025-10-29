@@ -16,8 +16,10 @@ from remix.framework.api.instance import Instance
 # Alternatively, you can also use the commandline tool grep to search for the pattern "**** Exec Error"  in the file to see what is wrong.
 
 group_name = "hadi"
-base_case  = "pypsa"       # base case folder under ../project/{group_name}/{base_case}/data
-low_case   = "pypsa-low"   # second case folder for dispatch run
+base_case  = "pypsa-cascade"       # base case folder under ../project/{group_name}/{base_case}/data
+low_case   = ""#"pypsa-low"   # second case folder for dispatch run
+RUN_DISPATCH = False  # set True if you also want the dispatch step
+
 
 # --- Folder setup -------------------------------------------------------------
 base_dir = Path(f"../project/{group_name}/{base_case}")
@@ -33,7 +35,8 @@ low_result.mkdir(parents=True, exist_ok=True)
 
 # shared run options
 run_opts = dict(
-    solver    = "gurobi", #"cplex",
+    solver    = "cplex", #"gurobi", #"cplex", #"gurobi", #"cplex",
+    datacheck = 1,                     # `datacheck` : will make CPLEX give out warnings about disproportionate values
     threads   = 8,
     keep      = 1,                     # keep scratch folder “/225a” with exported .csvs for debugging
     lo        = 4,                     # write a .log file next to the .lst
@@ -108,7 +111,8 @@ t0 = time.perf_counter()
 opt_gdx = run_opt_case(base_data, base_result, f"{base_case}_opt")
 
 # 2 Run dispatch using capacities from base run
-run_dispatch_case(low_data, low_result, f"{low_case}_dispatch", fixed_gdx=opt_gdx)
+if RUN_DISPATCH:
+    run_dispatch_case(low_data, low_result, f"{low_case}_dispatch", fixed_gdx=opt_gdx)
 
 t1 = time.perf_counter()
 print(f"\n✔ All runs completed successfully.")
