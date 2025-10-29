@@ -188,3 +188,5 @@ framework-v10/
 *.zip
 remixplot-dev/ 
 demand-paper/ 
+JADE_hydro/
+data-for-paper/

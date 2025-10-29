@@ -1,0 +1,15 @@
+,,,,,perUnitBuild,perUnitDecom,perUnitTotal,useAnnuity,amorTime,interest
+Invest,global,horizon,Battery,2020,936,,,1,20,0.06
+Invest,global,horizon,Battery,2030,440,,,1,20,0.06
+Invest,global,horizon,Battery,2040,304,,,1,20,0.06
+Invest,global,horizon,Battery,2050,244,,,1,20,0.06
+Invest,global,horizon,H2_storage,2020,131.9,,,1,40,0.06
+Invest,global,horizon,H2_storage,2035,131.9,,,1,40,0.06
+Invest,global,horizon,H2_storage,2050,131.9,,,1,40,0.06
+OMFix,global,horizon,Battery,2020,,,13.1,,,
+OMFix,global,horizon,Battery,2030,,,6.16,,,
+OMFix,global,horizon,Battery,2040,,,4.256,,,
+OMFix,global,horizon,Battery,2050,,,3.416,,,
+OMFix,global,horizon,H2_storage,2020,,,3.957,,,
+OMFix,global,horizon,H2_storage,2035,,,3.957,,,
+OMFix,global,horizon,H2_storage,2050,,,3.957,,,

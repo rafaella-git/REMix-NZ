@@ -32,7 +32,6 @@ Invest,global,horizon,H2_FC,2050,100,,,1,35,0.06
 Invest,global,horizon,H2_storage,2020,5.14,,,1,40,0.06
 Invest,global,horizon,H2_storage,2035,5.14,,,1,40,0.06
 Invest,global,horizon,H2_storage,2050,5.14,,,1,40,0.06
-Invest,global,horizon,Hydro,1950,2560,,,1,20,0.06
 Invest,global,horizon,OCGT,1950,475,,,1,30,0.06
 Invest,global,horizon,OCGT,2030,475,,,1,30,0.06
 Invest,global,horizon,geoth,1950,4970,,,1,100,0.06
@@ -89,7 +88,6 @@ OMFix,global,horizon,H2_FC,2050,,,5,,,
 OMFix,global,horizon,H2_storage,2020,,,0.2056,,,
 OMFix,global,horizon,H2_storage,2035,,,0.2056,,,
 OMFix,global,horizon,H2_storage,2050,,,0.2056,,,
-OMFix,global,horizon,Hydro,1950,,,76.8,,,
 OMFix,global,horizon,OCGT,1950,,,9.168,,,
 OMFix,global,horizon,OCGT,2030,,,9.168,,,
 OMFix,global,horizon,geoth,1950,,,79.52,,,

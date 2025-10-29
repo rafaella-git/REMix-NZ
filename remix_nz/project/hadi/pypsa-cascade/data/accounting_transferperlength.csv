@@ -1,0 +1,9 @@
+,,,,,,perLengthBuild,perLengthDecom,perLengthTotal,perFlow,perFlowAlong,perFlowAgainst,useAnnuity,amorTime,interest
+Invest,global,horizon,HV,2020,land,0.544,,0,,,,1,40,0.06
+Invest,global,horizon,HV,2020,sea,0.975,,0,,,,1,40,0.06
+Invest,global,horizon,HV,2030,land,0.544,,0,,,,1,40,0.06
+Invest,global,horizon,HV,2030,sea,0.975,,0,,,,1,40,0.06
+OMFix,global,horizon,HV,2020,land,0,,0.00544,,,,0,0,0
+OMFix,global,horizon,HV,2020,sea,0,,0.00975,,,,0,0,0
+OMFix,global,horizon,HV,2030,land,0,,0.00544,,,,0,0,0
+OMFix,global,horizon,HV,2030,sea,0,,0.00975,,,,0,0,0

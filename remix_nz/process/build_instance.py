@@ -18,54 +18,49 @@ import gams.transfer as gt
 from IPython.display import display
 from datetime import datetime
 idx = pd.IndexSlice
+import glob
+from collections import defaultdict, deque
 
 # %% [markdown]
 # ### Define the years to run the optimisation and the demand file
 # The demand file and the years run determine the name of the case and its results
 
-will_elec = ["00-test-elec","01-battery-distributed", "02-battery-overnight", "03-battery-recharging", "04-battery-solar"]
-will_h2 = ["01-h2-distributed", "02-h2-overnight", "03-h2-recharging", "04-h2-solar"]
-sdewes_ap = ["base", "high", "med", "ev-med", "low"]
-mbie=["base","h2pos", "h2"]
-dlr=["h2-domestic"]
-europe=["h2-lut-domestic", "h2-lut-exports", "h2-lut-exports-v2", "h2-pypsa","h2-pypsa-exports-domestic", "h2-pypsa-exports-20","h2-pypsa-exports-40","h2-pypsa-exports-200"]
-paper2=["no-h2"]
-madison=["base_input"]
-hadi=["pypsa-low", "pypsa-af", "pypsa-1y"]
 
-scenario_dict = {       
-    "will": [will_h2, [2020, 2030, 2050]],
-    "sdewes-ap": [sdewes_ap, [2020, 2030, 2040, 2050]],
-    "mbie": [mbie, [2020, 2030, 2040, 2050]],
-    "europe": [europe, [2020, 2030,2050]],
-    "dlr": [dlr, [2020, 2030,2050]],
-    "paper2": [paper2, [2020, 2030,2050]],
-    "madison": [madison, [2020, 2030,2050]],
-    "hadi": [hadi, [2020, 2030]] 
-}
-group_name="hadi"
-files_lst = scenario_dict[group_name][0]
-yrs_sel = scenario_dict[group_name][1] # [2020, 2025, 2030, 2035, 2040, 2045, 2050]
-yrs_str='-'.join([str(item) for item in yrs_sel])
+# scenario setup
+group_name = "hadi"                     # folder under /input/demand/
+base_scenario = "pypsa-cascade"         # main scenario name (used for CSVs) #hadi=["pypsa-cascade", "pypsa", "pypsa-af", "pypsa-1y"]
+yrs_sel = [2020, 2030]                  # optimisation years
+
+
 yrs_to_calc = [2020, 2025, 2030, 2035, 2040, 2045, 2050]
-indx=0
+yrs_str = "-".join(map(str, yrs_sel))
+case_name = f"{base_scenario}_{yrs_str}"
 
-# Define paths/directories
-path_input = "C:/Local/REMix/remix_nz/input"
-path_demand = f"{path_input}/demand/{group_name}"
-path_profiles = f"{path_input}/profiles"      # renewables
-path_brownfield = f"{path_input}/brownfield"  # info hydro and existing power plants database
-demand_file=files_lst[indx] 
-case_name=f"{demand_file}_{yrs_str}"
-# FIXME: modify 
-case_name=f"pypsa-low"
-data_dir = Path(f"../project/{group_name}/{case_name}/data")
+# optional sub-scenarios that tweak selected data
+sub_scenarios = {
+    "wind+": "modify_wind_prices",
+    #"H2-low-eff": "modify_electrolyser_efficiency",
+    "dry-year": "modify_inflow_profile",
+}
+
+# input and output paths
+path_input = Path("C:/Local/REMix/remix_nz/input")
+path_demand = path_input / "demand" / group_name
+path_profiles = path_input / "profiles"
+path_brownfield = path_input / "brownfield"
+
+base_dir = Path(f"../project/{group_name}/{base_scenario}")
+data_dir = base_dir / "data"
+results_dir = base_dir / "result"
 data_dir.mkdir(parents=True, exist_ok=True)
-results_dir = Path(f"../project/{group_name}/{case_name}/result")
 results_dir.mkdir(parents=True, exist_ok=True)
 
-
-
+print(f"\n--- scenario setup complete ---")
+print(f"base: {base_scenario}")
+print(f"years: {yrs_sel}")
+print(f"data directory: {data_dir.resolve()}")
+print(f"sub-scenarios: {', '.join(sub_scenarios.keys()) if sub_scenarios else 'none'}")
+print("--- end setup ---\n")
 
 
 def add_scope(m):
@@ -103,122 +98,6 @@ def add_scope(m):
     # "set_yearsSel"
     m["Base"].set.add(yrs_sel, "yearssel")  # years to be optimised
 
-def add_demandoriginal(m):
-    rename_commodity = {"Electricity": "Elec",
-                        "Hydrogen": "H2",
-                        "H2-feedstock": "H2",
-                        "Natural Gas": "CH4",
-                        "Gas": "CH4",
-                        "Feedstock Gas": "CH4",
-                        "Feedstock methanol": "CH3OH",
-                        "Renewable Fuels": "REfuel",
-                        }
-    
-
-    # note: we added the .round(3) part because we were getting errors 
-    ts_ffe = -1 * pd.read_csv(Path(path_demand).joinpath(f"{demand_file}.csv"), index_col=[0, 1, 2, 3]).rename(index=rename_commodity)
-    ts_ffe["type"] = "fixed"
-    ts_ffe_fixed = ts_ffe.set_index("type", append=True).round(3)
-    m["Base"].profile.add(ts_ffe_fixed, "sourcesink_profile")
-
-    ts_ffe_cfg = pd.DataFrame(index=ts_ffe.index)
-    ts_ffe_cfg["usesFixedProfile"] = 1
-
-
-    m["Base"].parameter.add(ts_ffe_cfg, "sourcesink_config")
-
-    # Slack for electricity
-    # for 2020 (minus 31st dec to attain to 8760 hours in leap year): https://www.emi.ea.govt.nz/Forward%20markets/Reports/0NQPKT?DateFrom=20211008&DateTo=20221007&Maturity=SHORT&_rsdr=L364D&_si=v|3
-
-    slack_annual = ts_ffe_cfg.loc[idx[:, :, "Wholesale", "Elec"], idx[:]]
-    slack_annual = slack_annual.rename(index={"Wholesale": "Slack"}, columns={"usesFixedProfile": "upper"})
-    slack_annual["upper"] = np.inf
-    m["Base"].parameter.add(slack_annual, "sourcesink_annualsum")
-
-    slack_cfg = slack_annual
-    slack_cfg = slack_cfg.rename(columns={"upper": "usesUpperSum"}).replace(np.inf, 1)
-    slack_cfg["usesLowerProfile"] = 1
-    # display(slack_cfg)
-    m["Base"].parameter.add(slack_cfg, "sourcesink_config")
-
-    slack_cost = pd.DataFrame(
-        index=pd.MultiIndex.from_product([["SlackCost"], ["global"], m["Base"].set.years, ["Slack"], ["Elec"]])
-    )
-    slack_cost["perFlow"] = 10  # EEX Strom Futures Cap 3.000 EUR/MWh -> 3 MEUR/GWh
-    # display(slack_cost)
-    m["Base"].parameter.add(slack_cost, "accounting_sourcesinkflow")
-
-    # Efuels
-    # "sourcesink_annualSum"
-    efuels_nodes =  m["Base"].set.nodesdata
-    efuels_annual = pd.DataFrame(
-        index=pd.MultiIndex.from_product([efuels_nodes, yrs_to_calc, ["Demand"], ["H2"]])
-    )
-
-    #Adding the new column "upper" to the DataFrame and setting values for the year 2050
-    efuels_annual["upper"] = 0 # Initializing with  0
-    m["Base"].parameter.add(efuels_annual, "sourcesink_annualsum")
-
-    efuels_cfg = pd.DataFrame(
-        index=pd.MultiIndex.from_product([efuels_nodes, yrs_to_calc, ["Demand"], ["H2"]])
-    )
-    efuels_cfg["usesUpperSum"] = 1
-    efuels_cfg["usesUpperProfile"] = 1
-
-    
-   
-    # h2_cfg["usesLowerProfile"] = 1
-    m["Base"].parameter.add(efuels_cfg, "sourcesink_config")   
-
-    # Derive region and time scope
-    m["Base"].set.add(list(ts_ffe.index.get_level_values(0)), "nodesdata")
-    m["Base"].set.add(list(ts_ffe.index.get_level_values(1)), "years")
-
-
-def add_demandsep(m, file_path, fuel_type, rename_commodity, slack=False, slack_cost=10):
-    """
-    Adds demand profiles for a specific fuel type to the model.
-
-    Args:
-        m: The energy model.
-        file_path: Path to the CSV file containing demand data.
-        fuel_type: Type of fuel (e.g., 'Elec', 'H2').
-        rename_commodity: Dictionary mapping original commodity names to model names.
-        slack: Whether to add slack configuration for this fuel type.
-        slack_cost: Cost of slack for this fuel type (default=10).
-    """
-    # Load and process the fuel demand data
-    ts_fuel = -1 * pd.read_csv(file_path, index_col=[0, 1, 2, 3]).rename(index=rename_commodity)
-    ts_fuel["type"] = "fixed"
-    ts_fuel_fixed = ts_fuel.set_index("type", append=True).round(3)
-    m["Base"].profile.add(ts_fuel_fixed, "sourcesink_profile")
-
-    # Add configuration for fixed profile
-    ts_fuel_cfg = pd.DataFrame(index=ts_fuel.index)
-    ts_fuel_cfg["usesFixedProfile"] = 1
-    m["Base"].parameter.add(ts_fuel_cfg, "sourcesink_config")
-
-    # Add slack configuration if applicable
-    if slack:
-        slack_annual = ts_fuel_cfg.loc[idx[:, :, "Wholesale", fuel_type], idx[:]]
-        slack_annual = slack_annual.rename(index={"Wholesale": "Slack"}, columns={"usesFixedProfile": "upper"})
-        slack_annual["upper"] = np.inf
-        m["Base"].parameter.add(slack_annual, "sourcesink_annualsum")
-
-        slack_cfg = slack_annual.rename(columns={"upper": "usesUpperSum"}).replace(np.inf, 1)
-        slack_cfg["usesLowerProfile"] = 1
-        m["Base"].parameter.add(slack_cfg, "sourcesink_config")
-
-        slack_cost_df = pd.DataFrame(
-            index=pd.MultiIndex.from_product([["SlackCost"], ["global"], m["Base"].set.years, ["Slack"], [fuel_type]])
-        )
-        slack_cost_df["perFlow"] = slack_cost
-        m["Base"].parameter.add(slack_cost_df, "accounting_sourcesinkflow")
-
-    # Update region and year scope
-    m["Base"].set.add(list(ts_fuel.index.get_level_values(0)), "nodesdata")
-    m["Base"].set.add(list(ts_fuel.index.get_level_values(1)), "years")
-
 def add_demand(m):
     """
     Add demand and inflow profiles to the REMix model.
@@ -228,12 +107,17 @@ def add_demand(m):
     Inflows are currently provided as negative values in the CSV,
     so they are multiplied by -1 to become positive in the model.
     """
+    # conditional hydro inflow (hydro scheme or without cascade)
+    if "cascade" in scenario.lower():
+        inflow_file = f"{path_input}/brownfield/hydro/inflows_remix-nz/regional-hydro-inflow.csv"
+    else:
+        inflow_file = f"{path_input}/brownfield/hydro/inflows_remix-nz/inflow_2012-to-2020_2014-to-2030.csv"
 
     # File paths for input time series (hourly data in GWh)
     file_paths = {
-        "Elec": f"C:/Local/REMix/remix_nz/input/demand/{group_name}/{case_name}.csv",
-        "H2": f"C:/Local/REMix/remix_nz/input/demand/{group_name}/{case_name}-h2.csv",
-        "Water_in": f"C:/Local/REMix/remix_nz/input/demand/{group_name}/separate-inflows.csv",
+        "Elec": f"{path_demand}/{case_name}.csv",
+        "H2": f"{path_demand}/{case_name}-h2.csv",
+        "HydroInflow": f"{inflow_file}",
     }
 
     # Commodity renaming rules for consistency across inputs
@@ -254,7 +138,7 @@ def add_demand(m):
     slack_settings = {
         "Elec": {"enabled": True, "cost": 10},
         "H2": {"enabled": True, "cost": 10},
-        "Water_in": {"enabled": False, "cost": 0},
+        "HydroInflow": {"enabled": False, "cost": 0},
     }
 
     # Process each commodity type
@@ -627,302 +511,302 @@ def add_geothermal(m):
     m["Base"].parameter.add(geoth_acc, "accounting_converterunits")
 
 def add_hydro(m):
+    # Define hydropower converters (turbines) and storage (reservoirs) for REMix NZ.
+    # Flow sequence: inflow (Water_in) -> reservoir -> turbine -> electricity.
+    # All quantities are in GWh-equivalent units.
 
-    # "sourcesink_config" (import configuration)
-    sourcesink_config = pd.DataFrame(
+    # Configuration for water balance and flow profiles
+    sourcesink_cfg = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [m["Base"].set.nodesdata, m["Base"].set.yearssel, ["Ocean"], ["Water_out"]]
         )
     )
-    # fix: negative profile for minimum flow, upper profile of 0
-    sourcesink_config.loc[idx[m["Base"].set.nodesdata, :, :, :], "usesUpperProfile"] = 1 #we need negative values to get water out of the system
-    sourcesink_config.dropna(inplace=True)
+    sourcesink_cfg["usesUpperProfile"] = 1
+    m["Base"].parameter.add(sourcesink_cfg, "sourcesink_config")
 
-    m["Base"].parameter.add(sourcesink_config, "sourcesink_config")
-    sourcesink_config
-
-    #error from logfile Infeasibility row 'Eq_balance_commodities(tm1,HBY,2020,Water_in)':  0  = -15.39.
     hydro_vintage = [1950]
-    hydro_years= [2000]+yrs_to_calc
-    hydro_techs = ["Hydro"] # unifying storage (dam) and converter (turbine) in one 
-    hydro_nodes = ["BOP", "CAN", "CEN", "HBY", "NEL", "OTG", "WTO"] #[n for n in m["Base"].set.nodesdata if not n.startswith("LNG")]
-    hydro_activities = ["Power_gen","Spill"] 
+    hydro_years = [2000] + yrs_to_calc
+    hydro_nodes = ["BOP", "CAN", "CEN", "HBY", "NEL", "OTG", "WTO"]
+    hydro_techs = ["Hydro"]
+    hydro_activities = ["Power_gen", "Spill"]
 
-	# Converter (turbine)
-    conv_tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product([hydro_techs, hydro_vintage])
-    )
-    conv_tech.loc[idx[:, :], ["lifeTime"]] = 100
-    conv_tech.loc[idx[:, :], ["activityUpperLimit"]] = 1
+    # Turbine technology settings
+    conv_tech = pd.DataFrame(index=pd.MultiIndex.from_product([hydro_techs, hydro_vintage]))
+    conv_tech["lifeTime"] = 100
+    conv_tech["activityUpperLimit"] = 1
     m["Base"].parameter.add(conv_tech, "converter_techparam")
 
-    conv_cap = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [hydro_nodes, hydro_years, hydro_techs] #fix: maybe years_mentioned
-        )
-    )
-    
-
-    # existing capacities
-    conv_cap.loc[idx[["BOP"], [2000], "Hydro"], "unitsBuild"] = 0.17095  # GW_el
-    conv_cap.loc[idx[["CAN"], [2000], "Hydro"], "unitsBuild"] = 1.82683  # GW_el
-    conv_cap.loc[idx[["CEN"], [2000], "Hydro"], "unitsBuild"] = 0.399  # GW_el
-    conv_cap.loc[idx[["HBY"], [2000], "Hydro"], "unitsBuild"] = 0.1422  # GW_el
-    conv_cap.loc[idx[["NEL"], [2000], "Hydro"], "unitsBuild"] = 0.0453  # GW_el
-    conv_cap.loc[idx[["OTG"], [2000], "Hydro"], "unitsBuild"] = 1.664  # GW_el
-    conv_cap.loc[idx[["WTO"], [2000], "Hydro"], "unitsBuild"] = 1.0873  # GW_el
-    # do not build anything new
-    conv_cap.loc[idx[:, :, :], "noExpansion"] = 1  # boolean
-    #define a finite upper limit, rotpo allow the  representation of  existing capacity
-    conv_cap["unitsUpperLimit"] = 100  # large number (or realistic upper bound)
-
+    # Installed turbine capacities (GW_el)
+    conv_cap = pd.DataFrame(index=pd.MultiIndex.from_product([hydro_nodes, hydro_years, hydro_techs]))
+    conv_cap.loc[idx[["BOP"], [2000], "Hydro"], "unitsBuild"] = 0.17095
+    conv_cap.loc[idx[["CAN"], [2000], "Hydro"], "unitsBuild"] = 1.82683
+    conv_cap.loc[idx[["CEN"], [2000], "Hydro"], "unitsBuild"] = 0.399
+    conv_cap.loc[idx[["HBY"], [2000], "Hydro"], "unitsBuild"] = 0.1422
+    conv_cap.loc[idx[["NEL"], [2000], "Hydro"], "unitsBuild"] = 0.0453
+    conv_cap.loc[idx[["OTG"], [2000], "Hydro"], "unitsBuild"] = 1.664
+    conv_cap.loc[idx[["WTO"], [2000], "Hydro"], "unitsBuild"] = 1.0873
+    conv_cap["noExpansion"] = 1
+    conv_cap["unitsUpperLimit"] = 100
     m["Base"].parameter.add(conv_cap, "converter_capacityparam")
 
-
+    # Turbine input/output coefficients
+    hydro_efficiency = 0.95
     conv_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [hydro_techs, hydro_vintage, hydro_activities, ["Water_in", "Water_out", "Elec"]]
         )
     )
-    #FIXME:  TO MATCH 2024 TO REAL DATA MBIE
-    conv_coef.loc[idx[:, :, "Power_gen", "Elec"], "coefficient"] = 1 # GW_el
-    conv_coef.loc[idx[:, :, "Power_gen", "Water_in"], "coefficient"] = -0.95  # GW_el
-    conv_coef.loc[idx[:, :, "Power_gen", "Water_out"], "coefficient"] = 0.95 # GW_el
-    #spill is not limited by the capacity of the turbine
-    conv_coef.loc[idx[:, :, "Spill", "Water_in"], "coefficient"] = -100 # GW_el
-    conv_coef.loc[idx[:, :, "Spill", "Water_out"], "coefficient"] = 100 # GW_el
-    # we dont need this bc its just zero: conv_coef.loc[idx[:, :, "Spill", "Elec"], "coefficient"] = 0 # GW_el
+    conv_coef.loc[idx[:, :, "Power_gen", "Elec"], "coefficient"] = 1.0
+    conv_coef.loc[idx[:, :, "Power_gen", "Water_in"], "coefficient"] = -hydro_efficiency
+    conv_coef.loc[idx[:, :, "Power_gen", "Water_out"], "coefficient"] = hydro_efficiency
+    conv_coef.loc[idx[:, :, "Spill", "Water_in"], "coefficient"] = -100.0
+    conv_coef.loc[idx[:, :, "Spill", "Water_out"], "coefficient"] = 100.0
     m["Base"].parameter.add(conv_coef, "converter_coefficient")
 
+    # Turbine investment and fixed O&M
     conv_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], ["horizon"],  hydro_techs, hydro_vintage]
+            [["Invest", "OMFix"], ["global"], ["horizon"], hydro_techs, hydro_vintage]
         )
     )
-    conv_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "perUnitBuild"] = 2560 # million EUR / unit
-    conv_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "useAnnuity"] = 1  # binary yes/no
-    conv_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "amorTime"] = 20  # years
-    conv_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "interest"] = 0.06  # percent/100
-    # conv_acc.loc[idx["OMFix", ["global"], ["horizon"],  :, :], "perUnitTotal"] = (
-    #     conv_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "perUnitBuild"]  *0.03
-    # )  # Mio EUR per unit
+    conv_acc.loc[idx["Invest", :, "horizon", :, :], "perUnitBuild"] = 2560
+    conv_acc.loc[idx["Invest", :, "horizon", :, :], "useAnnuity"] = 1
+    conv_acc.loc[idx["Invest", :, "horizon", :, :], "amorTime"] = 20
+    conv_acc.loc[idx["Invest", :, "horizon", :, :], "interest"] = 0.06
 
-    invest_vals = conv_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
-    invest_vals.index = pd.MultiIndex.from_tuples(
-        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
-        #names=conv_acc.index.names
-    )
-    conv_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.03
-
-
-
-
+    inv = conv_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"]
+    inv.index = pd.MultiIndex.from_tuples([("OMFix", *i[1:]) for i in inv.index])
+    conv_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = inv * 0.03
     m["Base"].parameter.add(conv_acc, "accounting_converterunits")
 
- 
+    # Reservoir technology and size
     stor_techs = ["Hydro_reservoir"]
-
-    stor_tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product([stor_techs, hydro_vintage])
-    )
-    stor_tech.loc[idx[:, :], "lifeTime"] = 100
-    stor_tech.loc[idx[:, :], "levelUpperLimit"] = 1
-
+    stor_tech = pd.DataFrame(index=pd.MultiIndex.from_product([stor_techs, hydro_vintage]))
+    stor_tech["lifeTime"] = 100
+    stor_tech["levelUpperLimit"] = 1
     m["Base"].parameter.add(stor_tech, "storage_techparam")
-    stor_tech
 
-	#test nodes
-    stor_size = pd.DataFrame(
-        index=pd.MultiIndex.from_product([stor_techs,hydro_vintage, ["Water_in"]])
-    )
-	# question about the units
-    stor_size.loc[idx["Hydro_reservoir", :, "Water_in"], "size"] = 1  # GWh_ch / unit  
-    stor_size.loc[idx[:, :, "Water_in"], "selfdischarge"] = 0 
+    stor_size = pd.DataFrame(index=pd.MultiIndex.from_product([stor_techs, hydro_vintage, ["Water_in"]]))
+    stor_size["size"] = 1
+    stor_size["selfdischarge"] = 0
     m["Base"].parameter.add(stor_size, "storage_sizeparam")
 
-    
-    stor_res = pd.DataFrame(
-        index=pd.MultiIndex.from_product([hydro_nodes, hydro_years, stor_techs])
-    )
-
-
-    
-    # storage reservoir capacity 
-    stor_res.loc[idx[:, :, :], "unitsUpperLimit"] = 3000  # units
-
-    stor_res.loc[idx[["CAN"], [2000], :], "unitsBuild"] = 2517.2429 # GWh_el
-    stor_res.loc[idx[["HBY"], [2000], :], "unitsBuild"] = 154.2635  # GWh_el
-    stor_res.loc[idx[["OTG"], [2000], :], "unitsBuild"] = 729.5595 # GWh_el
-    stor_res.loc[idx[["WTO"], [2000], :], "unitsBuild"] = 587.1371 # GWh_el
-
-    stor_res.loc[idx[:, :, :], "noExpansion"] = 1
+    # Reservoir installed capacities (GWh water potential)
+    stor_res = pd.DataFrame(index=pd.MultiIndex.from_product([hydro_nodes, hydro_years, stor_techs]))
+    stor_res.loc[idx[["CAN"], [2000], :], "unitsBuild"] = 2517.2429
+    stor_res.loc[idx[["HBY"], [2000], :], "unitsBuild"] = 154.2635
+    stor_res.loc[idx[["OTG"], [2000], :], "unitsBuild"] = 729.5595
+    stor_res.loc[idx[["WTO"], [2000], :], "unitsBuild"] = 587.1371
+    stor_res["noExpansion"] = 1
+    stor_res["unitsUpperLimit"] = 3000
     m["Base"].parameter.add(stor_res, "storage_reservoirparam")
 
+    # Reservoir investment and O&M
     stor_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [["Invest", "OMFix"], ["global"], ["horizon"], stor_techs, hydro_vintage]
         )
     )
-    
-    stor_acc.index.set_names(["indicator","regionscope","timescope","techs","years"], inplace=True)
-    stor_acc.loc[idx["Invest", :, "horizon", :, :], "perUnitBuild"] = 1650  # million EUR / unit, Breyer https://ars.els-cdn.com/content/image/1-s2.0-S0360544225005201-mmc1.pdf
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "perUnitBuild"] = 1650
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "useAnnuity"] = 1
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "amorTime"] = 20
+    stor_acc.loc[idx["Invest", :, "horizon", :, :], "interest"] = 0.06
 
-    stor_acc.loc[idx["Invest", :, "horizon", :, :], "useAnnuity"] = 1  # binary yes/no
-    stor_acc.loc[idx["Invest", :, "horizon", :, :], "amorTime"] = 20  # years
-    stor_acc.loc[idx["Invest", :, "horizon", :, :], "interest"] = 0.06  # percent/100
-
-    # stor_acc.loc[idx["OMFix", :, "horizon", :, :], "perUnitTotal"] = (
-    #     stor_acc.loc[idx["Invest", :, "horizon", :, :], "perUnitBuild"] * 0.03
-    # )  # Mio EUR per unit
-    
-    invest_vals = stor_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
-    invest_vals.index = pd.MultiIndex.from_tuples(
-        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
-        #names=conv_acc.index.names
-    )
-    stor_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.03 # 3% fixed O&M
-
+    inv = stor_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"]
+    inv.index = pd.MultiIndex.from_tuples([("OMFix", *i[1:]) for i in inv.index])
+    stor_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = inv * 0.03
     m["Base"].parameter.add(stor_acc, "accounting_storageunits")
 
+def add_hydro_scheme(m):
 
+    # Flow (per scheme):
+    #   exogenous inflow ( * _in ) --> [Reservoir if present] --> Turbine (Power_gen or Spill)
+    #     --> downstream inflow commodity ( * _in ) --> ... --> Water_out (Ocean sink)
 
-def add_hydro_cascade(m):
+    # Design choices:
+    #   - Turbine tech names exactly match JADE/CSV (e.g., Tekapo_A, Benmore, Karapiro).
+    #   - Water commodities are the JADE inflow names (Tekapo_in, Benmore_in, ...).
+    #   - Every spill also routes to the defined downstream commodity (no dead-end spill).
+    #   - Reservoir energy (GWh) is computed from JADE volumes (Mm³) using the *downstream*
+    #     turbine’s specific power (MW per cumec). Initial level is set as a fraction.
+    #   - No expansion allowed (turbines & reservoirs).
 
-    # Configure how water exits the system (flowing to the ocean).
-    sourcesink_config = pd.DataFrame(index=pd.MultiIndex.from_product([m["Base"].set.nodesdata, m["Base"].set.yearssel, ["Ocean"], ["Water_out"]]))
-    # Upper profile constraints: we need negative values to get water out of the system
-    sourcesink_config.loc[idx[m["Base"].set.nodesdata, :, :, :], "usesUpperProfile"] = 1 
-    sourcesink_config.dropna(inplace=True)
-    m["Base"].parameter.add(sourcesink_config, "sourcesink_config")
-    sourcesink_config
+    #  years / nodes
+    try:
+        years = list(m["Base"].set.yearssel)
+        if not years:
+            years = [2000]
+    except Exception:
+        years = [2000]
+    y0 = years[0]
 
+    # ---- turbines: (inflow(s)) -> tech -> outflow -----------------------------
+    # Columns: inflow_list, tech, outflow, scheme, region, cap_MW, sp_MW_per_cumec, spill_max_m3s
+    turbines = pd.DataFrame([
+        # Waitaki (CAN)
+        ("Tekapo_in",           "Tekapo_A",     "Tekapo_A_out",   "Waitaki", "CAN",  27, 0.2322,  600),
+        ("Tekapo_A_out",        "Tekapo_B",     "Pukaki_in",      "Waitaki", "CAN", 154, 1.2847,  None),
+        ("Pukaki_in, Ohau_in",  "Ohau_A",       "Ohau_A_out",     "Waitaki", "CAN", 264, 0.5005,  0),
+        ("Ohau_A_out",          "Ohau_B",       "Ohau_BC_canal",  "Waitaki", "CAN", 212, 0.4167,  560),
+        ("Ohau_BC_canal",       "Ohau_C",       "Benmore_in",     "Waitaki", "CAN", 212, 0.4167,  None),
+        ("Benmore_in",          "Benmore",      "Aviemore_in",    "Waitaki", "CAN", 540, 0.8177,  3400),
+        ("Aviemore_in",         "Aviemore",     "Waitaki_in",     "Waitaki", "CAN", 220, 0.3101,  5400),
+        ("Waitaki_in",          "Waitaki",      "Water_out",      "Waitaki", "CAN", 105, 0.1622,  5380),
+
+        # Waikato (WTO)
+        ("Aratiatia_in",        "Aratiatia",    "Ohakuri_in",     "Waikato", "WTO",  78, 0.2841,  None),
+        ("Ohakuri_in",          "Ohakuri",      "Atiamuri_in",    "Waikato", "WTO", 112, 0.2841,  None),
+        ("Atiamuri_in",         "Atiamuri",     "Whakamaru_in",   "Waikato", "WTO",  84, 0.1957,  None),
+        ("Whakamaru_in",        "Whakamaru",    "Maraetai_in",    "Waikato", "WTO", 124, 0.3165,  None),
+        ("Maraetai_in",         "Maraetai",     "Waipapa_in",     "Waikato", "WTO", 352, 0.5263,  None),
+        ("Waipapa_in",          "Waipapa",      "Arapuni_in",     "Waikato", "WTO",  54, 0.1385,  None),
+        ("Arapuni_in",          "Arapuni",      "Karapiro_in",    "Waikato", "WTO", 192, 0.4619,  None),
+        ("Karapiro_in",         "Karapiro",     "Water_out",      "Waikato", "WTO",  96, 0.2639,  None),
+
+        # Clutha (OTG)
+        ("Dunstan_in",          "Clyde_220kV",  "Roxburgh_in",    "Clutha",  "OTG", 464, 0.5181,  4140),
+        ("Roxburgh_in",         "Roxburgh",     "Water_out",      "Clutha",  "OTG", 320, 0.4016,  6000),
+
+        # Manapouri (OTG)
+        ("Manapouri_in",        "Manapouri",    "Water_out",      "Manapouri","OTG", 842, 1.5314, None),
+
+        # Waikaremoana (HBY)
+        ("Waikaremoana_in",     "Waikaremoana", "Water_out",      "Waikaremoana","HBY", 140, 3.535, 44),
+
+        # Singles (CEN, CAN, NEL)
+        ("Rangipo_in",          "Rangipo",      "Water_out",      "Rangipo",   "CEN", 120, 1.96,   None),
+        ("Tokaanu_in",          "Tokaanu",      "Water_out",      "Tokaanu",   "CEN", 240, 1.75,   None),
+        ("Matahina_in",         "Matahina",     "Water_out",      "Matahina",  "CEN",  80, 0.595,  None),
+        ("Mangahao_in",         "Mangahao",     "Water_out",      "Mangahao",  "CEN",  37, 2.53,   None),
+        ("Coleridge_in",        "Coleridge",    "Water_out",      "Coleridge", "CAN",  39, 1.009,  None),
+        ("Cobb_in",             "Cobb",         "Water_out",      "Cobb",      "NEL",  32, 4.405,  None),
+    ], columns=["inflow_list","tech","outflow","scheme","region","cap_MW","sp_MW_per_cumec","spill_max_m3s"])
+
+    # ---- reservoirs: store the *_in commodity above them ----------------------
+    # Columns: reservoir, stores_commodity, region, Ini_Storage_Mm3, Max_Level_Mm3
+    reservoirs = pd.DataFrame([
+        ("Lake_Tekapo",               "Tekapo_in",        "CAN",  508.797,  632.40),
+        ("Lake_Pukaki",               "Pukaki_in",        "CAN", 2250.192, 2425.45),
+        ("Lake_Ohau",                 "Ohau_in",          "CAN",    3.050,   30.22),
+        ("Lake_Taupo",                "Aratiatia_in",     "WTO",  747.122,  855.40),
+        ("Lake_Hawea",                "Dunstan_in",       "OTG", 1017.468, 1141.95),
+        ("Lakes_Manapouri_Te_Anau",   "Manapouri_in",     "OTG",  751.415, 1029.23),
+        ("Lake_Waikaremoana",         "Waikaremoana_in",  "HBY",  120.969,  157.10),
+    ], columns=["reservoir","stores_commodity","region","Ini_Storage_Mm3","Max_Level_Mm3"])
+
+    # All nodes touched by scheme
+    nodes = sorted(turbines["region"].unique())
+    # make sure they are present in nodesdata set
+    m["Base"].set.add(list(set(m["Base"].set.nodesdata) | set(nodes)), "nodesdata")
+
+    # ---- helper: convert Mm3 to GWh using downstream turbine Specific Power ---------------
+    # We need: (MW / cumec) * (cumec-hours) / 1000 = GWh
+    # 1 m³ = 1/3600 cumec-hour  -> (Mm3 * 1e6) / 3600 = cumec-hours
+    def mm3_to_gwh(volume_mm3, sp_mw_per_cumec):
+        if volume_mm3 is None or sp_mw_per_cumec is None or np.isnan(sp_mw_per_cumec):
+            return 0.0
+        cumec_hours = (volume_mm3 * 1e6) / 3600.0
+        return (sp_mw_per_cumec * cumec_hours) / 1000.0  # -> GWh
+
+    # map commodity -> downstream specific power (from first turbine that consumes it)
+    sp_downstream = {}
+    for _, r in turbines.iterrows():
+        for c in [s.strip() for s in r["inflow_list"].split(",") if s.strip()]:
+            sp_downstream.setdefault(c, r["sp_MW_per_cumec"])
+
+    reservoirs["E_max_GWh"]  = reservoirs.apply(lambda r: mm3_to_gwh(r["Max_Level_Mm3"],  sp_downstream.get(r["stores_commodity"], np.nan)), axis=1)
+    reservoirs["E_init_GWh"] = reservoirs.apply(lambda r: mm3_to_gwh(r["Ini_Storage_Mm3"], sp_downstream.get(r["stores_commodity"], np.nan)), axis=1)
+    reservoirs["InitFrac"] = ((reservoirs["E_init_GWh"] / reservoirs["E_max_GWh"]).replace([np.inf, -np.inf], 0).fillna(0))
+
+    # ---- converter_techparam (per-turbine) -----------------------------------
     hydro_vintage = [1950]
-    hydro_years= [2000]+yrs_to_calc
-    # hydro_techs = ["Hydroplant"] 
-    # hydro_nodes = ["BOP", "CAN", "CEN", "HBY", "NEL", "OTG", "WTO"] 
-    
-    hydro_techs = ["Turb_Clyde", "Turb_Roxburgh"] 
-    hydro_nodes = ["OTG"]
-    hydro_commodities = ["Elec",  "Roxburgh_in", "Water_out", "Clyde_in"]
-    hydro_activities = ["Power_gen","Spill"] 
+    hydro_activities = ["Power_gen", "Spill"]
+    techs = turbines["tech"].tolist()
 
-	# Converter (turbine) lifetime and activity limits
-    conv_tech = pd.DataFrame(index=pd.MultiIndex.from_product([hydro_techs, hydro_vintage]))
-    conv_tech.loc[idx[:, :], ["lifeTime"]] = 100
-    conv_tech.loc[idx[:, :], ["activityUpperLimit"]] = 1
+    conv_tech = pd.DataFrame(index=pd.MultiIndex.from_product([techs, hydro_vintage]))
+    conv_tech.loc[idx[:, :], "lifeTime"] = 100
+    conv_tech.loc[idx[:, :], "activityUpperLimit"] = 1
     m["Base"].parameter.add(conv_tech, "converter_techparam")
 
-    conv_cap = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [hydro_nodes, hydro_years, hydro_techs] #FIXME: maybe years_mentioned
-        )
+    # ---- converter_capacityparam (fixed GW, no expansion) ---------------------
+    cap = pd.DataFrame(index=pd.MultiIndex.from_product([nodes, years, techs]))
+    for _, r in turbines.iterrows():
+        cap.loc[(r["region"], y0, r["tech"]), "unitsBuild"] = r["cap_MW"] / 1000.0  # GW
+    cap.loc[idx[:, :, :], "noExpansion"] = 1
+    cap.loc[idx[:, :, :], "unitsUpperLimit"] = 100  # harmless upper cap
+    m["Base"].parameter.add(cap, "converter_capacityparam")
+
+    # ---- converter_coefficient (cascade + routed spill) -----------------------
+    # Collect all water commodities that appear anywhere (inflows and outflows) + Elec
+    all_inflows = set()
+    for s in turbines["inflow_list"]:
+        all_inflows |= {x.strip() for x in s.split(",") if x.strip()}
+    all_outflows = set(turbines["outflow"].tolist())
+    commodities = sorted(list(all_inflows | all_outflows | {"Elec"}))
+
+    hydro_eff = 0.95
+    conv_coef = pd.DataFrame(
+        index=pd.MultiIndex.from_product([techs, hydro_vintage, hydro_activities, commodities])
     )
-    
 
-    # Installed turbine capacities for each node and year
-    conv_cap.loc[idx[["OTG"], [2000], "Turb_Clyde"], "unitsBuild"] = 464 * 0.001 # GW_el   
-    conv_cap.loc[idx[["OTG"], [2000], "Turb_Roxburgh"], "unitsBuild"] = 320 * 0.001   # GW_el   
+    # default zero; then fill explicit entries
+    conv_coef["coefficient"] = 0.0
 
-    conv_cap.loc[idx[:, yrs_to_calc, :], "noExpansion"] = 1  # Prevent expansion. Boolean.
-    m["Base"].parameter.add(conv_cap, "converter_capacityparam")
+    for _, r in turbines.iterrows():
+        inflows = [c.strip() for c in r["inflow_list"].split(",") if c.strip()]
+        # Power generation: +Elec, -inflows, +outflow (all with hydro_eff on the water leg)
+        conv_coef.loc[(r["tech"], 1950, "Power_gen", "Elec"), "coefficient"] = 1.0
+        for c_in in inflows:
+            conv_coef.loc[(r["tech"], 1950, "Power_gen", c_in), "coefficient"] = -hydro_eff
+        conv_coef.loc[(r["tech"], 1950, "Power_gen", r["outflow"]), "coefficient"] = hydro_eff
 
-    # Turbine conversion coefficients (input-output relationships).
-    conv_coef = pd.DataFrame(index=pd.MultiIndex.from_product([hydro_techs, hydro_vintage, hydro_activities,hydro_commodities]))
+        # Spill: water still moves downstream commodity (unit water)
+        for c_in in inflows:
+            conv_coef.loc[(r["tech"], 1950, "Spill", c_in), "coefficient"] = -1.0
+        conv_coef.loc[(r["tech"], 1950, "Spill", r["outflow"]), "coefficient"] = 1.0
 
-    # Define coefficients for electricity generation.  , "Roxburgh_in"
-    conv_coef.loc[idx["Turb_Clyde", :, "Power_gen", "Elec"], "coefficient"] = 0.5181 * 0.001 # GW_el
-    conv_coef.loc[idx["Turb_Clyde", :, "Power_gen", "Clyde_in"], "coefficient"] = -1  # GW_el
-    conv_coef.loc[idx["Turb_Clyde", :, "Power_gen", "Roxburgh_in"], "coefficient"] = 1 # GW_el
-    conv_coef.loc[idx["Turb_Roxburgh", :, "Power_gen", "Elec"], "coefficient"] = 0.4016 * 0.001 # GW_el
-    conv_coef.loc[idx["Turb_Roxburgh", :, "Power_gen", "Roxburgh_in"], "coefficient"] = -1  # GW_el
-    conv_coef.loc[idx["Turb_Roxburgh", :, "Power_gen", "Water_out"], "coefficient"] = 1 # GW_el   
-    # #FIXME: DIRTY hack TO MATCH 2024 TO REAL DATA MBIE
-    # conv_coef.loc[idx[:, :, "Power_gen", "Elec"], "coefficient"] = 1 # GW_el
-    # conv_coef.loc[idx[:, :, "Power_gen", "Water_in"], "coefficient"] = -0.95  # GW_el
-    # conv_coef.loc[idx[:, :, "Power_gen", "Water_out"], "coefficient"] = 0.95 # GW_el
-
-
-    # Define coefficients for bypassing water without generating electricity. Spill is not limited by the capacity of the turbine
-    conv_coef.loc[idx["Turb_Clyde", :, "Spill", "Clyde_in"], "coefficient"] = -10000  # GW_el
-    conv_coef.loc[idx["Turb_Clyde", :, "Spill", "Roxburgh_in"], "coefficient"] = 10000 # GW_el
-    conv_coef.loc[idx["Turb_Roxburgh", :, "Spill", "Roxburgh_in"], "coefficient"] = -10000  # GW_el
-    conv_coef.loc[idx["Turb_Roxburgh", :, "Spill", "Water_out"], "coefficient"] = 10000 # GW_el   
-    # conv_coef.loc[idx[:, :, "Spill", "Water_in"], "coefficient"] = -100 # GW_el # Arbitrary large bypass.
-    # conv_coef.loc[idx[:, :, "Spill", "Water_out"], "coefficient"] = 100 # GW_el
     m["Base"].parameter.add(conv_coef, "converter_coefficient")
 
-    # Economic parameters for turbines.
-    conv_acc = pd.DataFrame(index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], hydro_techs, hydro_vintage]))
-    conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] = 2560 # million EUR / unit
-    conv_acc.loc[idx["Invest", :, :, :], "useAnnuity"] = 1  # Use annuity method. binary yes/no
-    conv_acc.loc[idx["Invest", :, :, :], "amorTime"] = 20  #  Amortization time (years).
-    conv_acc.loc[idx["Invest", :, :, :], "interest"] = 0.06  # Interest rate (6%)
-    
-    # conv_acc.loc[idx["OMFix", :, :, :], "perUnitTotal"] = (
-    #     conv_acc.loc[idx["Invest", :, :, :], "perUnitBuild"] *0.03
-    # )  # Mio EUR per unit
-    invest_vals = conv_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
-    invest_vals.index = pd.MultiIndex.from_tuples(
-        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
-        #names=conv_acc.index.names
-    )
-    conv_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.0300 # 3% fixed O&M
-
-    m["Base"].parameter.add(conv_acc, "accounting_converterunits")
-
-    
-    # Configure Reservoirs (Storage)
-    stor_techs = ["Lake_Hawea"]#, "Lake_Ohau", "Lake_Pukaki", "Lake_Taupo", "Lake_Tekapo", "Lake_Waikaremoana", "Lakes_Manapouri_Te_Anau"] # ["Hydro_reservoir"]
-
-    # Reservoir technical properties.
+    # ---- storage_* tables (reservoirs store *_in commodity) ------------
+    stor_techs = [f"Stor_{r}" for r in reservoirs["reservoir"]]
     stor_tech = pd.DataFrame(index=pd.MultiIndex.from_product([stor_techs, hydro_vintage]))
     stor_tech.loc[idx[:, :], "lifeTime"] = 100
-    stor_tech.loc[idx[:, :], "levelUpperLimit"] = 1 # Normalized fill level limit
+    stor_tech.loc[idx[:, :], "levelUpperLimit"] = 1.0
+    stor_tech.loc[idx[:, :], "levelLowerLimit"] = 0.0
     m["Base"].parameter.add(stor_tech, "storage_techparam")
 
-	# Storage reservoir sizes 
-    stor_size = pd.DataFrame(index=pd.MultiIndex.from_product([stor_techs,hydro_vintage, hydro_commodities]))
-    stor_size.loc[idx["Lake_Hawea", :, "Clyde_in"], "size"] = 1  # GWh_ch / unit  
-    stor_size.loc[idx["Lake_Hawea", :, "Clyde_in"], "selfdischarge"] = 0 # TODO: ask if i can do that to all commodities or only water comming in
-    # stor_size = pd.DataFrame(index=pd.MultiIndex.from_product([stor_techs,hydro_vintage, ["Water_in"]]))
-    # stor_size.loc[idx["Hydro_reservoir", :, "Water_in"], "size"] = 1  # GWh_ch / unit  
-    # stor_size.loc[idx[:, :, "Water_in"], "selfdischarge"] = 0 
+    size_idx = []
+    for _, r in reservoirs.iterrows():
+        size_idx.append((f"Stor_{r['reservoir']}", 1950, r["stores_commodity"]))
+    stor_size = pd.DataFrame(index=pd.MultiIndex.from_tuples(size_idx, names=["techs","years","commodities"]))
+    stor_size["size"] = 1.0
+    stor_size["selfdischarge"] = 0.0
     m["Base"].parameter.add(stor_size, "storage_sizeparam")
 
+    stor_units = pd.DataFrame(index=pd.MultiIndex.from_product([nodes, years, stor_techs]))
+    for _, r in reservoirs.iterrows():
+        tech_name = f"Stor_{r['reservoir']}"
+        stor_units.loc[(r["region"], y0, tech_name), "unitsBuild"]   = float(r["E_max_GWh"])
+        stor_units.loc[(r["region"], y0, tech_name), "initialLevel"] = float(r["InitFrac"])
+    stor_units.loc[idx[:, :, :], "noExpansion"] = 1
+    m["Base"].parameter.add(stor_units, "storage_reservoirparam")
 
-    # Installed reservoir capacities (in Mm3) from reservoir_limits.csv
-    stor_res = pd.DataFrame(index=pd.MultiIndex.from_product([hydro_nodes, hydro_years, stor_techs]))
-    stor_res.loc[idx[:, :, :], "unitsUpperLimit"] = 3000  # units 
-    #TODO: mdify capacity of the storage
-    stor_res.loc[idx[["OTG"], [2000], "Lake_Hawea"], "unitsBuild"] = 1141.95 * 1000 # thousand cubic meters (m3)
-    # stor_res.loc[idx[["CAN"], [2000], :], "unitsBuild"] = 2517.2429 # GWh_el
-    # stor_res.loc[idx[["HBY"], [2000], :], "unitsBuild"] = 154.2635  # GWh_el
-    # stor_res.loc[idx[["OTG"], [2000], :], "unitsBuild"] = 729.5595 # GWh_el
-    # stor_res.loc[idx[["WTO"], [2000], :], "unitsBuild"] = 587.1371 # GWh_el
-
-    stor_res.loc[idx[:, yrs_to_calc, :], "noExpansion"] = 1
-    m["Base"].parameter.add(stor_res, "storage_reservoirparam")
-
-    stor_acc = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], ["horizon"], stor_techs, hydro_vintage]
-        )
+    # ---- ocean sink -----------------------------
+    ocean_cfg = pd.DataFrame(
+        index=pd.MultiIndex.from_product([nodes, years, ["Ocean"], ["Water_out"]])
     )
-    stor_acc.loc[idx["Invest", :, "horizon", :, :], "perUnitBuild"] = 1650  # million EUR / unit
-    stor_acc.loc[idx["Invest", :, "horizon", :, :], "useAnnuity"] = 1  # binary yes/no
-    stor_acc.loc[idx["Invest", :, "horizon", :, :], "amorTime"] = 20  # years
-    stor_acc.loc[idx["Invest", :, "horizon", :, :], "interest"] = 0.06  # percent/100
+    ocean_cfg["usesUpperProfile"] = 1
+    m["Base"].parameter.add(ocean_cfg, "sourcesink_config")
 
-    # stor_acc.loc[idx["OMFix", :, "horizon", :, :], "perUnitTotal"] = (
-    #     stor_acc.loc[idx["Invest", :, "horizon", :, :], "perUnitBuild"] * 0.03
-    # )  # Mio EUR per unit
-    invest_vals = stor_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
-    invest_vals.index = pd.MultiIndex.from_tuples(
-        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
-    )
-    stor_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.03 # 2% fixed O&M
+    # ---- prints --------------------------------------
+    print("\nHydro scheme loaded.")
+    print(f"  Turbines: {len(techs)} | Reservoirs: {len(reservoirs)} | Regions: {', '.join(nodes)}")
+    print("  Reservoir energy [GWh] (init %):")
+    for _, r in reservoirs.iterrows():
+        emx = float(r["E_max_GWh"])
+        init_pct = 100.0 * float(r["InitFrac"]) if emx > 0 else 0.0
+        print(f"   - {r['reservoir']:<26s} {emx:6.1f} GWh  (init {init_pct:5.1f}%)")
 
-    m["Base"].parameter.add(stor_acc, "accounting_storageunits")
 
 
 # conventional
@@ -1988,146 +1872,195 @@ def validate_scope(m):
     nodes_data = set(m["Base"].set.nodesdata)
     nodes_model = set(m["Base"].set.nodesmodel)
     print(f"Not including modes nodes: {', '.join(sorted(nodes_data - nodes_model))}")
-s1 = time.perf_counter()
 
+# scenario modifiers
 
+def modify_inflow_file(m, data_dir, new_inflow_path, tag="alt-inflow"):
+    """
+    Replace the hydropower inflow CSV with a different file.
+    Re-runs only the inflow portion of the demand logic and writes
+    the modified sourcesink files to a new subfolder.
 
-def _snapshot_csv(dirpath: Path):
-    """Return {abs_path: (mtime, size)} for all CSVs under dirpath."""
-    out = {}
-    for p in Path(dirpath).rglob("*.csv"):
-        try:
-            st = p.stat()
-            out[str(p.resolve())] = (st.st_mtime, st.st_size)
-        except FileNotFoundError:
-            pass
-    return out
+    Parameters
+    ----------
+    m : dict
+        REMix instance dictionary (m["Base"])
+    data_dir : Path
+        Base data directory
+    new_inflow_path : Path or str
+        Path to the alternative inflow CSV
+    tag : str, optional
+        Name for the scenario folder (default: 'alt-inflow')
+    """
 
-def _fmt_size(n: int) -> str:
-    for unit in ("B","KB","MB","GB"):
-        if n < 1024 or unit == "GB":
-            return f"{n:.0f} {unit}" if unit=="B" else f"{n/1024:.1f} {unit}" if unit!="B" else f"{n} {unit}"
-        n /= 1024
+    print(f"Processing modifier: inflow replacement ({tag})...")
+    from pathlib import Path
+
+    out_dir = data_dir / tag
+    out_dir.mkdir(exist_ok=True)
+
+    # read inflow data (same structure as base)
+    ts = pd.read_csv(new_inflow_path, index_col=[0, 1, 2, 3])
+    ts *= -1  # REMix convention: inflows are negative in input
+
+    # add 'type=fixed' for REMix
+    ts["type"] = "fixed"
+    ts_fixed = ts.set_index("type", append=True).round(3)
+
+    # save profiles & config only
+    ts_fixed.to_csv(out_dir / "sourcesink_profile.csv")
+    cfg = pd.DataFrame(index=ts.index)
+    cfg["usesFixedProfile"] = 1
+    cfg.to_csv(out_dir / "sourcesink_config.csv")
+
+    print(f"  New inflow file used: {new_inflow_path}")
+    print(f"  Files written: {out_dir}")
+
+def modify_renewable_costs(m, data_dir, tech="wind_onshore", factor=0.8, tag="wind-cost-low"):
+    """
+    Modify renewable technology investment cost (e.g. wind, PV).
+    Reloads renewable cost parameters from base files, applies scaling factor, and writes modified accounting files to subfolder.
+
+    Parameters
+    ----------
+    m : dict
+        REMix instance dictionary
+    data_dir : Path
+        Base data directory
+    tech : str
+        Technology name to modify ('wind_onshore', 'pv_central_fixed', etc.)
+    factor : float
+        Scaling factor (e.g., 0.8 = 20% cheaper)
+    tag : str
+        Folder name for scenario output
+    """
+
+    print(f"Processing modifier: renewable cost ({tech}, {factor*100:.0f}% level)...")
+    from pathlib import Path
+
+    out_dir = data_dir / tag
+    out_dir.mkdir(exist_ok=True)
+
+    # read existing accounting file
+    acc_path = data_dir / "accounting_converterunits.csv"
+    acc = pd.read_csv(acc_path, index_col=list(range(5)))
+
+    # find investment rows for the given tech and apply scaling
+    mask = (acc.index.get_level_values(0) == "Invest") & (acc.index.get_level_values(3) == tech)
+    acc.loc[mask, "perUnitBuild"] *= factor
+
+    acc.to_csv(out_dir / "accounting_converterunits.csv")
+    print(f"  File written: {out_dir/'accounting_converterunits.csv'}")
+
+def modify_tech_cost_by_year(m, data_dir, tech, year_costs, tag=None):
+    """
+    Modify investment costs for a technology for specific years.
+
+    Parameters
+    ----------
+    m : dict
+        REMix instance dictionary
+    data_dir : Path
+        Base data directory
+    tech : str
+        Technology to modify (e.g. 'Electrolyser', 'Battery')
+    year_costs : dict[int, float]
+        Mapping of year -> new perUnitBuild value (absolute, not factor)
+    tag : str or None
+        Folder name for scenario output (defaults to tech name)
+    """
+
+    print(f"Processing modifier: {tech} custom yearly cost changes...")
+
+    out_dir = data_dir / (tag or f"{tech}-custom-costs")
+    out_dir.mkdir(exist_ok=True)
+
+    acc_path = data_dir / "accounting_converterunits.csv"
+    acc = pd.read_csv(acc_path, index_col=list(range(5)))
+
+    for year, new_val in year_costs.items():
+        mask = (
+            (acc.index.get_level_values(0) == "Invest")
+            & (acc.index.get_level_values(3) == tech)
+            & (acc.index.get_level_values(4).astype(int) == int(year))
+        )
+        acc.loc[mask, "perUnitBuild"] = new_val
+        print(f"  - updated {tech} investment cost for {year} → {new_val}")
+
+    acc.to_csv(out_dir / "accounting_converterunits.csv")
+    print(f"  File written: {out_dir/'accounting_converterunits.csv'}")
 
 
 # #%%
 if __name__ == "__main__":
-    # Create instance
-    #m = Instance(datadir=data_dir)
+    
+    print("\nBuilding REMix data for case:", case_name)
+    start_base = time.time()
+    m = {"Base": Instance(index_names=False, datadir=data_dir)} # Create base instance
 
-    m = {i: Instance(datadir=data_dir,index_names=False) for i in ["wind"]}
-    m["Base"] = Instance(index_names=False,datadir=data_dir)
-
-
-
-
-
+    # build the model
     add_scope(m)
     add_demand(m)
-    # rename_commodity = {"Electricity": "Elec", "Hydrogen": "H2"}
-
-
-    #     # Add demand for Electricity
-    # add_demand(
-    #     m=m,
-    #     file_path="C:/Local/REMix/remix_nz/input/demand/dlr/separate-elec.csv",
-    #     fuel_type="Elec",
-    #     rename_commodity=rename_commodity,
-    #     slack=True,
-    #     slack_cost=10
-    # )
-
-    # # Add demand for Hydrogen
-    # add_demand(
-    #     m=m,
-    #     file_path="C:/Local/REMix/remix_nz/input/demand/dlr/separate-h2.csv",
-    #     fuel_type="H2",
-    #     rename_commodity=rename_commodity
-    # )
-
-    # # Add demand for Water_in
-    # add_demand(
-    #     m=m,
-    #     file_path="C:/Local/REMix/remix_nz/input/demand/dlr/separate-inflows.csv",
-    #     fuel_type="Water_in",
-    #     rename_commodity=rename_commodity
-    # )
-
-    # renewables
     add_renewables(m)
     add_geothermal(m)
-    #add_hydro_original(m)
-    add_hydro(m)
-
-    # batteries
+    #add_hydro(m)
+    add_hydro_scheme(m)
     add_lithium_batteries(m)
-
-    # conventional
     add_thermal(m)
     add_gas_turbines(m)
-
-    # hydrogen
     add_electrolyser(m)
     add_h2_storage(m)
     add_H2_CCGT(m)
     add_H2_FC(m)
-
     #add_methanizer(m)
     #add_methanol_syn(m)
     #add_ftropsch_syn(m)
-
-    #carbon capture
     #add_dac(m)
-
-    #others
     add_network(m)
     add_accounting(m)
     validate_scope(m)
 
-    # Create data
-    s2 = time.perf_counter()
-
-    # Snapshot before writing
-    before = _snapshot_csv(data_dir)
-    t_start_write = time.time()
-
-    # Write
+    # write base data
     m["Base"].write(project_path=data_dir, fileformat="csv", float_format="{:.4g}".format)
+    base_time = time.time() - start_base
+    print(f"Base model completed in {base_time:.1f} seconds.")
+    print("Base data written to:", data_dir)
+  
 
-    # Snapshot after writing
-    after = _snapshot_csv(data_dir)
+    # # Apply scenario modifiers ------------------------------------------
+    # print("\nRunning scenario modifiers...\n")
 
-    # Compare
-    new_files = []
-    updated_files = []
-    for path, (mt_after, sz_after) in after.items():
-        if path not in before:
-            new_files.append((path, mt_after, sz_after))
-        else:
-            mt_before, sz_before = before[path]
-            if mt_after > t_start_write + 1e-3 and (sz_after != sz_before or mt_after != mt_before):
-                updated_files.append((path, mt_after, sz_after))
+    # # Dry-year inflow
+    # start_scn = time.time()
+    # modify_inflow_file(
+    #     m,
+    #     data_dir,
+    #     new_inflow_path="C:/Local/REMix/remix_nz/input/brownfield/hydro/inflows_remix-nz/inflow_dryyear.csv",
+    #     tag="dry-year"
+    # )
+    # print(f"Scenario 'dry-year' completed in {time.time() - start_scn:.1f} seconds.\n")
 
-    # Pretty print report
-    rel = lambda p: str(Path(p).resolve().relative_to(data_dir.resolve()))
-    new_files.sort(key=lambda x: rel(x[0]))
-    updated_files.sort(key=lambda x: rel(x[0]))
+    # # Cheaper wind (scalar)
+    # start_scn = time.time()
+    # modify_renewable_costs(
+    #     m,
+    #     data_dir,
+    #     tech="wind_onshore",
+    #     factor=0.75,
+    #     tag="wind-cheaper"
+    # )
+    # print(f"Scenario 'wind-cheaper' completed in {time.time() - start_scn:.1f} seconds.\n")
 
-    e2 = time.perf_counter()
-    d2 = time.strftime("%Hh %Mm %Ss", time.gmtime(e2 - s2))
-    print(f"Writing dataset for {case_name} took {d2}.")
-    print(f"Output root: {data_dir.resolve()}")
-    print(f"Files written or updated: {len(new_files) + len(updated_files)} "
-          f"(NEW: {len(new_files)}, UPDATED: {len(updated_files)})")
+    # # Cheaper H2 (by year)
+    # start_scn = time.time()
+    # modify_tech_cost_by_year(
+    #     m,
+    #     data_dir,
+    #     tech="Electrolyser",
+    #     year_costs={2030: 500, 2040: 420},
+    #     tag="H2-cheaper"
+    # )
+    # print(f"Scenario 'H2-cheaper' completed in {time.time() - start_scn:.1f} seconds.\n")
 
-    if new_files:
-        print("\nNEW files:")
-        for p, mt, sz in new_files:
-            ts = datetime.fromtimestamp(mt).strftime("%Y-%m-%d %H:%M:%S")
-            print(f"  + {rel(p)}  ({_fmt_size(sz)}, {ts})")
-
-    if updated_files:
-        print("\nUPDATED files:")
-        for p, mt, sz in updated_files:
-            ts = datetime.fromtimestamp(mt).strftime("%Y-%m-%d %H:%M:%S")
-            print(f"  ~ {rel(p)}  ({_fmt_size(sz)}, {ts})")
+    total_time = time.time() - start_base
+    print(f"All scenarios finished in {total_time/60:.1f} minutes total.")
