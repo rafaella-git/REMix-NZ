@@ -10,7 +10,6 @@ Elec
 Elec_battery
 H2
 H2_stored
-Heat_CSP
 Karapiro_in
 Manapouri_in
 Mangahao_in
@@ -29,6 +28,5 @@ Tokaanu_in
 Waikaremoana_in
 Waipapa_in
 Waitaki_in
-Water_in
 Water_out
 Whakamaru_in
