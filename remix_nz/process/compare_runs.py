@@ -107,6 +107,34 @@ def _report_table(name: str, df: pd.DataFrame):
     if bals:  print(f"Balance types: {', '.join(bals)}")
     if nodes: print(f"Nodes (sample): {', '.join(nodes[:12])}" + (" ..." if len(nodes) > 12 else ""))
 
+# --- Hydro cascade → single group label --------------------------------------
+def _hydro_tech_set() -> set:
+    """All hydro turbine tech names to group under 'Hydro'."""
+    return {
+        # Waitaki
+        "Tekapo_A","Tekapo_B","Ohau_A","Ohau_B","Ohau_C","Benmore","Aviemore","Waitaki",
+        # Waikato
+        "Aratiatia","Ohakuri","Atiamuri","Whakamaru","Maraetai","Waipapa","Arapuni","Karapiro",
+        # Clutha
+        "Clyde_220kV","Roxburgh",
+        # Singles
+        "Rangipo","Tokaanu","Matahina","Mangahao","Coleridge","Cobb",
+        # South Island others you have in your table
+        "Manapouri","Waipapa","Ohau_A","Ohau_B","Ohau_C","Arapuni","Aviemore","Benmore",
+        "Waitaki","Tekapo_A","Tekapo_B"
+    }
+
+_HYDRO = _hydro_tech_set()
+
+def _group_tech(tech: str) -> str:
+    """Map raw tech to a friendlier group name for plotting."""
+    if tech in _HYDRO:
+        return "Hydro"
+    # Keep common H2 family together but distinct
+    if tech.lower().startswith("h2_") or tech.lower() in {"electrolyser","h2_storage"}:
+        return tech  # keep as-is so you see the H2 chain
+    return tech
+
 # ------------------------ Comparisons -----------------------------------------
 def compare_converter_capacity(cap_base, cap_scen, year, label1, label2):
     d1 = _norm_strings(_lower_cols(cap_base.reset_index()), ["accyears", "captype", "commodity", "accnodesmodel"])
@@ -214,38 +242,57 @@ def compare_commodity_balance(bal_base, bal_scen, year, label1, label2):
     return comp
 
 def compare_global_dispatch(bal_base, bal_scen, label1, label2, year):
+    """Compare GLOBAL dispatch (Elec + H2), grouped, clean signs & hydro collapsed."""
     def extract(df):
         d = _norm_strings(_lower_cols(df.reset_index()),
-                          ["accnodesmodel", "commodity", "balancetype", "accyears"])
+                          ["accnodesmodel", "commodity", "balancetype", "accyears", "techs"])
         d = d[
             (d["accnodesmodel"] == "global") &
             (d["commodity"].isin(["elec", "h2"])) &
             (d["balancetype"] == "net") &
             (d["accyears"] == str(year))
-        ]
-        return d.groupby(["techs", "commodity"], as_index=False)["value"].sum()
+        ][["techs","commodity","value"]].copy()
+
+        # Make Wholesale and Demand positive for readability
+        d.loc[d["techs"].str.lower().isin(["wholesale", "demand"]), "value"] = d["value"].abs()
+
+        # Collapse hydro turbines to one label
+        d["tech_group"] = d["techs"].apply(_group_tech)
+
+        # Aggregate after grouping
+        d = d.groupby(["tech_group","commodity"], as_index=False)["value"].sum()
+        return d
 
     d1 = extract(bal_base)
     d2 = extract(bal_scen)
-    comp = pd.merge(d1, d2, on=["techs", "commodity"], how="outer",
-                    suffixes=(f"_{label1}", f"_{label2}")).fillna(0)
-    comp["Difference"] = comp[f"value_{label2}"] - comp[f"value_{label1}"]
-    comp = comp.sort_values("Difference", ascending=False).reset_index(drop=True)
 
-    _print_section("Global Dispatch Comparison (Elec + H2, TWh)")
+    comp = pd.merge(d1, d2, on=["tech_group","commodity"], how="outer",
+                    suffixes=(f"_{label1}", f"_{label2}")).fillna(0)
+
+    # Percent change helper (safe when base==0)
+    def pct(base, scen):
+        return 0.0 if base == 0 else (scen - base) / abs(base) * 100.0
+
+    comp["pct_change"]  = comp.apply(lambda r: pct(r[f"value_{label1}"], r[f"value_{label2}"]), axis=1)
+    comp["Difference"]  = comp[f"value_{label2}"] - comp[f"value_{label1}"]
+    comp = comp.sort_values(["commodity","Difference"], ascending=[True, False]).reset_index(drop=True)
+
+    _print_section("Global Dispatch Comparison (Elec + H2, grouped, TWh)")
     view = comp.rename(columns={
-        "techs": "Technology",
+        "tech_group": "Technology",
         "commodity": "Commodity",
         f"value_{label1}": f"{label1} (TWh)",
-        f"value_{label2}": f"{label2} (TWh)"
+        f"value_{label2}": f"{label2} (TWh)",
+        "pct_change": "Δ Scenario vs Base (%)"
     })
     print(view.to_string(index=False, formatters={
-        f"{label1} (TWh)": lambda x: _fmt(x, 2),
-        f"{label2} (TWh)": lambda x: _fmt(x, 2),
-        "Difference":     lambda x: _fmt(x, 2)
+        f"{label1} (TWh)":        lambda x: _fmt(x, 2),
+        f"{label2} (TWh)":        lambda x: _fmt(x, 2),
+        "Difference":             lambda x: _fmt(x, 2),
+        "Δ Scenario vs Base (%)": lambda x: f"{x:+.1f}%"
     }))
 
-    _save_csv(view, "global_dispatch_comparison_twh")
+    _save_csv(view, "global_dispatch_comparison_grouped_twh")
     return comp
 
 # ------------------------ Plotting --------------------------------------------
@@ -253,17 +300,20 @@ def plot_results(cap_df, bal_df, disp_df, label1, label2):
     sns.set_theme(style="whitegrid", context="talk")
     palette = sns.color_palette("colorblind", 2)
 
+    # --- existing capacity & balance plots unchanged ---
     def _maybe_plot(df, id_col, val_cols, title, xlab, fname):
         if df is None or df.empty:
             print(f"  • Skipping plot '{title}' (no data after filters).")
             return
-        fig, ax = plt.subplots(figsize=(10, max(5, 0.4 * len(df))))
+        fig, ax = plt.subplots(figsize=(10, max(5, 0.45 * len(df))))
         plot = df.copy().sort_values("Difference").rename(columns={id_col: "Label"})
         plot_m = plot.melt(id_vars=["Label"], value_vars=val_cols, var_name="Scenario", value_name=xlab)
         plot_m["Scenario"] = plot_m["Scenario"].map({val_cols[0]: label1, val_cols[1]: label2})
         sns.barplot(data=plot_m, y="Label", x=xlab, hue="Scenario", palette=palette, ax=ax, errorbar=None)
         ax.set_title(title)
-        _annotate_barh(ax)
+        for c in ax.containers: ax.bar_label(c, fmt="%.2f", padding=4)
+        ax.grid(True, axis="x", linestyle="--", alpha=0.5)
+        ax.spines["right"].set_visible(False); ax.spines["top"].set_visible(False)
         ax.legend(title="Scenario", frameon=False, loc="lower right")
         fig.tight_layout()
         if SAVE_OUTPUT:
@@ -271,7 +321,57 @@ def plot_results(cap_df, bal_df, disp_df, label1, label2):
 
     _maybe_plot(cap_df,  "techs",           [f"value_{label1}", f"value_{label2}"], "Installed Capacity (GW)", "GW",  "plot_capacity_gw")
     _maybe_plot(bal_df,  "commodity_group", [f"value_{label1}", f"value_{label2}"], "Commodity Balance (TWh)", "TWh", "plot_commodity_balance_twh")
-    _maybe_plot(disp_df, "techs",           [f"value_{label1}", f"value_{label2}"], "Global Dispatch (TWh)",   "TWh", "plot_global_dispatch_twh")
+
+    # --- NEW: clean grouped dispatch plots (Elec & H2 separately) -------------
+    if disp_df is None or disp_df.empty:
+        print("  • Skipping dispatch plot (no data).")
+        plt.show(); return
+
+    for com in ["elec","h2"]:
+        dfc = disp_df[disp_df["commodity"] == com].copy()
+        if dfc.empty: 
+            continue
+
+        # Prepare melt with order preserved
+        order = dfc.sort_values("Difference")["tech_group"].tolist()
+        base_col = f"value_{label1}"
+        scen_col = f"value_{label2}"
+
+        # Build per-row % label dictionary
+        pct_label = {
+            r["tech_group"]: f"{r['pct_change']:+.1f}%"
+            for _, r in dfc.iterrows()
+        }
+
+        fig, ax = plt.subplots(figsize=(11, max(5, 0.5 * len(order))))
+        plot_m = dfc.melt(id_vars=["tech_group"], value_vars=[base_col, scen_col],
+                          var_name="Scenario", value_name="TWh")
+        plot_m["Scenario"] = plot_m["Scenario"].map({base_col: label1, scen_col: label2})
+        sns.barplot(
+            data=plot_m, y="tech_group", x="TWh",
+            hue="Scenario", hue_order=[label1, label2],
+            order=order, palette=palette, ax=ax, errorbar=None
+        )
+        ax.set_title(f"Global Dispatch (TWh) — {com.upper()} (Hydro grouped)")
+        ax.set_ylabel("")
+        ax.grid(True, axis="x", linestyle="--", alpha=0.5)
+        ax.spines["right"].set_visible(False); ax.spines["top"].set_visible(False)
+        ax.legend(title="Scenario", frameon=False, loc="lower right")
+
+        # Add a single % label per row (right of the longer bar)
+        # Compute max of base/scen per label for placement
+        base_map = dict(zip(dfc["tech_group"], dfc[base_col]))
+        scen_map = dict(zip(dfc["tech_group"], dfc[scen_col]))
+        for i, label in enumerate(order):
+            x_max = max(base_map.get(label, 0.0), scen_map.get(label, 0.0))
+            ax.text(x_max * 1.01 if x_max >= 0 else x_max * 0.99,
+                    i,  # y position aligns with the category index
+                    pct_label[label],
+                    va="center", ha="left" if x_max >= 0 else "right", fontsize=10)
+
+        fig.tight_layout()
+        if SAVE_OUTPUT:
+            fig.savefig(OUTDIR / f"plot_global_dispatch_{com}_grouped_twh.png", dpi=IMG_DPI)
 
     plt.show()
 
