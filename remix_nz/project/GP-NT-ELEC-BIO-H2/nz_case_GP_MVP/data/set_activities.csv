@@ -1,11 +1,17 @@
 Capture
 Charge
 Coal_fossil_cons
+Coal_fossil_imp
 Discharge
 Electrolysis
+Gas_bio_imp
+Gas_fossil_imp
+LF_bio_imp
+LF_fossil_imp
 Methanizer
 Power_gen
 Powergen
 Spill
 Synthesis
 Wood_cons
+Wood_imp
