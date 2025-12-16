@@ -160,11 +160,12 @@ cython_debug/
 #.idea/
 
 *_commodity_balance.csv
-*hourly_electricity_GP-NT-ELEC-BIO-H2.csv
 
 remix_nz/output/will/01-battery-distributed_2020-2035-2050/result/csv/01-battery-distributed_2020-2035-2050_commodity_balance.csv
 *01-battery-distributed_2020-2035-2050/result/csv/01-battery-distributed_2020-2035-2050_commodity_balance.csv
 remix_nz/input/demand/electricity-authority/*.csv
+remix_nz/project/GP-NT-ELEC-BIO-H2/nz_case_GP_MVP/data/accounting_converteractivity.csv
+
 
 # Ignore auto-generated files and folders
 225*/
