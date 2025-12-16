@@ -4,9 +4,13 @@ Coal_fossil_cons
 Coal_fossil_imp
 Discharge
 Electrolysis
+Gas_bio_cons
 Gas_bio_imp
+Gas_fossil_cons
 Gas_fossil_imp
+LF_bio_cons
 LF_bio_imp
+LF_fossil_cons
 LF_fossil_imp
 Methanizer
 Power_gen

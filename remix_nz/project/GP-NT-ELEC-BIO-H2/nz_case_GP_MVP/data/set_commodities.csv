@@ -4,6 +4,10 @@ Coal_fossil
 Elec
 Elec_battery
 FuelService_Coal_fossil
+FuelService_Gas_bio
+FuelService_Gas_fossil
+FuelService_LF_bio
+FuelService_LF_fossil
 FuelService_Wood
 Gas_bio
 Gas_fossil
