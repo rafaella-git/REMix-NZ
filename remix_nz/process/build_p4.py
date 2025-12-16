@@ -2629,8 +2629,8 @@ def fuel_and_efuel_from_excel(m, carriers_long: pd.DataFrame):
 
     # Carriers that are specifically e-fuels (optional consumption caps)
     efuel_keys = {
-        "e-fuel (lf)": "REfuel",
-        "e-fuel (gas)": "CH4",
+        # "e-fuel (lf)": "REfuel",
+        # "e-fuel (gas)": "CH4",
     }
 
     # Split into paid and e-fuel groups
@@ -2793,6 +2793,162 @@ def fuel_and_efuel_from_excel(m, carriers_long: pd.DataFrame):
         f"{len(nodes_with_demand)} nodes and {len(df_paid)} demand rows."
     )
 
+def add_fuel_imports(m, carriers_long: pd.DataFrame):
+    """
+    Allow purchasable annual imports of primary fuels (Coal_fossil, Wood, Gas_fossil, Gas_bio,
+    LF_fossil, LF_bio) in each node/year where there is FuelService demand.
+
+    - sourcesink_annualsum: positive upper (supply cap) on the FUEL commodity
+    - sourcesink_config:    usesUpperSum = 1, usesLowerSum = 0, usesUpperProfile = 1
+    - accounting_converteractivity: FuelImportCost + CO2_emission per unit imported fuel
+    """
+
+    # same mapping you use in fuel_and_efuel_from_excel
+    paid_carrier_to_commodity = {
+        "coal (fossil)": "Coal_fossil",
+        "coal": "Coal_fossil",
+        "coal_fossil": "Coal_fossil",
+        "gas (fossil)": "Gas_fossil",
+        "natural gas": "Gas_fossil",
+        "gas": "Gas_fossil",
+        "gas_fossil": "Gas_fossil",
+        "liquid fuel (fossil)": "LF_fossil",
+        "liquid fuel": "LF_fossil",
+        "lf_fossil": "LF_fossil",
+        "liquid fuel (bio)": "LF_bio",
+        "lf_bio": "LF_bio",
+        "wood": "Wood",
+        "biomass": "Wood",
+        "wood (bio)": "Wood",
+        "gas (bio)": "Gas_bio",
+        "gas_bio": "Gas_bio",
+    }
+
+    df = carriers_long.copy()
+    df["Carrier_key"] = df["Carrier"].astype(str).str.strip().str.lower()
+    df = df.loc[df["Carrier_key"].isin(paid_carrier_to_commodity.keys())].copy()
+    if df.empty:
+        print("No paid fuel carriers found in Excel; skipping fuel import sinks.")
+        return
+
+    df["commodity"] = df["Carrier_key"].map(paid_carrier_to_commodity)
+    df = df.loc[df["Year"].isin(yrs_sel)].copy()
+    if df.empty:
+        print("No paid fuel demand in selected years; skipping fuel import sinks.")
+        return
+
+    # aggregate total fuel demand per node/year/commodity to set a sensible cap
+    agg = (
+        df.groupby(["REMixRegion", "Year", "commodity"], as_index=False)["Demand"]
+          .sum()
+    )
+    # import cap as factor * demand (so it is never binding, just finite)
+    safety_factor = 2.0
+    agg["ImportCap"] = safety_factor * agg["Demand"]
+
+    idx_ss = pd.MultiIndex.from_arrays(
+        [agg["REMixRegion"], agg["Year"], ["FuelImport"] * len(agg), agg["commodity"]],
+        names=["nodesdata", "years", "sector", "commodity"],
+    )
+
+    ss = pd.DataFrame(index=idx_ss)
+    # Positive upper: this is a source to the system
+    ss["upper"] = agg["ImportCap"].values
+    m["Base"].parameter.add(ss, "sourcesink_annualsum")
+
+    cfg = pd.DataFrame(index=idx_ss)
+    cfg["usesUpperSum"] = 1
+    cfg["usesLowerSum"] = 0
+    cfg["usesUpperProfile"] = 1
+    m["Base"].parameter.add(cfg, "sourcesink_config")
+
+    m["Base"].set.add(list(agg["REMixRegion"].unique()), "nodesdata")
+    m["Base"].set.add(list(agg["Year"].unique()), "years")
+
+    # Cost and CO2 per imported GWh, using CSIRO + same factors as FuelConsumer
+    co2_kt_per_gwh = {
+        "Coal_fossil": 0.34,
+        "Gas_fossil":  0.20,
+        "LF_fossil":   0.27,
+        "LF_bio":      0.0,
+        "Gas_bio":     0.0,
+        "Wood":        0.0,
+    }
+    commodity_to_csiro = {
+        "Coal_fossil": "Black Coal",
+        "Gas_fossil":  "Gas",
+        "LF_fossil":   "Liquid Fuel",
+        "LF_bio":      "Liquid Fuel",
+        "Gas_bio":     "Gas",
+        "Wood":        "Biomass",
+    }
+
+    # Model imports as a "virtual" technology FuelImport with one activity per fuel
+    fuel_import_tech = "FuelImport"
+    vintages = yrs_to_calc
+    activities = [f"{c}_imp" for c in sorted(co2_kt_per_gwh.keys())]
+
+    # tech and capacity (non-binding)
+    tech = pd.DataFrame(index=pd.MultiIndex.from_product([[fuel_import_tech], vintages]))
+    tech["lifeTime"] = 1
+    tech["activityUpperLimit"] = 1
+    m["Base"].parameter.add(tech, "converter_techparam")
+
+    nodes = sorted(agg["REMixRegion"].unique().tolist())
+    cap = pd.DataFrame(
+        index=pd.MultiIndex.from_product([nodes, yrs_to_calc, [fuel_import_tech]])
+    )
+    cap["unitsBuild"] = 0.0
+    cap["unitsUpperLimit"] = 1e9
+    cap["noExpansion"] = 0
+    m["Base"].parameter.add(cap, "converter_capacityparam")
+
+    # coefficients: +1 fuel commodity per unit of import activity
+    coef = pd.DataFrame(
+        index=pd.MultiIndex.from_product(
+            [[fuel_import_tech], vintages, activities, sorted(co2_kt_per_gwh.keys())]
+        )
+    )
+    for fuel, act in zip(sorted(co2_kt_per_gwh.keys()), activities):
+        coef.loc[idx[:, :, act, fuel], "coefficient"] = 1.0
+    m["Base"].parameter.add(coef, "converter_coefficient")
+
+    # accounting per activity: FuelImportCost + CO2_emission
+    acc_idx = pd.MultiIndex.from_product(
+        [
+            ["FuelImportCost", "CO2_emission"],
+            ["global"],
+            ["horizon"],
+            [fuel_import_tech],
+            vintages,
+            activities,
+        ],
+        names=["indicator", "regionscope", "timescope", "techs", "years", "activities"],
+    )
+    acc = pd.DataFrame(index=acc_idx)
+
+    fuels = sorted(co2_kt_per_gwh.keys())
+    for y in vintages:
+        suffix = "early" if y < 2050 else "2050"
+        for fuel, act in zip(fuels, activities):
+            fuel_key = commodity_to_csiro.get(fuel, None)
+            if fuel_key is None:
+                continue
+            csiro_key = f"{fuel_key}_{suffix}"
+            cost = aud_per_gj_to_meur_per_gwh(csiro_fuel_aud_per_gj[csiro_key])
+            co2 = co2_kt_per_gwh[fuel]
+
+            acc.loc[("FuelImportCost", "global", "horizon", fuel_import_tech, y, act), "perActivity"] = cost
+            acc.loc[("CO2_emission", "global", "horizon", fuel_import_tech, y, act), "perActivity"] = co2
+
+    acc = acc.fillna(0.0)
+    m["Base"].parameter.add(acc, "accounting_converteractivity")
+
+    print(
+        f"Fuel import sinks added for {len(fuels)} fuels, "
+        f"{len(nodes)} nodes and years {vintages}."
+    )
+
 
 # #%%
 
@@ -2819,6 +2975,7 @@ if __name__ == "__main__":
     # annual hydrogen demand (perfect battery)
     add_h2_annual_demand_from_excel(m, carriers_long)
     fuel_and_efuel_from_excel(m, carriers_long)
+    add_fuel_imports(m, carriers_long)
 
     # supply side blocks
     if include_renewables:
