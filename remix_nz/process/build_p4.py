@@ -2602,27 +2602,15 @@ def fuel_and_efuel_from_excel(m, carriers_long: pd.DataFrame):
 
     # ---- 1. Classification of carriers --------------------------------
     # Carriers that are modelled as *paid fuels* through FuelConsumer
+
+        # same mapping used in fuel_and_efuel_from_excel
     paid_carrier_to_commodity = {
-        # fossil and bio fuels (liquid / gas / solid)
-        "coal (fossil)": "Coal_fossil",
         "coal": "Coal_fossil",
-        "coal_fossil": "Coal_fossil",
-        "gas (fossil)": "Gas_fossil",
-        "natural gas": "Gas_fossil",
-        "gas": "Gas_fossil",
-        "gas_fossil": "Gas_fossil",
-        "liquid fuel (fossil)": "LF_fossil",
-        "liquid fuel": "LF_fossil",
-        "lf_fossil": "LF_fossil",
-        "liquid fuel (bio)": "LF_bio",
-        "lf_bio": "LF_bio",
+        "fossil (gas)": "Gas_fossil",
+        "fossil (lf)": "LF_fossil",
+        "biofuel (lf)": "LF_bio",
+        "biofuel (gas)": "Gas_bio",
         "wood": "Wood",
-        "biomass": "Wood",
-        "wood (bio)": "Wood",
-        "gas (bio)": "Gas_bio",
-        "gas_bio": "Gas_bio",
-        # if you want to treat REfuel/CH4 as paid final fuels instead of
-        # optional e-fuels, you can also map them here:
         # "e-fuel (lf)": "REfuel",
         # "e-fuel (gas)": "CH4",
     }
@@ -2802,26 +2790,16 @@ def add_fuel_imports(m, carriers_long: pd.DataFrame):
     - sourcesink_config:    usesUpperSum = 1, usesLowerSum = 0, usesUpperProfile = 1
     - accounting_converteractivity: FuelImportCost + CO2_emission per unit imported fuel
     """
-
-    # same mapping you use in fuel_and_efuel_from_excel
+    # same mapping used in fuel_and_efuel_from_excel
     paid_carrier_to_commodity = {
-        "coal (fossil)": "Coal_fossil",
         "coal": "Coal_fossil",
-        "coal_fossil": "Coal_fossil",
-        "gas (fossil)": "Gas_fossil",
-        "natural gas": "Gas_fossil",
-        "gas": "Gas_fossil",
-        "gas_fossil": "Gas_fossil",
-        "liquid fuel (fossil)": "LF_fossil",
-        "liquid fuel": "LF_fossil",
-        "lf_fossil": "LF_fossil",
-        "liquid fuel (bio)": "LF_bio",
-        "lf_bio": "LF_bio",
+        "fossil (gas)": "Gas_fossil",
+        "fossil (lf)": "LF_fossil",
+        "biofuel (lf)": "LF_bio",
+        "biofuel (gas)": "Gas_bio",
         "wood": "Wood",
-        "biomass": "Wood",
-        "wood (bio)": "Wood",
-        "gas (bio)": "Gas_bio",
-        "gas_bio": "Gas_bio",
+        # "e-fuel (lf)": "REfuel",
+        # "e-fuel (gas)": "CH4",
     }
 
     df = carriers_long.copy()
