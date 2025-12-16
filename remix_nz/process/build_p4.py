@@ -494,193 +494,6 @@ def add_demand(m):
 
     print("Hydro inflows loaded.")
 
-
-def add_h2_annual_demand_from_excel(m, carriers_long: pd.DataFrame):
-    """
-    Adds annual hydrogen demand as exogenous sinks on the real H2 commodity.
-    Supply must come from the model (electrolyers, etc.); no H2 imports.
-    """
-
-    df = carriers_long.copy()
-    df["Carrier_key"] = df["Carrier"].astype(str).str.strip().str.lower()
-
-    # Keep only hydrogen-type carriers
-    h2_keys = {"hydrogen", "h2", "h2-feedstock"}
-    df = df.loc[df["Carrier_key"].isin(h2_keys)].copy()
-    if df.empty:
-        print("No H2 carriers found in Excel; skipping H2 annual demand.")
-        return
-
-    # Map to REMix commodity H2
-    df["commodity"] = "H2"
-
-    # Index: (nodesdata, years, sector, commodity)
-    idx = pd.MultiIndex.from_arrays(
-        [df["REMixRegion"], df["Year"], df["Sector"], df["commodity"]],
-        names=["nodesdata", "years", "sector", "commodity"],
-    )
-
-    # Annual upper sums
-    ss = pd.DataFrame(index=idx)
-    ss["upper"] = df["Demand"].values  # GWh_H2 per year
-    m["Base"].parameter.add(ss, "sourcesink_annualsum")
-
-    # Configuration: enforce only the upper sum; profile not used
-    cfg = pd.DataFrame(index=idx)
-    cfg["usesUpperSum"] = 1
-    cfg["usesUpperProfile"] = 1
-    m["Base"].parameter.add(cfg, "sourcesink_config")
-
-    # Ensure nodes and years are in sets
-    m["Base"].set.add(list(df["REMixRegion"].unique()), "nodesdata")
-    m["Base"].set.add(list(df["Year"].unique()), "years")
-
-    print(f"Hydrogen annual demand added: {len(df)} rows")
-
-# def add_paid_fuel_consumption_from_excel(m, carriers_long: pd.DataFrame):
-#     """
-#     Adds annual supply of paid fuels (fossil + bio + wood) with a cost.
-#     Biofuels and wood are treated CO2-neutral (CO2 intensity = 0).
-
-#     This is for non-electric, non-hydrogen carriers that are not produced endogenously.
-#     """
-#     # exclude carriers not needed here
-#     exclude = {"electricity", "hydrogen", "solar", "geothermal", "e-fuel (lf)", "e-fuel (gas)"}
-#     df = carriers_long.copy()
-#     df["Carrier_key"] = df["Carrier"].astype(str).str.strip().str.lower()
-#     df = df.loc[~df["Carrier_key"].isin(exclude)].copy()
-#     if df.empty:
-#         print("No paid fuel carriers to add.")
-#         return
-
-#     # mapping from Excel carrier name to REMix commodity
-#     carrier_to_commodity = {
-#         "fossil (lf)": "LF_fossil",
-#         "fossil (gas)": "Gas_fossil",
-#         "coal": "Coal_fossil",
-#         "biofuel (lf)": "LF_bio",
-#         "biofuel (gas)": "Gas_bio",
-#         "wood": "Wood",
-#     }
-
-#     # Keep only carriers we know
-#     df = df.loc[df["Carrier_key"].isin(carrier_to_commodity.keys())].copy()
-#     if df.empty:
-#         print("No matching paid fuel carriers found after mapping.")
-#         return
-
-#     df["commodity"] = df["Carrier_key"].map(carrier_to_commodity)
-
-#     # sector kept as in data (Heat/Transport/etc). Keep it, do not force All.
-#     idx_ss = pd.MultiIndex.from_arrays(
-#         [df["REMixRegion"], df["Year"], df["Sector"], df["commodity"]],
-#         names=["nodesdata", "years", "sector", "commodity"],
-#     )
-
-#     ss = pd.DataFrame(index=idx_ss)
-#     # FIXME: this allows consumption up to the demand value, do not force an exact minimum
-#     ss["lower"] = 0.0
-#     ss["upper"] = df["Demand"].values
-#     m["Base"].parameter.add(ss, "sourcesink_annualsum")
-
-#     cfg = pd.DataFrame(index=idx_ss)
-#     cfg["usesLowerSum"] = 0   # no hard lower sum
-#     cfg["usesUpperSum"] = 1   # enforce only the upper sum
-#     m["Base"].parameter.add(cfg, "sourcesink_config")
-
-
-#     # Costs + emissions for paid fuels
-#     # Fossil: CSIRO proxy costs, CO2 intensities from PDF (kg/MWh) converted to kt/GWh
-#     # Biofuels/wood: costs from CSIRO proxies, CO2 intensity = 0
-
-#     co2_kt_per_gwh = {
-#         "LF_fossil": 0.2624,     # 262.4 kg/MWh = 0.2624 kt/GWh
-#         "Gas_fossil": 0.2048,
-#         "Coal_fossil": 0.3546,
-#         "LF_bio": 0.0,
-#         "Gas_bio": 0.0,
-#         "Wood": 0.0,
-#     }
-
-#     # Map commodities to CSIRO fuel categories
-#     commodity_to_csiro = {
-#         "LF_fossil": "Liquid Fuel",
-#         "LF_bio": "Liquid Fuel",
-#         "Gas_fossil": "Gas",
-#         "Gas_bio": "Gas",
-#         "Coal_fossil": "Black Coal",
-#         "Wood": "Biomass",
-#     }
-
-#     years_dem = sorted(df["Year"].unique().tolist())
-#     sectors_dem = sorted(df["Sector"].unique().tolist())
-#     commodities_dem = sorted(df["commodity"].unique().tolist())
-
-#     acc_index = pd.MultiIndex.from_product(
-#         [["FuelCost", "CO2_emission"], ["global"], years_dem, sectors_dem, commodities_dem],
-#         names=["indicator", "regionscope", "years", "sector", "commodity"],
-#     )
-#     acc = pd.DataFrame(index=acc_index)
-
-#     for y in years_dem:
-#         for s in sectors_dem:
-#             for c in commodities_dem:
-#                 fuel_key = commodity_to_csiro.get(c, None)
-#                 if fuel_key is None:
-#                     continue
-#                 cost = csiro_fuel_cost_meur_per_gwh(y, fuel_key)
-#                 acc.loc[("FuelCost", "global", y, s, c), "perFlow"] = cost
-#                 acc.loc[("CO2_emission", "global", y, s, c), "perFlow"] = co2_kt_per_gwh.get(c, 0.0)
-
-#     acc = acc.fillna(0.0)
-#     m["Base"].parameter.add(acc, "accounting_sourcesinkflow")
-
-#     print(f"Paid fuels added: {len(df)} rows")
-
-
-def add_efuel_demand_from_excel(m, carriers_long: pd.DataFrame):
-    """
-    Adds annual demand sinks for e-fuels from the carriers Excel.
-    E-fuel (LF) is mapped to 'REfuel' (output of FTropschSyn in your code).
-    E-fuel (gas) is mapped to 'CH4' (output of Methanizer in your code).
-
-    No direct fuel cost is added here. Costs come from the converter chains.
-    """
-    df = carriers_long.copy()
-    df["Carrier_key"] = df["Carrier"].astype(str).str.strip().str.lower()
-
-    mapping = {
-        "e-fuel (lf)": "REfuel",
-        "e-fuel (gas)": "CH4",
-    }
-    df = df.loc[df["Carrier_key"].isin(mapping.keys())].copy()
-    if df.empty:
-        print("No e-fuel demand in Excel for this scenario.")
-        return
-
-    df["commodity"] = df["Carrier_key"].map(mapping)
-
-    idx_ss = pd.MultiIndex.from_arrays(
-        [df["REMixRegion"], df["Year"], df["Sector"], df["commodity"]],
-        names=["nodesdata", "years", "sector", "commodity"],
-    )
-
-    #FIXME: this allows consumption up to the demand value, do not force an exact minimum
-    ss = pd.DataFrame(index=idx_ss)
-    ss["lower"] = 0.0
-    ss["upper"] = df["Demand"].values
-    m["Base"].parameter.add(ss, "sourcesink_annualsum")
-
-    cfg = pd.DataFrame(index=idx_ss)
-    cfg["usesLowerSum"] = 0
-    cfg["usesUpperSum"] = 1
-    m["Base"].parameter.add(cfg, "sourcesink_config")
-
-
-
-    print(f"E-fuel demand added: {len(df)} rows")
-
-
 # hydro
 def add_hydro(m):
     # Define hydropower converters (turbines) and storage (reservoirs) for REMix NZ.
@@ -1322,8 +1135,6 @@ def add_geothermal(m):
 
 
     m["Base"].parameter.add(geoth_acc, "accounting_converterunits")
-
-
 
 # conventional
 
@@ -2309,683 +2120,6 @@ def add_emission_slack(m, year=2050, slack_cost_eur_per_tco2=1_000_000):
     m["Base"].parameter.add(perind, "accounting_perindicator")
 
 
-# other carriers 
-def add_fossil_fuel_consumption(m):
-    """
-    read csv and add fossil fuel demand
-    as annual sinks with fuel cost and co2 emissions
-
-    csv is expected to have columns:
-        Scenario, Sector, Fuel, Region, 2020, 2025, ..., 2050
-
-    fuel_scenario (global) selects which Scenario to use (GP, NT, ELEC+, BIO+, H2+)
-    """
-
-    # fossil fuels in the carriers csv
-    fossil_specs = {
-        "Fossil (LF)": {
-            "commodity": "LF_fossil",
-            "cost_MEUR_per_GWh": 0.0528,  # 52.8 €/MWh
-            "co2_kt_per_GWh":    0.2624,  # 262.4 kg/MWh
-        },
-        "Fossil (gas)": {
-            "commodity": "Gas_fossil",
-            "cost_MEUR_per_GWh": 0.0299,  # 29.9 €/MWh
-            "co2_kt_per_GWh":    0.2048,  # 204.8 kg/MWh
-        },
-        "Coal": {
-            "commodity": "Coal_fossil",
-            "cost_MEUR_per_GWh": 0.0101,  # 10.1 €/MWh
-            "co2_kt_per_GWh":    0.3546,  # 354.6 kg/MWh
-        },
-    }
-
-    # build helper: commodity -> cost/emis
-    specs_by_commodity = {}
-    for fuel_name, spec in fossil_specs.items():
-        c = spec["commodity"]
-        specs_by_commodity[c] = {
-            "cost_MEUR_per_GWh": spec["cost_MEUR_per_GWh"],
-            "co2_kt_per_GWh":    spec["co2_kt_per_GWh"],
-        }
-
-    # read carriers file
-    carriers_file = f"{path_input}/demand/grouped-elec-carriers-demand/all_carriers_remix_scenarios.csv"
-    df = pd.read_csv(carriers_file)
-
-    # filter scenario
-    df = df[df["Scenario"] == fuel_scenario].copy()
-    if df.empty:
-        print(f"no rows in grouped-elec-carriers-demand for scenario '{fuel_scenario}'")
-        return
-
-    # keep only fossil fuels we know about
-    df = df[df["Fuel"].isin(fossil_specs.keys())].copy()
-    if df.empty:
-        print(f"no fossil fuel rows for scenario '{fuel_scenario}' in grouped-elec-carriers-demand")
-        return
-
-    # year columns present in the csv
-    csv_years = [int(c) for c in df.columns if str(c).isdigit()]
-
-    # model years from remix (fallback to yrs_to_calc)
-    try:
-        model_years = sorted(int(y) for y in m["Base"].set.years)
-    except Exception:
-        model_years = yrs_to_calc
-
-    # intersect csv years and model years
-    years_use = [y for y in model_years if y in csv_years]
-    if not years_use:
-        print("no overlapping years between grouped-elec-carriers-demand and model years (fossil)")
-        return
-
-    # build annual demand records
-    demand_records = []   # (region, year, sector, commodity, value_gwh)
-
-    for _, row in df.iterrows():
-        fuel_name = row["Fuel"]
-        spec = fossil_specs[fuel_name]
-        commodity = spec["commodity"]
-
-        region = row["Region"]
-        sector = row["Sector"]
-
-        for y in years_use:
-            val = row[str(y)]
-            if pd.isna(val):
-                continue
-
-            val_float = float(val)
-            if val_float == 0.0:
-                continue
-
-            val_round = round(val_float, 6)  # gwh
-            demand_records.append((region, int(y), sector, commodity, val_round))
-
-    if not demand_records:
-        print("no non-zero fossil fuel demand found")
-        return
-
-    # sourcesink_annualsum
-    idx_ss = pd.MultiIndex.from_tuples(
-        [(r, y, s, c) for (r, y, s, c, _) in demand_records],
-        names=["nodesdata", "years", "sector", "commodity"],
-    )
-    values = [v for (*_, v) in demand_records]
-
-    ss_annual = pd.DataFrame(index=idx_ss)
-    ss_annual["lower"] = values
-    ss_annual["upper"] = values
-
-    m["Base"].parameter.add(ss_annual, "sourcesink_annualsum")
-
-    # config: annual sums only
-    ss_cfg = pd.DataFrame(index=idx_ss)
-    ss_cfg["usesLowerSum"] = 1
-    ss_cfg["usesUpperSum"] = 1
-    m["Base"].parameter.add(ss_cfg, "sourcesink_config")
-
-    # update node + year sets
-    m["Base"].set.add(list(ss_annual.index.get_level_values("nodesdata")), "nodesdata")
-    m["Base"].set.add(list(ss_annual.index.get_level_values("years")), "years")
-
-    # accounting_sourcesinkflow: FuelCost + CO2_emission
-
-    years_dem = sorted({y for (_, y, _, _, _) in demand_records})
-    sectors_dem = sorted({s for (_, _, s, _, _) in demand_records})
-    commodities_dem = sorted({c for (_, _, _, c, _) in demand_records})
-
-    acc_index = pd.MultiIndex.from_product(
-        [
-            ["FuelCost", "CO2_emission"],
-            ["global"],
-            years_dem,
-            sectors_dem,
-            commodities_dem,
-        ],
-        names=["indicator", "regionscope", "years", "sector", "commodity"],
-    )
-
-    acc = pd.DataFrame(index=acc_index)
-
-    for commodity in commodities_dem:
-        spec = specs_by_commodity.get(commodity, None)
-        if spec is None:
-            continue
-
-        cost_val = spec["cost_MEUR_per_GWh"]
-        emis_val = spec["co2_kt_per_GWh"]
-
-        acc.loc[idx["FuelCost", "global", :, :, commodity], "perFlow"] = cost_val
-        acc.loc[idx["CO2_emission", "global", :, :, commodity], "perFlow"] = emis_val
-
-    acc = acc.dropna(how="all")
-
-    m["Base"].parameter.add(acc, "accounting_sourcesinkflow")
-
-    print(
-        f"added {len(ss_annual)} fossil fuel demand entries with constant costs and emissions "
-        f"for scenario {fuel_scenario}"
-    )
-
-def add_efuel_demand(m):
-    """
-    add annual demand sinks for e-fuels (liquid and gas) from
-    grouped-elec-carriers-demand.csv
-
-    this only creates demand (sourcesink_annualsum) and config.
-    costs and co2 emissions must come from converter chains
-    (electrolyser, ftropsch, methanol, dac, etc.)
-    """
-
-    fuel_to_commodity = {
-        "E-fuel (LF)":  "LF_efuel",
-        "E-fuel (gas)": "Gas_efuel",
-    }
-
-    carriers_file = f"{path_input}/demand/grouped-elec-carriers-demand/all_carriers_remix_scenarios.csv"
-    df = pd.read_csv(carriers_file)
-
-    # filter scenario
-    df = df[df["Scenario"] == fuel_scenario].copy()
-    if df.empty:
-        print(f"no rows in grouped-elec-carriers-demand for scenario '{fuel_scenario}'")
-        return
-
-    # keep only e-fuels
-    df = df[df["Fuel"].isin(fuel_to_commodity.keys())].copy()
-    if df.empty:
-        print(f"no e-fuel rows for scenario '{fuel_scenario}' in grouped-elec-carriers-demand")
-        return
-
-    # year columns present in the csv
-    csv_years = [int(c) for c in df.columns if str(c).isdigit()]
-
-    # model years from remix (fallback to yrs_to_calc)
-    try:
-        model_years = sorted(int(y) for y in m["Base"].set.years)
-    except Exception:
-        model_years = yrs_to_calc
-
-    years_use = [y for y in model_years if y in csv_years]
-    if not years_use:
-        print("no overlapping years between grouped-elec-carriers-demand and model years (e-fuels)")
-        return
-
-    # build annual demand records
-    demand_records = []   # (region, year, sector, commodity, value_gwh)
-
-    for _, row in df.iterrows():
-        fuel_name = row["Fuel"]
-        commodity = fuel_to_commodity[fuel_name]
-
-        region = row["Region"]
-        sector = row["Sector"]
-
-        for y in years_use:
-            val = row[str(y)]
-            if pd.isna(val):
-                continue
-
-            val_float = float(val)
-            if val_float == 0.0:
-                continue
-
-            val_round = round(val_float, 6)  # gwh
-            demand_records.append((region, int(y), sector, commodity, val_round))
-
-    if not demand_records:
-        print("no non-zero e-fuel demand found")
-        return
-
-    # sourcesink_annualsum
-    idx_ss = pd.MultiIndex.from_tuples(
-        [(r, y, s, c) for (r, y, s, c, _) in demand_records],
-        names=["nodesdata", "years", "sector", "commodity"],
-    )
-    values = [v for (*_, v) in demand_records]
-
-    ss_annual = pd.DataFrame(index=idx_ss)
-    ss_annual["lower"] = values
-    ss_annual["upper"] = values
-
-    m["Base"].parameter.add(ss_annual, "sourcesink_annualsum")
-
-    # config: annual sums only, no profile
-    ss_cfg = pd.DataFrame(index=idx_ss)
-    ss_cfg["usesLowerSum"] = 1
-    ss_cfg["usesUpperSum"] = 1
-    m["Base"].parameter.add(ss_cfg, "sourcesink_config")
-
-    # update node + year sets
-    m["Base"].set.add(list(ss_annual.index.get_level_values("nodesdata")), "nodesdata")
-    m["Base"].set.add(list(ss_annual.index.get_level_values("years")), "years")
-
-    print(
-        f"added {len(ss_annual)} e-fuel demand entries (LF_efuel / Gas_efuel) "
-        f"for scenario {fuel_scenario}"
-    )
-
-def add_fuel_consumers(m, carriers_long: pd.DataFrame):
-    """
-    Generic fuel consumer tech with one activity per carrier.
-    For each (node, year, sector, carrier) demand from carriers_long:
-      - strict demand on FuelService_<carrier>
-      - activity <carrier>_cons of FuelConsumer consumes that fuel
-      - fuel cost and CO2 are accounted per unit of fuel flow.
-    """
-
-    # ---- 1. Extract fuel rows from carriers_long ----
-    df = carriers_long.copy()
-    df["Carrier_key"] = df["Carrier"].astype(str).str.strip().str.lower()
-
-    carrier_to_commodity = {
-        "fossil (lf)": "LF_fossil",
-        "fossil (gas)": "Gas_fossil",
-        "coal": "Coal_fossil",
-        "biofuel (lf)": "LF_bio",
-        "biofuel (gas)": "Gas_bio",
-        "wood": "Wood",
-    }
-
-    df = df.loc[df["Carrier_key"].isin(carrier_to_commodity)].copy()
-    if df.empty:
-        print("No paid fuel carriers found in carriers Excel; skipping add_fuel_consumers.")
-        return
-
-    df["commodity"] = df["Carrier_key"].map(carrier_to_commodity)
-
-    # keep only model years
-    df = df.loc[df["Year"].isin(yrs_sel)].copy()
-    if df.empty:
-        print("No paid fuel demand in selected years; skipping add_fuel_consumers.")
-        return
-
-    # ---- 2. Strict demand per (node, year, sector, carrier) on FuelService_<carrier> ----
-    df["service_commodity"] = df["commodity"].apply(lambda c: f"FuelService_{c}")
-
-    idx_ss = pd.MultiIndex.from_arrays(
-        [df["REMixRegion"], df["Year"], df["Sector"], df["service_commodity"]],
-        names=["nodesdata", "years", "sector", "commodity"],
-    )
-
-    ss = pd.DataFrame(index=idx_ss)
-    # strict negative demand: must meet Excel demand exactly
-    ss["lower"] = df["Demand"].values
-    ss["upper"] = df["Demand"].values
-    m["Base"].parameter.add(ss, "sourcesink_annualsum")
-
-    cfg = pd.DataFrame(index=idx_ss)
-    cfg["usesLowerSum"] = 1
-    cfg["usesUpperSum"] = 1
-    m["Base"].parameter.add(cfg, "sourcesink_config")
-
-    # ---- 3. Define the FuelConsumer converter tech+capacity ----
-    fuel_tech = "FuelConsumer"
-    vintages = yrs_to_calc  # or yrs_sel
-
-    tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product([[fuel_tech], vintages])
-    )
-    tech["lifeTime"] = 1
-    tech["activityUpperLimit"] = 1
-    m["Base"].parameter.add(tech, "converter_techparam")
-
-    nodes = list(m["Base"].set.nodesdata)
-    cap = pd.DataFrame(
-        index=pd.MultiIndex.from_product([nodes, yrs_to_calc, [fuel_tech]])
-    )
-    cap["unitsBuild"] = 1.0
-    cap["unitsUpperLimit"] = 1.0
-    cap["noExpansion"] = 1
-    m["Base"].parameter.add(cap, "converter_capacityparam")
-
-    # ---- 4. Converter coefficients: one activity per fuel ----
-    fuels = sorted(df["commodity"].unique())
-    activities = [f"{f}_cons" for f in fuels]           # e.g. "Coal_fossil_cons"
-    services = [f"FuelService_{f}" for f in fuels]      # e.g. "FuelService_Coal_fossil"
-    commodities = fuels + services
-
-    coef = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [[fuel_tech], vintages, activities, commodities]
-        )
-    )
-
-    for f, act, serv in zip(fuels, activities, services):
-        # consume 1 GWh of fuel
-        coef.loc[idx[:, :, act, f], "coefficient"] = -1.0
-        # produce 1 GWh of matching service
-        coef.loc[idx[:, :, act, serv], "coefficient"] = 1.0
-
-    m["Base"].parameter.add(coef, "converter_coefficient")
-
-     # ---- 5. Accounting per activity: fuel cost + CO2 (converteractivity) ----
-    co2_kt_per_gwh = {
-        "Coal_fossil": 0.34,   # use your actual values
-        "Gas_fossil": 0.20,
-        "LF_fossil": 0.27,
-        "LF_bio": 0.0,
-        "Gas_bio": 0.0,
-        "Wood": 0.0,
-    }
-
-    commodity_to_csiro = {
-        "Coal_fossil": "Black Coal",
-        "Gas_fossil": "Gas",
-        "LF_fossil": "Liquid Fuel",
-        "LF_bio": "Liquid Fuel",
-        "Gas_bio": "Gas",
-        "Wood": "Biomass",
-    }
-
-    # Match existing accounting_converteractivity index:
-    # (indicator, regionscope, timescope, techs, years, activities)
-    acc_idx = pd.MultiIndex.from_product(
-        [
-            ["FuelCost", "CO2_emission"],   # indicators
-            ["global"],                     # regionscope
-            ["horizon"],                    # timescope
-            [fuel_tech],                    # techs
-            vintages,                       # years
-            activities,                     # activities
-        ],
-        names=["indicator", "regionscope", "timescope", "techs", "years", "activities"],
-    )
-
-    acc = pd.DataFrame(index=acc_idx)
-
-    for y in vintages:
-        suffix = "early" if y < 2050 else "2050"
-        for f, act in zip(fuels, activities):
-            fuel_key = commodity_to_csiro.get(f, None)
-            if fuel_key is None:
-                continue
-            csiro_key = f"{fuel_key}_{suffix}"
-            cost = aud_per_gj_to_meur_per_gwh(csiro_fuel_aud_per_gj[csiro_key])
-            co2 = co2_kt_per_gwh.get(f, 0.0)
-
-            acc.loc[("FuelCost", "global", "horizon", fuel_tech, y, act), "perActivity"] = cost
-            acc.loc[("CO2_emission", "global", "horizon", fuel_tech, y, act), "perActivity"] = co2
-
-    acc = acc.fillna(0.0)
-    m["Base"].parameter.add(acc, "accounting_converteractivity")
-
-    print(f"added fuel consumers for {len(fuels)} fuels and {len(nodes)} nodes")
-
-def add_purchased_fuel_accounting(m, carriers_long: pd.DataFrame):
-    """
-    Adds accounting entries (FuelCost and CO2_emission) for exogenous,
-    non-optimised fuel consumption specified in the carriers Excel.
-    The model does NOT decide these flows; they are given by the data.
-    """
-
-    df = carriers_long.copy()
-    df["Carrier_key"] = df["Carrier"].astype(str).str.strip().str.lower()
-
-    # Map Excel carriers to model fuel commodities
-    carrier_to_commodity = {
-        "fossil (lf)": "LF_fossil",
-        "fossil (gas)": "Gas_fossil",
-        "coal": "Coal_fossil",
-        "biofuel (lf)": "LF_bio",
-        "biofuel (gas)": "Gas_bio",
-        "wood": "Wood",
-    }
-
-    df = df.loc[df["Carrier_key"].isin(carrier_to_commodity)].copy()
-    if df.empty:
-        print("No purchased fuel carriers found in Excel; skipping fuel accounting.")
-        return
-
-    df["commodity"] = df["Carrier_key"].map(carrier_to_commodity)
-
-    years_dem = sorted(df["Year"].unique().tolist())
-    sectors_dem = sorted(df["Sector"].unique().tolist())
-    commodities_dem = sorted(df["commodity"].unique().tolist())
-
-    # CO2 intensities [kt CO2 / GWh] – use your existing values
-    co2_kt_per_gwh = {
-        "LF_fossil": 0.2624,
-        "Gas_fossil": 0.2048,
-        "Coal_fossil": 0.3546,
-        "LF_bio": 0.0,
-        "Gas_bio": 0.0,
-        "Wood": 0.0,
-    }
-
-    # Map model commodities to CSIRO fuel categories used in csiro_fuel_cost_meur_per_gwh
-    commodity_to_csiro = {
-        "LF_fossil": "Liquid Fuel",
-        "LF_bio": "Liquid Fuel",
-        "Gas_fossil": "Gas",
-        "Gas_bio": "Gas",
-        "Coal_fossil": "Black Coal",
-        "Wood": "Biomass",
-    }
-
-    # Build accounting_sourcesinkflow: (indicator, regionscope, years, sector, commodity)
-    acc_index = pd.MultiIndex.from_product(
-        [["FuelCost", "CO2_emission"], ["global"], years_dem, sectors_dem, commodities_dem],
-        names=["indicator", "regionscope", "years", "sector", "commodity"],
-    )
-    acc = pd.DataFrame(index=acc_index)
-
-    for y in years_dem:
-        for s in sectors_dem:
-            for c in commodities_dem:
-                fuel_key = commodity_to_csiro.get(c, None)
-                if fuel_key is None:
-                    continue
-                cost = csiro_fuel_cost_meur_per_gwh(y, fuel_key)
-                acc.loc[("FuelCost", "global", y, s, c), "perFlow"] = cost
-                acc.loc[("CO2_emission", "global", y, s, c), "perFlow"] = co2_kt_per_gwh.get(c, 0.0)
-
-    acc = acc.fillna(0.0)
-    m["Base"].parameter.add(acc, "accounting_sourcesinkflow")
-
-    print(f"Purchased-fuel accounting added for {len(commodities_dem)} commodities and {len(years_dem)} years.")
-
-def fuel_and_efuel_from_excel(m, carriers_long: pd.DataFrame):
-    """
-    Implements all non-H2 fuel and e-fuel demand from the carriers Excel.
-
-    - Paid fuels (fossil/bio/wood) -> strict annual demand on FuelService_<fuel>
-      + FuelConsumer converter (no binding capacity, just accounting)
-    - E-fuels (lf/gas)            -> OPTIONAL annual demand on REfuel / CH4
-      (upper-only; can be partly or fully unmet if the FT/methanizer chain
-       cannot supply it economically or at all).
-
-    H2 is handled separately by add_h2_annual_demand_from_excel.
-    """
-
-    df = carriers_long.copy()
-    df["Carrier_key"] = df["Carrier"].astype(str).str.strip().str.lower()
-
-    # ---- 0. Exclude carriers not handled here ----
-    exclude = {"electricity", "hydrogen", "h2", "h2-feedstock", "solar", "geothermal"}
-    df = df.loc[~df["Carrier_key"].isin(exclude)].copy()
-    if df.empty:
-        print("No non-H2 fuel or e-fuel carriers found in Excel; skipping fuel_and_efuel_from_excel.")
-        return
-
-    # ---- 1. Split into paid fuels vs. e-fuels ----
-    paid_carrier_to_commodity = {
-        "fossil (lf)":   "LF_fossil",
-        "fossil (gas)":  "Gas_fossil",
-        "coal":          "Coal_fossil",
-        "biofuel (lf)":  "LF_bio",
-        "biofuel (gas)": "Gas_bio",
-        "wood":          "Wood",
-    }
-
-    efuel_mapping = {
-        "e-fuel (lf)":  "REfuel",
-        "e-fuel (gas)": "CH4",
-    }
-
-    df_paid  = df.loc[df["Carrier_key"].isin(paid_carrier_to_commodity)].copy()
-    df_efuel = df.loc[df["Carrier_key"].isin(efuel_mapping)].copy()
-
-    # ---- 2. E-fuel final demand: OPTIONAL upper-only sums on REfuel / CH4 ----
-    if not df_efuel.empty:
-        df_efuel["commodity"] = df_efuel["Carrier_key"].map(efuel_mapping)
-
-        idx_ss_ef = pd.MultiIndex.from_arrays(
-            [df_efuel["REMixRegion"], df_efuel["Year"], df_efuel["Sector"], df_efuel["commodity"]],
-            names=["nodesdata", "years", "sector", "commodity"],
-        )
-
-        ss_ef = pd.DataFrame(index=idx_ss_ef)
-
-        # FIXME: dirty but practical hack
-        # Treat e-fuel demand as an *upper bound* only (optional), not a hard
-        # minimum. This avoids infeasibility when the FT/Methanizer chain cannot
-        # physically deliver the Excel quantity in a given node/year/sector.
-        # Hard, must-be-met final energy demand is only on FuelService_* for
-        # fossil/bio/wood. REfuel/CH4 here are "nice to have" if the system can
-        # afford to produce them.
-        ss_ef["lower"] = 0.0
-        ss_ef["upper"] = df_efuel["Demand"].values
-
-        m["Base"].parameter.add(ss_ef, "sourcesink_annualsum")
-
-        cfg_ef = pd.DataFrame(index=idx_ss_ef)
-        cfg_ef["usesLowerSum"] = 0   # no hard lower sum
-        cfg_ef["usesUpperSum"] = 1   # enforce only the upper sum
-        m["Base"].parameter.add(cfg_ef, "sourcesink_config")
-
-        m["Base"].set.add(list(df_efuel["REMixRegion"].unique()), "nodesdata")
-        m["Base"].set.add(list(df_efuel["Year"].unique()), "years")
-
-        print(f"E-fuel (optional) annual demand added: {len(df_efuel)} rows")
-    else:
-        print("No e-fuel carriers in Excel; skipping explicit e-fuel final demand.")
-
-    # ---- 3. Paid fuel demand via FuelConsumer ----
-    if df_paid.empty:
-        print("No paid fuel carriers found in Excel; skipping FuelConsumer block.")
-        return
-
-    df_paid["commodity"] = df_paid["Carrier_key"].map(paid_carrier_to_commodity)
-    df_paid = df_paid.loc[df_paid["Year"].isin(yrs_sel)].copy()
-    if df_paid.empty:
-        print("No paid fuel demand in selected years; skipping FuelConsumer block.")
-        return
-
-    # 3a. Strict annual demand on FuelService_<commodity>
-    df_paid["service_commodity"] = df_paid["commodity"].apply(lambda c: f"FuelService_{c}")
-
-    idx_ss = pd.MultiIndex.from_arrays(
-        [df_paid["REMixRegion"], df_paid["Year"], df_paid["Sector"], df_paid["service_commodity"]],
-        names=["nodesdata", "years", "sector", "commodity"],
-    )
-
-    ss = pd.DataFrame(index=idx_ss)
-    # positive magnitude; GAMS equations handle sign internally
-    ss["lower"] = df_paid["Demand"].values
-    ss["upper"] = df_paid["Demand"].values
-    m["Base"].parameter.add(ss, "sourcesink_annualsum")
-
-    cfg = pd.DataFrame(index=idx_ss)
-    cfg["usesLowerSum"] = 1
-    cfg["usesUpperSum"] = 1
-    m["Base"].parameter.add(cfg, "sourcesink_config")
-
-    m["Base"].set.add(list(df_paid["REMixRegion"].unique()), "nodesdata")
-    m["Base"].set.add(list(df_paid["Year"].unique()), "years")
-
-    # 3b. FuelConsumer converter tech (capacity non-binding, per-node where needed)
-    fuel_tech = "FuelConsumer"
-    vintages = yrs_to_calc
-
-    tech = pd.DataFrame(index=pd.MultiIndex.from_product([[fuel_tech], vintages]))
-    tech["lifeTime"] = 1
-    tech["activityUpperLimit"] = 1
-    m["Base"].parameter.add(tech, "converter_techparam")
-
-    nodes_with_demand = sorted(df_paid["REMixRegion"].unique().tolist())
-    cap = pd.DataFrame(
-        index=pd.MultiIndex.from_product([nodes_with_demand, yrs_to_calc, [fuel_tech]])
-    )
-    cap["unitsBuild"] = 0.0          # start at zero
-    cap["unitsUpperLimit"] = 1e6     # effectively unconstrained
-    cap["noExpansion"] = 0
-    m["Base"].parameter.add(cap, "converter_capacityparam")
-
-    # 3c. Converter coefficients: one activity per fuel
-    fuels = sorted(df_paid["commodity"].unique())
-    activities = [f"{f}_cons" for f in fuels]
-    services = [f"FuelService_{f}" for f in fuels]
-    commodities = fuels + services
-
-    coef = pd.DataFrame(
-        index=pd.MultiIndex.from_product([[fuel_tech], vintages, activities, commodities])
-    )
-
-    for f, act, serv in zip(fuels, activities, services):
-        # consume 1 GWh of fuel
-        coef.loc[idx[:, :, act, f], "coefficient"] = -1.0
-        # produce 1 GWh of matching service
-        coef.loc[idx[:, :, act, serv], "coefficient"] = 1.0
-
-    m["Base"].parameter.add(coef, "converter_coefficient")
-
-    # 3d. Accounting per activity: fuel cost + CO2
-    co2_kt_per_gwh = {
-        "Coal_fossil": 0.34,
-        "Gas_fossil":  0.20,
-        "LF_fossil":   0.27,
-        "LF_bio":      0.0,
-        "Gas_bio":     0.0,
-        "Wood":        0.0,
-    }
-
-    commodity_to_csiro = {
-        "Coal_fossil": "Black Coal",
-        "Gas_fossil":  "Gas",
-        "LF_fossil":   "Liquid Fuel",
-        "LF_bio":      "Liquid Fuel",
-        "Gas_bio":     "Gas",
-        "Wood":        "Biomass",
-    }
-
-    acc_idx = pd.MultiIndex.from_product(
-        [
-            ["FuelCost", "CO2_emission"],
-            ["global"],
-            ["horizon"],
-            [fuel_tech],
-            vintages,
-            activities,
-        ],
-        names=["indicator", "regionscope", "timescope", "techs", "years", "activities"],
-    )
-
-    acc = pd.DataFrame(index=acc_idx)
-
-    for y in vintages:
-        suffix = "early" if y < 2050 else "2050"
-        for f, act in zip(fuels, activities):
-            fuel_key = commodity_to_csiro.get(f, None)
-            if fuel_key is None:
-                continue
-            csiro_key = f"{fuel_key}_{suffix}"
-            cost = aud_per_gj_to_meur_per_gwh(csiro_fuel_aud_per_gj[csiro_key])
-            co2  = co2_kt_per_gwh.get(f, 0.0)
-
-            acc.loc[("FuelCost", "global", "horizon", fuel_tech, y, act), "perActivity"] = cost
-            acc.loc[("CO2_emission", "global", "horizon", fuel_tech, y, act), "perActivity"] = co2
-
-    acc = acc.fillna(0.0)
-    m["Base"].parameter.add(acc, "accounting_converteractivity")
-
-    print(
-        f"FuelConsumer block added for {len(fuels)} fuels, "
-        f"{len(nodes_with_demand)} nodes and {len(df_paid)} demand rows."
-    )
-
 # others
     
 def add_network(m):
@@ -3391,6 +2525,275 @@ def modify_tech_cost_by_year(m, data_dir, tech, year_costs, tag=None):
     print(f"  File written: {out_dir/'accounting_converterunits.csv'}")
 
 
+#other carriers
+
+# -------------------------------------------------------------------
+# H2 annual demand from carriers Excel
+# -------------------------------------------------------------------
+
+def add_h2_annual_demand_from_excel(m, carriers_long: pd.DataFrame):
+    """
+    Adds annual hydrogen demand as exogenous sinks on the real H2 commodity.
+    Supply must come from the model (electrolyers, etc.); no H2 imports.
+
+    Pattern:
+      - sourcesink_annualsum: upper = -Demand (GWh), lower not used
+      - sourcesink_config:    usesUpperSum = 1, usesLowerSum = 0, usesUpperProfile = 1
+    """
+
+    df = carriers_long.copy()
+    df["Carrier_key"] = df["Carrier"].astype(str).str.strip().str.lower()
+
+    # Keep only hydrogen-type carriers
+    h2_keys = {"hydrogen", "h2", "h2-feedstock"}
+    df = df.loc[df["Carrier_key"].isin(h2_keys)].copy()
+    if df.empty:
+        print("No H2 carriers found in Excel; skipping H2 annual demand.")
+        return
+
+    # Map to REMix commodity H2
+    df["commodity"] = "H2"
+
+    # Index: (nodesdata, years, sector, commodity)
+    idx_ss = pd.MultiIndex.from_arrays(
+        [df["REMixRegion"], df["Year"], df["Sector"], df["commodity"]],
+        names=["nodesdata", "years", "sector", "commodity"],
+    )
+
+    # Annual upper sums: negative for demand (GWh per year)
+    ss = pd.DataFrame(index=idx_ss)
+    ss["upper"] = -df["Demand"].values
+    m["Base"].parameter.add(ss, "sourcesink_annualsum")
+
+    # Configuration: upper sum only, no lower, no profile lower/upper other than sum flag
+    cfg = pd.DataFrame(index=idx_ss)
+    cfg["usesUpperSum"] = 1
+    cfg["usesLowerSum"] = 0
+    cfg["usesUpperProfile"] = 1
+    m["Base"].parameter.add(cfg, "sourcesink_config")
+
+    # Ensure nodes and years are in sets
+    m["Base"].set.add(list(df["REMixRegion"].unique()), "nodesdata")
+    m["Base"].set.add(list(df["Year"].unique()), "years")
+
+    print(f"Hydrogen annual demand added: {len(df)} rows")
+
+
+# -------------------------------------------------------------------
+# Final fuels (fossil/bio/wood/paid REfuel/CH4) + e-fuels from Excel
+# -------------------------------------------------------------------
+
+def fuel_and_efuel_from_excel(m, carriers_long: pd.DataFrame):
+    """
+    Single, consistent entry point for:
+      - Fossil/bio/wood/paid fuels via FuelConsumer (FuelService_* demand)
+      - Optional REfuel/CH4 e-fuel demand
+
+    All non-hourly *final* demands (H2 handled separately) follow Manuel's convention:
+      - sourcesink_annualsum: upper = -Demand (GWh), lower not used
+      - sourcesink_config:    usesUpperSum = 1, usesLowerSum = 0, usesUpperProfile = 1
+
+    FuelConsumer remains as the only converter linking fuels to FuelService_*.
+    No other function writes FuelService_*, REfuel or CH4 demand.
+    """
+
+    df = carriers_long.copy()
+    df["Carrier_key"] = df["Carrier"].astype(str).str.strip().str.lower()
+
+    # ---- 1. Classification of carriers --------------------------------
+    # Carriers that are modelled as *paid fuels* through FuelConsumer
+    paid_carrier_to_commodity = {
+        # fossil and bio fuels (liquid / gas / solid)
+        "coal (fossil)": "Coal_fossil",
+        "coal": "Coal_fossil",
+        "coal_fossil": "Coal_fossil",
+        "gas (fossil)": "Gas_fossil",
+        "natural gas": "Gas_fossil",
+        "gas": "Gas_fossil",
+        "gas_fossil": "Gas_fossil",
+        "liquid fuel (fossil)": "LF_fossil",
+        "liquid fuel": "LF_fossil",
+        "lf_fossil": "LF_fossil",
+        "liquid fuel (bio)": "LF_bio",
+        "lf_bio": "LF_bio",
+        "wood": "Wood",
+        "biomass": "Wood",
+        "wood (bio)": "Wood",
+        "gas (bio)": "Gas_bio",
+        "gas_bio": "Gas_bio",
+        # if you want to treat REfuel/CH4 as paid final fuels instead of
+        # optional e-fuels, you can also map them here:
+        # "e-fuel (lf)": "REfuel",
+        # "e-fuel (gas)": "CH4",
+    }
+
+    # Carriers that are specifically e-fuels (optional consumption caps)
+    efuel_keys = {
+        "e-fuel (lf)": "REfuel",
+        "e-fuel (gas)": "CH4",
+    }
+
+    # Split into paid and e-fuel groups
+    df_paid = df.loc[df["Carrier_key"].isin(paid_carrier_to_commodity.keys())].copy()
+    df_efuel = df.loc[df["Carrier_key"].isin(efuel_keys.keys())].copy()
+
+    # Restrict to optimisation years
+    df_paid = df_paid.loc[df_paid["Year"].isin(yrs_sel)].copy()
+    df_efuel = df_efuel.loc[df_efuel["Year"].isin(yrs_sel)].copy()
+
+    # ---- 2. Optional e-fuel demand (REfuel / CH4) ----------------------
+    # Uses Manuel pattern: upper = -Demand, lower unused, usesUpperSum=1,
+    # usesLowerSum=0, usesUpperProfile=1
+    if not df_efuel.empty:
+        df_efuel["commodity"] = df_efuel["Carrier_key"].map(efuel_keys)
+
+        idx_ss_ef = pd.MultiIndex.from_arrays(
+            [df_efuel["REMixRegion"], df_efuel["Year"], df_efuel["Sector"], df_efuel["commodity"]],
+            names=["nodesdata", "years", "sector", "commodity"],
+        )
+
+        ss_ef = pd.DataFrame(index=idx_ss_ef)
+        ss_ef["upper"] = -df_efuel["Demand"].values
+        # no lower bound for these optional demands
+        m["Base"].parameter.add(ss_ef, "sourcesink_annualsum")
+
+        cfg_ef = pd.DataFrame(index=idx_ss_ef)
+        cfg_ef["usesUpperSum"] = 1
+        cfg_ef["usesLowerSum"] = 0
+        cfg_ef["usesUpperProfile"] = 1
+        m["Base"].parameter.add(cfg_ef, "sourcesink_config")
+
+        m["Base"].set.add(list(df_efuel["REMixRegion"].unique()), "nodesdata")
+        m["Base"].set.add(list(df_efuel["Year"].unique()), "years")
+
+        print(f"E-fuel (REfuel/CH4) annual demand added: {len(df_efuel)} rows")
+    else:
+        print("No e-fuel carriers in Excel; skipping explicit e-fuel final demand.")
+
+    # ---- 3. Paid fuel demand via FuelConsumer -------------------------
+    if df_paid.empty:
+        print("No paid fuel carriers found in Excel; skipping FuelConsumer block.")
+        return
+
+    df_paid["commodity"] = df_paid["Carrier_key"].map(paid_carrier_to_commodity)
+    df_paid = df_paid.loc[df_paid["Year"].isin(yrs_sel)].copy()
+    if df_paid.empty:
+        print("No paid fuel demand in selected years; skipping FuelConsumer block.")
+        return
+
+    # 3a. Strict annual demand on FuelService_<commodity>
+    df_paid["service_commodity"] = df_paid["commodity"].apply(lambda c: f"FuelService_{c}")
+
+    idx_ss = pd.MultiIndex.from_arrays(
+        [df_paid["REMixRegion"], df_paid["Year"], df_paid["Sector"], df_paid["service_commodity"]],
+        names=["nodesdata", "years", "sector", "commodity"],
+    )
+
+    ss = pd.DataFrame(index=idx_ss)
+    # Manuel pattern: negative upper only, no lower
+    ss["upper"] = -df_paid["Demand"].values
+    m["Base"].parameter.add(ss, "sourcesink_annualsum")
+
+    cfg = pd.DataFrame(index=idx_ss)
+    cfg["usesUpperSum"] = 1
+    cfg["usesLowerSum"] = 0
+    cfg["usesUpperProfile"] = 1
+    m["Base"].parameter.add(cfg, "sourcesink_config")
+
+    m["Base"].set.add(list(df_paid["REMixRegion"].unique()), "nodesdata")
+    m["Base"].set.add(list(df_paid["Year"].unique()), "years")
+
+    # 3b. FuelConsumer converter tech (capacity non-binding, per-node where needed)
+    fuel_tech = "FuelConsumer"
+    vintages = yrs_to_calc
+
+    tech = pd.DataFrame(index=pd.MultiIndex.from_product([[fuel_tech], vintages]))
+    tech["lifeTime"] = 1
+    tech["activityUpperLimit"] = 1
+    m["Base"].parameter.add(tech, "converter_techparam")
+
+    nodes_with_demand = sorted(df_paid["REMixRegion"].unique().tolist())
+    cap = pd.DataFrame(
+        index=pd.MultiIndex.from_product([nodes_with_demand, yrs_to_calc, [fuel_tech]])
+    )
+    cap["unitsBuild"] = 0.0          # start at zero
+    cap["unitsUpperLimit"] = 1e6     # effectively unconstrained
+    cap["noExpansion"] = 0
+    m["Base"].parameter.add(cap, "converter_capacityparam")
+
+    # 3c. Converter coefficients: one activity per fuel
+    fuels = sorted(df_paid["commodity"].unique())
+    activities = [f"{f}_cons" for f in fuels]
+    services = [f"FuelService_{f}" for f in fuels]
+    commodities = fuels + services
+
+    coef = pd.DataFrame(
+        index=pd.MultiIndex.from_product([[fuel_tech], vintages, activities, commodities])
+    )
+
+    for f, act, serv in zip(fuels, activities, services):
+        # consume 1 GWh of fuel
+        coef.loc[idx[:, :, act, f], "coefficient"] = -1.0
+        # produce 1 GWh of matching service
+        coef.loc[idx[:, :, act, serv], "coefficient"] = 1.0
+
+    m["Base"].parameter.add(coef, "converter_coefficient")
+
+    # 3d. Accounting per activity: fuel cost + CO2 (unchanged)
+    co2_kt_per_gwh = {
+        "Coal_fossil": 0.34,
+        "Gas_fossil":  0.20,
+        "LF_fossil":   0.27,
+        "LF_bio":      0.0,
+        "Gas_bio":     0.0,
+        "Wood":        0.0,
+    }
+
+    commodity_to_csiro = {
+        "Coal_fossil": "Black Coal",
+        "Gas_fossil":  "Gas",
+        "LF_fossil":   "Liquid Fuel",
+        "LF_bio":      "Liquid Fuel",
+        "Gas_bio":     "Gas",
+        "Wood":        "Biomass",
+    }
+
+    acc_idx = pd.MultiIndex.from_product(
+        [
+            ["FuelCost", "CO2_emission"],
+            ["global"],
+            ["horizon"],
+            [fuel_tech],
+            vintages,
+            activities,
+        ],
+        names=["indicator", "regionscope", "timescope", "techs", "years", "activities"],
+    )
+
+    acc = pd.DataFrame(index=acc_idx)
+
+    for y in vintages:
+        suffix = "early" if y < 2050 else "2050"
+        for f, act in zip(fuels, activities):
+            fuel_key = commodity_to_csiro.get(f, None)
+            if fuel_key is None:
+                continue
+            csiro_key = f"{fuel_key}_{suffix}"
+            cost = aud_per_gj_to_meur_per_gwh(csiro_fuel_aud_per_gj[csiro_key])
+            co2 = co2_kt_per_gwh.get(f, 0.0)
+
+            acc.loc[("FuelCost", "global", "horizon", fuel_tech, y, act), "perActivity"] = cost
+            acc.loc[("CO2_emission", "global", "horizon", fuel_tech, y, act), "perActivity"] = co2
+
+    acc = acc.fillna(0.0)
+    m["Base"].parameter.add(acc, "accounting_converteractivity")
+
+    print(
+        f"FuelConsumer block added for {len(fuels)} fuels, "
+        f"{len(nodes_with_demand)} nodes and {len(df_paid)} demand rows."
+    )
+
+
 # #%%
 
 
@@ -3415,17 +2818,7 @@ if __name__ == "__main__":
 
     # annual hydrogen demand (perfect battery)
     add_h2_annual_demand_from_excel(m, carriers_long)
-    
     fuel_and_efuel_from_excel(m, carriers_long)
-
-    # # paid fuels (fossil + bio + wood)
-    # add_paid_fuel_consumption_from_excel(m, carriers_long)
-
-    # # e-fuel demand (met endogenously by synthesis chain)
-    # add_purchased_fuel_accounting(m, carriers_long)
-
-    # add_fuel_consumers(m, carriers_long)
-    # add_efuel_demand_from_excel(m, carriers_long)
 
     # supply side blocks
     if include_renewables:
