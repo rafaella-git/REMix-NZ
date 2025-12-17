@@ -16,7 +16,7 @@ idx = pd.IndexSlice
 # -------------------------------------------------------------------
 
 group_name = "GP-NT-ELEC-BIO-H2" # Demand folder group (used for output folder structure)
-base_scenario = "GP" # Scenario name: GP, NT, ELEC+, BIO+, H2+ (must match "Scenario" column in CSV/Excel)
+base_scenario = "H2+" # Scenario name: GP, NT, ELEC+, BIO+, H2+ (must match "Scenario" column in CSV/Excel)
 yrs_to_calc = [2020, 2050] # Model years available
 yrs_sel = [2050] # Model years to optimise
 
@@ -370,7 +370,6 @@ def add_demand(m):
         m["Base"].set.add(sorted(cfg.index.get_level_values(1).unique().tolist()), "years")
 
         print(f"Electricity demand loaded: {len(cfg)} rows (Sector aggregated to 'All').")
-        print("Hydrogen is not loaded hourly in MVP (annual sum handled separately).")
 
     else:
         # original behaviour
@@ -419,10 +418,8 @@ def add_demand(m):
 
             print(f"{commodity_type} demand loaded: {len(ts)} rows")
 
-    # ---------------------------------------------
-    # Hydro inflows (simplified for MVP)
-    # ---------------------------------------------
-    print("\nProcessing hydro inflows...")
+    # hydro inflows simplified
+    print("\n--- ADDING HYDRO INFLOWS ---")
     inflow_df = pd.read_csv(inflow_file)
 
     inflow_rename = {}
@@ -2461,11 +2458,10 @@ def modify_tech_cost_by_year(m, data_dir, tech, year_costs, tag=None):
 
 def add_h2_annual_demand_from_excel(m, carriers_long: pd.DataFrame):
     """
-    Adds annual hydrogen demand as exogenous sinks on the real H2 commodity.
-    Supply must come from the model (electrolyers, etc.); no H2 imports.
+    Adds annual hydrogen demand as exogenous sinks on the H2 commodity.
+    Supply must come from the model (electrolysers, etc.); no H2 imports.
 
-    Aggregates original Excel regions (e.g. West Coast + Canterbury) into
-    single REMix nodes (e.g. CAN) before writing parameters, ensuring
+    Aggregates original Excel regions into REMix nodes, ensuring
     one row per (node, year, sector, commodity).
 
     Pattern:
@@ -2480,34 +2476,17 @@ def add_h2_annual_demand_from_excel(m, carriers_long: pd.DataFrame):
     h2_keys = {"hydrogen", "h2", "h2-feedstock"}
     df = df.loc[df["Carrier_key"].isin(h2_keys)].copy()
     if df.empty:
-        print("No H2 carriers found in Excel; skipping H2 annual demand.")
         return
 
     # Map to REMix commodity H2
     df["commodity"] = "H2"
 
-    print("\n[DEBUG] H2 demand before aggregation:")
-    print(f"  Rows: {len(df)}")
-    print(f"  By (REMixRegion, Year, Sector):")
-    pre_agg = (
-        df.groupby(["REMixRegion", "Year", "Sector"])["Demand"]
-        .sum()
-        .sort_index()
-    )
-    print(pre_agg.to_string())
-
-    # AGGREGATE to ensure 1 row per (node, year, sector, commodity)
-    # This sums original regions that map to same REMixRegion
+    # Aggregate to ensure 1 row per (node, year, sector, commodity)
     grp = (
         df.groupby(["REMixRegion", "Year", "Sector", "commodity"])["Demand"]
         .sum()
         .reset_index()
     )
-
-    print(f"\n[DEBUG] H2 demand after aggregation:")
-    print(f"  Aggregated rows: {len(grp)}")
-    print(f"  Total demand: {grp['Demand'].sum():,.2f} GWh")
-    print(grp.to_string(index=False))
 
     # Index: (nodesdata, years, sector, commodity)
     idx_ss = pd.MultiIndex.from_frame(
@@ -2520,21 +2499,16 @@ def add_h2_annual_demand_from_excel(m, carriers_long: pd.DataFrame):
     ss["upper"] = -grp["Demand"].values
     m["Base"].parameter.add(ss, "sourcesink_annualsum")
 
-    # Configuration: upper sum only, no lower, no profile
+    # Configuration: upper sum only, no lower
     cfg = pd.DataFrame(index=idx_ss)
     cfg["usesUpperSum"] = 1
     cfg["usesLowerSum"] = 0
-    cfg["usesUpperProfile"] = 0
+    cfg["usesUpperProfile"] = 1
     m["Base"].parameter.add(cfg, "sourcesink_config")
 
     # Ensure nodes and years are in sets
     m["Base"].set.add(sorted(grp["REMixRegion"].unique().tolist()), "nodesdata")
     m["Base"].set.add(sorted(grp["Year"].unique().tolist()), "years")
-
-    print(
-        f"\n[DEBUG] Hydrogen annual demand added: {len(grp)} aggregated rows "
-        f"(total {grp['Demand'].sum():,.2f} GWh)"
-    )
 
 def fuel_from_excel(m, carriers_long: pd.DataFrame):
     """
@@ -2545,7 +2519,7 @@ def fuel_from_excel(m, carriers_long: pd.DataFrame):
     single REMix nodes (e.g. CAN) before writing parameters, ensuring
     one row per (node, year, sector, commodity).
     """
-
+    print("\n--- ADDING FOSSIL AND BIO FUEL DEMAND ---")
     df = carriers_long.copy()
     df["Carrier_key"] = df["Carrier"].astype(str).str.strip().str.lower()
 
@@ -2682,7 +2656,7 @@ def fuel_from_excel(m, carriers_long: pd.DataFrame):
         names=["indicator", "regionscope", "timescope", "techs", "years", "activities"],
     )
 
-    acc = pd.DataFrame(index=acc_idx)
+    acc = pd.DataFrame(index=acc_idx).sort_index()
 
     for y in vintages:
         suffix = "early" if y < 2050 else "2050"
@@ -2692,11 +2666,30 @@ def fuel_from_excel(m, carriers_long: pd.DataFrame):
                 continue
             csiro_key = f"{fuel_key}_{suffix}"
             cost = aud_per_gj_to_meur_per_gwh(csiro_fuel_aud_per_gj[csiro_key])
-            co2 = co2_kt_per_gwh.get(f, 0.0)
+            co2  = co2_kt_per_gwh.get(f, 0.0)
 
-            acc.loc[("FuelCost", "global", "horizon", fuel_tech, y, act), "perActivity"] = cost
-            acc.loc[("CO2_emission", "global", "horizon", fuel_tech, y, act), "perActivity"] = co2
+            # FuelCost
+            mask_fc = (
+                (acc.index.get_level_values("indicator") == "FuelCost") &
+                (acc.index.get_level_values("regionscope") == "global") &
+                (acc.index.get_level_values("timescope") == "horizon") &
+                (acc.index.get_level_values("techs") == fuel_tech) &
+                (acc.index.get_level_values("years") == y) &
+                (acc.index.get_level_values("activities") == act)
+            )
+            acc.loc[mask_fc, "perActivity"] = cost
 
+            # CO2_emission
+            mask_co2 = (
+                (acc.index.get_level_values("indicator") == "CO2_emission") &
+                (acc.index.get_level_values("regionscope") == "global") &
+                (acc.index.get_level_values("timescope") == "horizon") &
+                (acc.index.get_level_values("techs") == fuel_tech) &
+                (acc.index.get_level_values("years") == y) &
+                (acc.index.get_level_values("activities") == act)
+            )
+            acc.loc[mask_co2, "perActivity"] = co2
+        
     acc = acc.fillna(0.0)
     m["Base"].parameter.add(acc, "accounting_converteractivity")
 
@@ -2714,6 +2707,8 @@ def add_fuel_imports(m, carriers_long: pd.DataFrame):
     - sourcesink_config:    usesUpperSum = 1, usesLowerSum = 0, usesUpperProfile = 1
     - accounting_converteractivity: FuelImportCost + CO2_emission per unit imported fuel
     """
+    idx = pd.IndexSlice
+
     # same mapping used in fuel_and_efuel_from_excel
     paid_carrier_to_commodity = {
         "coal": "Coal_fossil",
@@ -2840,8 +2835,27 @@ def add_fuel_imports(m, carriers_long: pd.DataFrame):
             cost = aud_per_gj_to_meur_per_gwh(csiro_fuel_aud_per_gj[csiro_key])
             co2 = co2_kt_per_gwh[fuel]
 
-            acc.loc[("FuelImportCost", "global", "horizon", fuel_import_tech, y, act), "perActivity"] = cost
-            acc.loc[("CO2_emission", "global", "horizon", fuel_import_tech, y, act), "perActivity"] = co2
+            # FuelImportCost
+            mask_fc = (
+                (acc.index.get_level_values("indicator")   == "FuelImportCost") &
+                (acc.index.get_level_values("regionscope") == "global") &
+                (acc.index.get_level_values("timescope")   == "horizon") &
+                (acc.index.get_level_values("techs")       == fuel_import_tech) &
+                (acc.index.get_level_values("years")       == y) &
+                (acc.index.get_level_values("activities")  == act)
+            )
+            acc.loc[mask_fc, "perActivity"] = cost
+
+            # CO2_emission
+            mask_co2 = (
+                (acc.index.get_level_values("indicator")   == "CO2_emission") &
+                (acc.index.get_level_values("regionscope") == "global") &
+                (acc.index.get_level_values("timescope")   == "horizon") &
+                (acc.index.get_level_values("techs")       == fuel_import_tech) &
+                (acc.index.get_level_values("years")       == y) &
+                (acc.index.get_level_values("activities")  == act)
+            )
+            acc.loc[mask_co2, "perActivity"] = co2
 
     acc = acc.fillna(0.0)
     m["Base"].parameter.add(acc, "accounting_converteractivity")
