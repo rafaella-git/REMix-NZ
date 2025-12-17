@@ -10,7 +10,7 @@ from remix.framework.api.instance import Instance
 # -----------------------------------------------------------------------------
 # user settings
 group_name = "GP-NT-ELEC-BIO-H2"   # main folder under /project/
-case_name  = "nz_case_GP_MVP"      # case folder (has /data/ and /result/)
+case_name  = "nz_case_GP_2050"      # case folder (has /data/ and /result/)
 solver     = "cplex"#"gurobi"              # or "cplex", etc.
 
 # -----------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 BIO
 Battery
 CCGT
+CH4Storage
 COAL
 DAC
 DIE
@@ -10,12 +11,14 @@ FuelConsumer
 FuelImport
 GT
 Geothermal
+H2Storage
 H2_CCGT
 H2_FC
 H2_storage
 Hydro
 Methanizer
 OCGT
+REfuelStorage
 geoth
 pv_central_fixed
 pv_central_track_azimuth

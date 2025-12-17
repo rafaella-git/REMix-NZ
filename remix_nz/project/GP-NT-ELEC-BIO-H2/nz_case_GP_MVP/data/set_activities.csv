@@ -1,3 +1,4 @@
+CH4_cons
 Capture
 Charge
 Coal_fossil_cons
@@ -15,6 +16,7 @@ LF_fossil_imp
 Methanizer
 Power_gen
 Powergen
+REfuel_cons
 Spill
 Synthesis
 Wood_cons
