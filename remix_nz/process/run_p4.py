@@ -3,18 +3,15 @@ import os, time
 from pathlib import Path
 from remix.framework.api.instance import Instance
 
-# -----------------------------------------------------------------------------
-# user settings
-solver = "cplex"  # or "gurobi", etc.
-
-# List all scenarios you want to run
+# List all models to run
 cases = [
-    ("GP-NT-ELEC-BIO-H2", "nz_case_GP_2050"),
-    ("GP-NT-ELEC-BIO-H2", "nz_case_NT_2050"),
-    ("GP-NT-ELEC-BIO-H2", "nz_case_ELEC+_2050"),
-    ("GP-NT-ELEC-BIO-H2", "nz_case_BIO+_2050"),
-    ("GP-NT-ELEC-BIO-H2", "nz_case_H2+_2050"),
-    # add more (group_name, case_name) tuples here
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_GP_2050", "gurobi"),
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_NT_2050", "gurobi"),
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_ELEC+_2050", "gurobi"),
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_BIO+_2050", "gurobi"),
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_H2+_2050", "gurobi"),
+    ("GP-NT-ELEC-BIO-H2", "nz_case_H2+_2020-2050", "cplex"),
+    #("GP-NT-ELEC-BIO-H2", "nz_case_GP_2020-2025-2030-2035-2040-2045-2050", "cplex"),
 ]
 
 # -----------------------------------------------------------------------------
@@ -22,7 +19,7 @@ cases = [
 script_dir = Path(__file__).parent.resolve()
 os.chdir(script_dir)
 
-for group_name, case_name in cases:
+for group_name, case_name, solver in cases:
     print("\n" + "-" * 80)
     print(f"Running case: group='{group_name}', case='{case_name}'")
     print("-" * 80)
@@ -51,7 +48,7 @@ for group_name, case_name in cases:
             names=1,
             timeres=1,      # hourly
             threads=8,
-            pathopt="myopic",
+            pathopt="myopic", # "myopic"/"foresight" /"target"
         )
 
         status = "OK"

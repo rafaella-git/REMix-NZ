@@ -17,8 +17,8 @@ idx = pd.IndexSlice
 
 group_name = "GP-NT-ELEC-BIO-H2" # Demand folder group (used for output folder structure)
 base_scenario = "H2+" # Scenario name: GP, NT, ELEC+, BIO+, H2+ (must match "Scenario" column in CSV/Excel)
-yrs_to_calc = [2020, 2050] # Model years available
-yrs_sel = [2050] # Model years to optimise
+yrs_to_calc = [2020, 2050] # Model years available [2020, 2025, 2030, 2035, 2040, 2045, 2050]
+yrs_sel = [2050]#[2050] # Model years to optimise
 
 # Case folder name (output goes to ../project/<group_name>/<case_name>/data)
 years_tag = "-".join(str(y) for y in yrs_sel)
@@ -79,7 +79,7 @@ if use_hydro_cascade:
 else:
     inflow_file = str(simplified_hydro_inflow_file)
 
-print("\n--- scenario setup complete ---")
+print("\n--- SCENARIO SETUP COMPLETE ---")
 print("case:", case_name)
 print("scenario:", base_scenario)
 print("years:", yrs_sel)
@@ -277,11 +277,9 @@ def add_demand(m):
     - Region/Year/Sector/Carrier
     - node/year/sector/carrier  (your current file)
     """
-    print("\n--- ADDING DEMAND AND INFLOWS ---")
+    print("\n--- ADDING ELECTRICITY DEMAND ---")
 
-    # ---------------------------------------------
-    # Electricity demand (hourly)
-    # ---------------------------------------------
+    # hourly electricity demand
     if str(group_name).strip() == "GP-NT-ELEC-BIO-H2":
         elec_path = path_demand / hourly_electricity_file
         if not elec_path.exists():
@@ -861,7 +859,7 @@ def load_feedin_csv(year, aggregate=False, norm=True):
     return ts.round(3)
 
 def add_renewables(m):
-    
+    print("\n--- adding solar and wind")
     re_inst_csv = pd.read_csv(Path(path_profiles).joinpath("region_statistics_2012.csv"), index_col=[0, 1])
     re_nodes = [n for n in m["Base"].set.nodesdata]
 
@@ -1002,6 +1000,7 @@ def add_renewables(m):
     m["Base"].parameter.add(re_acc, "accounting_converterunits")  
 
 def add_geothermal(m):
+    print("\n--- adding geothermal")
     geoth_inst_csv = pd.read_csv(f"{path_brownfield}/power-plant-nz-database.csv")
     geoth_vintage = [1950]
     geoth_techs = ["geoth"]
@@ -1115,6 +1114,7 @@ def add_geothermal(m):
 # conventional
 
 def add_thermal(m):
+    print("\n--- adding thermal generators")
     the_inst_csv = pd.read_csv(Path(path_brownfield).joinpath("power-plant-nz-database.csv"))
 
     the_vintage = [1950, 2030, 2050]                   # vintages (for techparam & coefficients)
@@ -1167,7 +1167,7 @@ def add_thermal(m):
     ).sort_index()
 
     # broadcast values to all years
-    the_acc.loc[idx["Invest", "global", "horizon", "BIO", :],  "perUnitBuild"] = 2600
+    the_acc.loc[idx["Invest", "global", "horizon", "BIO", :],  "perUnitBuild"] = 2600 
     the_acc.loc[idx["Invest", "global", "horizon", "COAL", :], "perUnitBuild"] = 1600
     the_acc.loc[idx["Invest", "global", "horizon", "DIE", :],  "perUnitBuild"] = 900
 
@@ -1207,6 +1207,7 @@ def add_thermal(m):
     m["Base"].parameter.add(the_emission, "accounting_converteractivity")
 
 def add_gas_turbines(m):    
+    print("\n--- adding gas turbines")
     gt_inst_csv = pd.read_csv(Path(path_brownfield).joinpath("power-plant-nz-database.csv"))
 
     gt_vintage = [1950,2030]
@@ -1321,6 +1322,7 @@ def add_electrolyser(m):
     lifetime: 30 years
     efficiency: 70%
     """
+    print("\n--- adding electrolyser")
     years = yrs_to_calc
     eltr_vintage = years
     eltr_nodes = [n for n in m["Base"].set.nodesdata if not n.startswith("LNG")]
@@ -1367,6 +1369,7 @@ def add_electrolyser(m):
     m["Base"].parameter.add(eltr_acc, "accounting_converterunits")
 
 def add_H2_CCGT(m):
+    print("\n--- adding H2_CCGT")
     H2_CCGT_vintage = [2030, 2035, 2040, 2045, 2050]
     H2_CCGT_nodes = [n for n in m["Base"].set.nodesdata]
     # technology
@@ -1417,6 +1420,7 @@ def add_H2_CCGT(m):
     m["Base"].parameter.add(H2_CCGT_acc, "accounting_converterunits")
 
 def add_H2_FC(m):
+    print("\n--- adding H2_FC")
     H2_FC_vintage = [2020, 2025, 2030, 2035, 2040, 2045, 2050]
     H2_FC_nodes = [n for n in m["Base"].set.nodesdata]
     # technology
@@ -1450,6 +1454,8 @@ def add_H2_FC(m):
         index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], ["horizon"],  ["H2_FC"], H2_FC_vintage])
         ).sort_index()
 
+    #FIXME: high values
+
     H2_FC_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "perUnitBuild"] = [2980.992, 1468.139, 773.195, 733.604, 694.012, 654.421, 614.830]   #  
     H2_FC_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "amorTime"] = 35  # years
     H2_FC_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "useAnnuity"] = 1  # binary yes/no
@@ -1467,7 +1473,7 @@ def add_H2_FC(m):
     m["Base"].parameter.add(H2_FC_acc, "accounting_converterunits")
 
 def add_dac(m):
-    idx = pd.IndexSlice
+    print("\n--- adding dac")
 
     dac_vintage = [2020, 2030, 2040, 2050]
     dac_techs   = ["DAC"]
@@ -1541,13 +1547,12 @@ def add_dac(m):
     dac_activity["perActivity"] = -1.0
     m["Base"].parameter.add(dac_activity, "accounting_converteractivity")
 
-    print("DAC added successfully.")
-
 
 def add_methanizer(m):
     """
     Methanizer: H2 + CO2_feed -> CH4 (synthetic methane).
     """
+    print("\n--- adding methanizer")
     methanizer_vintage = [2020, 2030, 2040, 2050]
     methanizer_techs   = ["Methanizer"]
     methanizer_nodes   = [n for n in m["Base"].set.nodesdata if not n.startswith("LNG")]
@@ -1623,13 +1628,13 @@ def add_methanizer(m):
 
     m["Base"].parameter.add(methanizer_acc, "accounting_converterunits")
 
-    print("Methanizer added successfully.")
 
 
 def add_methanolsyn(m):
     """
     Methanol synthesis: H2 + CO2_feed -> CH3OH.
     """
+    print("\n--- adding methanol synthesis")
     methanolsyn_vintage = [2020]
     methanolsyn_techs   = ["MethanolSyn"]
     methanol_nodes      = [n for n in m["Base"].set.nodesdata if not n.startswith("LNG")]
@@ -1703,7 +1708,6 @@ def add_methanolsyn(m):
 
     m["Base"].parameter.add(methanolsyn_acc, "accounting_converterunits")
 
-    print("Methanol synthesis added successfully.")
 
 
 def add_ftropsch_syn(m):
@@ -1712,6 +1716,7 @@ def add_ftropsch_syn(m):
     - Output: REfuel
     - Inputs: H2, CO2_feed, Elec
     """
+    print("\n--- adding Fischer-Tropsch Synthesis")
     ftropsch_vintage = [2020, 2040, 2050]
     ftropsch_techs   = ["FTropschSyn"]
     ftropsch_nodes   = [n for n in m["Base"].set.nodesdata if not n.startswith("LNG")]
@@ -1783,12 +1788,12 @@ def add_ftropsch_syn(m):
     ] = invest_vals * 0.04
 
     m["Base"].parameter.add(ftropsch_syn_acc, "accounting_converterunits")
-    print("Fischer-Tropsch Synthesis added successfully.")
 
 
 # storage
     
 def add_lithium_batteries(m):
+    print("\n--- adding lithium batteries")
     battery_vintage = [2020, 2030, 2040, 2050] 
     battery_techs = ["Battery"]
     battery_nodes = [n for n in m["Base"].set.nodesdata if not n.startswith("LNG")]
@@ -1867,7 +1872,7 @@ def add_lithium_batteries(m):
     )
     stor_res.loc[idx[:, :, :], "unitsUpperLimit"] = 30  # units
     if 2020 in yrs_sel:
-        stor_res.loc[idx[:, ["2020"], :], "noExpansion"] = 1  # boolean
+        stor_res.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean
     m["Base"].parameter.add(stor_res, "storage_reservoirparam")
 
     stor_acc = pd.DataFrame(
@@ -1892,7 +1897,7 @@ def add_lithium_batteries(m):
     m["Base"].parameter.add(stor_acc, "accounting_storageunits")
 
 def add_h2_storage(m):
-
+    print("\n--- adding hydrogen storage")
     # converter is the compressor 
     # storage is the gas tank
     h2_stor_vintage = [2020]#, 2030, 2040, 2050]
@@ -3162,6 +3167,6 @@ if __name__ == "__main__":
     m["Base"].write(project_path=data_dir, fileformat="csv", float_format="{:.4g}".format)
 
     total = time.time() - start_time
-    print("\nDone.")
+    print("\nDone !!")
     print("Wrote inputs to:", data_dir)
     print(f"Total time: {total:.1f} s")

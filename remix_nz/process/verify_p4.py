@@ -1,253 +1,217 @@
+# analyse_2050_all_scenarios.py
+
+import gdxpds  # must come before pandas on Windows
+
+import os
 from pathlib import Path
 import pandas as pd
-import gdxpds
-import numpy as np
+import matplotlib.pyplot as plt
 
-# --- USER SETTINGS ---
-EXCEL_PATH = Path(
-    "C:/Local/REMix/remix_nz/input/demand/GP-NT-ELEC-BIO-H2/data_summary.xlsx"
-)
-DATA_DIR = Path(
-    "C:/Local/REMix/remix_nz/project/GP-NT-ELEC-BIO-H2/nz_case_GP_2050/data"
-)
-GDX_PATH = Path(
-    "C:/Local/REMix/remix_nz/project/GP-NT-ELEC-BIO-H2/nz_case_GP_2050/result/nz_case_GP_2050.gdx"
-)
+# ------------------------------------------------------------------------
+# CONFIG
+cases = [
+    ("GP-NT-ELEC-BIO-H2", "nz_case_GP_2050"),
+    ("GP-NT-ELEC-BIO-H2", "nz_case_NT_2050"),
+    ("GP-NT-ELEC-BIO-H2", "nz_case_ELEC+_2050"),
+    ("GP-NT-ELEC-BIO-H2", "nz_case_BIO+_2050"),
+    ("GP-NT-ELEC-BIO-H2", "nz_case_H2+_2050"),
+]
 
-SCENARIO = "GP"
-YEARS_CHECK = [2050]
+YEAR = "2050"
 
-# Mapping (same as in your build)
-REGION_MAP = {
-    "Auckland": "AKL",
-    "Bay of Plenty": "BOP",
-    "Canterbury": "CAN",
-    "Gisborne": "HBY",
-    "Hawkes Bay": "HBY",
-    "Hawke's Bay": "HBY",
-    "Manawatu-Whanganui": "CEN",
-    "Manawatū-Whanganui": "CEN",
-    "Marlborough": "NEL",
-    " Marlborough": "NEL",
-    "Nelson": "NEL",
-    "Northland": "NIS",
-    "Otago": "OTG",
-    "Southland": "OTG",
-    "Taranaki": "TRN",
-    "Tasman": "NEL",
-    "Waikato": "WTO",
-    "Wellington": "WEL",
-    "West Coast": "CAN",
-}
+base_dir = Path(__file__).parent.resolve() / ".." / "project"
 
+# ------------------------------------------------------------------------
+# HELPERS
+def scen_label(case_name: str) -> str:
+    return case_name.replace("nz_case_", "").replace("_2050", "")
 
-CARRIER_MAP = {
-    "biofuel (gas)": "Gas_bio", "biofuel (lf)": "LF_bio", "wood": "Wood",
-    "coal": "Coal_fossil", "fossil (gas)": "Gas_fossil", "fossil (lf)": "LF_fossil",
-    "hydrogen": "H2", "h2": "H2",
-}
+def load_gdx_tables(gdx_path: Path) -> dict:
+    data = gdxpds.to_dataframes(str(gdx_path))
+    return data
 
+def tech_group(tech: str) -> str:
+    # Map your builder’s tech names into groups for capacity comparison
+    t = tech
+    if t == "Hydro":
+        return "Hydro"
+    if t.lower().startswith("wind"):
+        return "Wind"
+    if t.lower().startswith("pv"):
+        return "Solar"
+    if t in ["Geoth", "geoth"]:
+        return "Geothermal"
+    if t in ["BIO", "COAL", "DIE"]:
+        return "Thermal_fossil_bio"
+    if t == "Electrolyser":
+        return "Electrolyser"
+    if t == "DAC":
+        return "DAC"
+    if t == "Methanizer":
+        return "Methanizer"
+    if t == "MethanolSyn":
+        return "MethanolSyn"
+    if t == "FTropschSyn":
+        return "FTropsch"
+    if t == "H2CCGT":
+        return "H2CCGT"
+    if t == "H2FC":
+        return "H2FC"
+    return "Other"
 
-def load_excel_demand(path, scenario, years):
-    """Load Excel and aggregate to (REMixRegion, Year, Carrier_Clean)."""
-    print("[EXCEL] Loading Excel carriers sheet...")
-    df = pd.read_excel(path, sheet_name="carriers")
-    df.columns = [c.strip() for c in df.columns]
-    df = df[df["Scenario"].astype(str).str.strip() == scenario].copy()
+def bar_table(df: pd.DataFrame, title: str, ylabel: str):
+    ax = df.plot(kind="bar", figsize=(10, 6))
+    ax.set_title(title)
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel("")
+    ax.legend(title="Scenario")
+    ax.grid(axis="y", linestyle="--", alpha=0.4)
+    plt.tight_layout()
+    plt.show()
 
-    df["REMixRegion"] = df["Region"].map(REGION_MAP)
-    if df["REMixRegion"].isna().any():
-        unmapped = df[df["REMixRegion"].isna()]["Region"].unique()
-        print(f"  WARNING: Unmapped regions: {list(unmapped)}")
-        df = df.dropna(subset=["REMixRegion"])
+# ------------------------------------------------------------------------
+# METRIC EXTRACTION FOR ONE SCENARIO (2050)
+# ------------------------------------------------------------------------
+def extract_metrics_2050(data: dict) -> dict:
+    """
+    data: dict from gdxpds.to_dataframes
 
-    df["Carrier_Clean"] = df["Carrier"].str.strip().str.lower().map(CARRIER_MAP)
-    df = df.dropna(subset=["Carrier_Clean"])
+    Returns:
+      - capacity_by_group_GW: Series(index=tech_group, value=GW)
+      - final_energy_TWh:     Series(index=commodity, value=TWh demand)
+      - total_cost_MEUR:      float
+      - cost_by_indicator:    Series(index=indicator, value)
+      - storage_throughput_GWh: float (batteries + H2 storage)
+    """
+    m = {}
 
-    val_cols = [c for c in df.columns if str(c) in [str(y) for y in years]]
-    long = df.melt(
-        id_vars=["REMixRegion", "Carrier_Clean", "Sector"],
-        value_vars=val_cols, var_name="Year", value_name="Demand",
-    )
-    long["Year"] = long["Year"].astype(int)
-    agg = long.groupby(["REMixRegion", "Year", "Carrier_Clean"])["Demand"].sum()
-    agg.name = "Excel"
-    print(f"[EXCEL] ✓ Loaded. Total: {agg.sum():,.2f} GWh")
-    return agg
+    # 1) converter_caps → capacities in 2050
+    cap = data.get("converter_caps")
+    if cap is None or cap.empty:
+        raise KeyError("converter_caps not found or empty in GDX")
 
+    cap_2050 = cap[cap["accYears"] == YEAR].copy()
+    cap_2050["group"] = cap_2050["techs"].map(tech_group)
+    # Filter to total Elec capacity (GW)
+    mask_total = (cap_2050["capType"] == "total") & (cap_2050["commodity"] == "Elec")
+    cap_2050 = cap_2050[mask_total]
+    cap_by_group = cap_2050.groupby("group")["Value"].sum()
+    m["capacity_by_group_GW"] = cap_by_group
 
-def load_csv_demand(data_dir, years):
-    """Load sourcesink_annualsum.csv (build input data)."""
-    csv_path = data_dir / "sourcesink_annualsum.csv"
-    if not csv_path.exists():
-        print(f"[CSV] ERROR: {csv_path} not found.")
-        return pd.Series()
+    # 2) commodity_balance_annual → final energy demand by commodity (TWh)
+    cba = data.get("commodity_balance_annual")
+    if cba is None or cba.empty:
+        raise KeyError("commodity_balance_annual not found or empty in GDX")
 
-    print(f"[CSV] Loading {csv_path}...")
-    df = pd.read_csv(csv_path, index_col=[0, 1, 2, 3])
-    df.index.names = ["nodesdata", "years", "sector", "commodity"]
-    df = df.reset_index()
+    cba_2050 = cba[(cba["accYears"] == YEAR) & (cba["balanceType"] == "net")].copy()
+    # Negative = demand; convert to positive demand
+    fe_by_comm = -cba_2050.groupby("commodity")["Value"].sum() / 1e3  # TWh
+    m["final_energy_TWh"] = fe_by_comm
 
-    df = df[df["years"].astype(str).isin([str(y) for y in years])].copy()
+    # 3) indicator_accounting → cost metrics
+    ind = data.get("indicator_accounting")
+    if ind is None or ind.empty:
+        raise KeyError("indicator_accounting not found or empty in GDX")
 
-    def map_csv_comm(c):
-        c = str(c).strip()
-        if c == "H2": return "H2"
-        if c.startswith("FuelService_"): return c.replace("FuelService_", "")
-        return None
+    # Use accYears == "horizon" for total cost (typical REMix convention), fallback to YEAR if missing
+    ia_hor = ind[ind["accYears"] == "horizon"]
+    if ia_hor.empty:
+        ia_use = ind[ind["accYears"] == YEAR]
+    else:
+        ia_use = ia_hor
 
-    df["Carrier_Clean"] = df["commodity"].apply(map_csv_comm)
-    df = df.dropna(subset=["Carrier_Clean"])
+    total_cost = ia_use[ia_use["indicator"] == "SystemCost"]["Value"].sum()
+    m["total_cost_MEUR"] = total_cost
 
-    df["Demand"] = -df["upper"].astype(float)
+    cost_by_indicator = ia_use.groupby("indicator")["Value"].sum()
+    m["cost_by_indicator"] = cost_by_indicator
 
-    agg = df.groupby(["nodesdata", "years", "Carrier_Clean"])["Demand"].sum()
-    agg.index.names = ["REMixRegion", "Year", "Carrier_Clean"]
-    agg.name = "CSV"
-    agg.index = agg.index.set_levels(
-        pd.to_numeric(agg.index.levels[1], errors="coerce"), level="Year"
-    )
-    print(f"[CSV] ✓ Loaded. Total: {agg.sum():,.2f} GWh")
-    return agg
+    # 4) storage_flows_annual → storage throughput (only batteries + H2 storage)
+    sf = data.get("storage_flows_annual")
+    if sf is None or sf.empty:
+        raise KeyError("storage_flows_annual not found or empty in GDX")
 
+    sf_2050 = sf[(sf["accYears"] == YEAR) & (sf["balanceType"].isin(["positive", "negative"]))].copy()
+    # keep only Battery and H2_storage
+    mask_batt = sf_2050["techs"].str.contains("Battery", case=False, na=False)
+    mask_h2st = sf_2050["techs"].str.contains("H2_storage", case=False, na=False)
+    sf_2050 = sf_2050[mask_batt | mask_h2st]
 
-def load_gdx_model_demand(path, years):
-    """Load model DEMAND (FuelService consumption) from commodity_balance_annual."""
-    print(f"[GDX] Loading {path}...")
-    if not path.exists():
-        print(f"[GDX] ERROR: {path} not found.")
-        return pd.Series()
+    # Annual throughput ≈ sum of positive flows (GWh)
+    storage_throughput = sf_2050[sf_2050["balanceType"] == "positive"]["Value"].sum()
+    m["storage_throughput_GWh"] = storage_throughput
 
-    try:
-        dfs = gdxpds.to_dataframes(str(path))
-    except Exception as e:
-        print(f"[GDX] ERROR reading GDX: {e}")
-        return pd.Series()
+    return m
 
-    # Look for commodity_balance_annual (model results)
-    if "commodity_balance_annual" not in dfs:
-        print(f"[GDX] ERROR: commodity_balance_annual not found in GDX.")
-        print(f"[GDX]   Available tables: {list(dfs.keys())[:15]}")
-        return pd.Series()
-
-    cb = dfs["commodity_balance_annual"]
-    cb.columns = [c.lower() for c in cb.columns]
-
-    print(f"[GDX]   commodity_balance_annual shape: {cb.shape}")
-    print(f"[GDX]   Columns: {list(cb.columns)}")
-
-    # Filter for years
-    cb = cb[cb["accyears"].astype(str).isin([str(y) for y in years])].copy()
-
-    # We want negative balance (demand): FuelService_* and H2
-    def map_gdx_comm(c):
-        c = str(c).strip()
-        if c == "H2": return "H2"
-        if c.startswith("FuelService_"): return c.replace("FuelService_", "")
-        return None
-
-    cb["Carrier_Clean"] = cb["commodity"].apply(map_gdx_comm)
-    cb = cb.dropna(subset=["Carrier_Clean"])
-
-    # Filter for negative balance (demand side)
-    cb = cb[cb["balancetype"] == "negative"].copy()
-
-    # Value column
-    numeric_cols = cb.select_dtypes(include=[np.number]).columns.tolist()
-    value_col = numeric_cols[0] if numeric_cols else None
-    if value_col is None:
-        print("[GDX] ERROR: No numeric column found.")
-        return pd.Series()
-
-    # Demand is absolute value (negative balance means demand)
-    cb["Demand"] = cb[value_col].astype(float).abs()
-
-    # Aggregate
-    agg = cb.groupby(["accnodesmodel", "accyears", "Carrier_Clean"])["Demand"].sum()
-    agg.index.names = ["REMixRegion", "Year", "Carrier_Clean"]
-    agg.name = "GDX_Model"
-
-    agg.index = agg.index.set_levels(
-        pd.to_numeric(agg.index.levels[1], errors="coerce"), level="Year"
-    )
-
-    print(f"[GDX] ✓ Loaded. Total model demand: {agg.sum():,.2f} GWh")
-    return agg
-
-
+# ------------------------------------------------------------------------
+# MAIN: loop over scenarios, build tables, plot
+# ------------------------------------------------------------------------
 def main():
-    print("=" * 80)
-    print("VERIFICATION: Excel → CSV (build) → GDX (model result)")
-    print("=" * 80)
+    cap_rows = []
+    fe_rows = []
+    cost_rows = []
+    cost_bd_rows = []
+    ops_rows = []
 
-    print("\n--- Step 1: Load Excel ---")
-    excel = load_excel_demand(EXCEL_PATH, SCENARIO, YEARS_CHECK)
+    for group_name, case_name in cases:
+        scen = scen_label(case_name)
+        gdx_path = base_dir / group_name / case_name / "result" / f"{case_name}.gdx"
+        if not gdx_path.exists():
+            print(f"[WARN] Missing GDX for {scen}: {gdx_path}")
+            continue
 
-    print("\n--- Step 2: Load CSV (build input) ---")
-    csv = load_csv_demand(DATA_DIR, YEARS_CHECK)
+        print(f"\n=== Scenario: {scen} ===")
+        data = load_gdx_tables(gdx_path)
 
-    print("\n--- Step 3: Load GDX (model demand from commodity_balance_annual) ---")
-    gdx = load_gdx_model_demand(GDX_PATH, YEARS_CHECK)
+        metrics = extract_metrics_2050(data)
 
-    # Combine
-    print("\n" + "=" * 80)
-    print("COMPARISON")
-    print("=" * 80 + "\n")
+        cap_rows.append(metrics["capacity_by_group_GW"].rename(scen))
+        fe_rows.append(metrics["final_energy_TWh"].rename(scen))
 
-    df_compare = pd.concat([excel, csv, gdx], axis=1).fillna(0.0)
+        cost_rows.append(pd.Series({
+            "scenario": scen,
+            "total_cost_MEUR_2050": metrics["total_cost_MEUR"],
+        }))
+        cost_bd_rows.append(metrics["cost_by_indicator"].rename(scen))
 
-    df_compare["Excel-CSV"] = df_compare["Excel"] - df_compare["CSV"]
-    df_compare["CSV-GDX"] = df_compare["CSV"] - df_compare["GDX_Model"]
-    df_compare["Excel-GDX"] = df_compare["Excel"] - df_compare["GDX_Model"]
+        ops_rows.append(pd.Series({
+            "scenario": scen,
+            "storage_throughput_GWh_2050": metrics["storage_throughput_GWh"],
+        }))
 
-    tol = 1e-2
-    df_compare["Excel=CSV"] = df_compare["Excel-CSV"].abs() < tol
-    df_compare["CSV=GDX"] = df_compare["CSV-GDX"].abs() < tol
+    # ---------- Table 1: capacities ----------
+    tbl_cap = pd.concat(cap_rows, axis=1).fillna(0.0)
+    tbl_cap.index.name = "Tech_group"
+    print("\nTable 1: Installed capacity by tech group in 2050 (GW)")
+    print(tbl_cap)
+    bar_table(tbl_cap, "Installed capacity in 2050 by tech group", "GW")
 
-    print(df_compare.to_string())
+    # ---------- Table 2: final energy demand ----------
+    tbl_fe = pd.concat(fe_rows, axis=1).fillna(0.0)
+    tbl_fe.index.name = "Commodity"
+    print("\nTable 2: Final energy demand in 2050 (TWh)")
+    print(tbl_fe)
+    bar_table(tbl_fe, "Final energy demand in 2050", "TWh")
 
-    print("\n" + "=" * 80)
-    print("SUMMARY")
-    print("=" * 80)
+    # ---------- Table 3: total cost ----------
+    tbl_cost = pd.DataFrame(cost_rows).set_index("scenario")
+    print("\nTable 3: Total SystemCost in 2050 (M€)")
+    print(tbl_cost)
+    bar_table(tbl_cost[["total_cost_MEUR_2050"]], "Total SystemCost in 2050", "M€")
 
-    tot_excel = df_compare["Excel"].sum()
-    tot_csv = df_compare["CSV"].sum()
-    tot_gdx = df_compare["GDX_Model"].sum()
+    # ---------- Table 4: cost breakdown ----------
+    tbl_cost_bd = pd.concat(cost_bd_rows, axis=1).fillna(0.0)
+    tbl_cost_bd.index.name = "Indicator"
+    print("\nTable 4: Cost breakdown by indicator in 2050 (M€)")
+    print(tbl_cost_bd)
+    bar_table(tbl_cost_bd, "Cost breakdown by indicator in 2050", "M€")
 
-    print(f"\nTotal Demands:")
-    print(f"  Excel:              {tot_excel:>15,.2f} GWh")
-    print(f"  CSV (build input):  {tot_csv:>15,.2f} GWh")
-    print(f"  GDX (model result): {tot_gdx:>15,.2f} GWh")
-
-    print(f"\nAbsolute Differences:")
-    print(f"  Excel - CSV:        {(tot_excel - tot_csv):>15,.2f} GWh")
-    print(f"  CSV - GDX:          {(tot_csv - tot_gdx):>15,.2f} GWh")
-    print(f"  Excel - GDX:        {(tot_excel - tot_gdx):>15,.2f} GWh")
-
-    print(f"\nMatch Count (within {tol} GWh):")
-    print(f"  Excel = CSV:        {df_compare['Excel=CSV'].sum()} / {len(df_compare)}")
-    print(f"  CSV = GDX:          {df_compare['CSV=GDX'].sum()} / {len(df_compare)}")
-
-    print("\n" + "=" * 80)
-    print("MISMATCHES")
-    print("=" * 80)
-
-    ex_csv = df_compare[~df_compare["Excel=CSV"]]
-    if ex_csv.empty:
-        print("\n✓ Excel → CSV: Perfect match!")
-    else:
-        print("\n✗ Excel → CSV mismatches:")
-        print(ex_csv[["Excel", "CSV", "Excel-CSV"]].to_string())
-
-    csv_gdx = df_compare[~df_compare["CSV=GDX"]]
-    if csv_gdx.empty:
-        print("\n✓ CSV → GDX: Model fully used all demands!")
-    else:
-        print("\n✗ CSV → GDX (model may not use all demands):")
-        print(csv_gdx[["CSV", "GDX_Model", "CSV-GDX"]].to_string())
-
-    print("\n" + "=" * 80)
-
+    # ---------- Table 5: storage throughput ----------
+    tbl_ops = pd.DataFrame(ops_rows).set_index("scenario")
+    print("\nTable 5: Storage throughput (Battery + H2_storage) in 2050 (GWh)")
+    print(tbl_ops)
+    bar_table(tbl_ops[["storage_throughput_GWh_2050"]],
+              "Storage throughput in 2050 (Battery + H2_storage)", "GWh")
 
 if __name__ == "__main__":
     main()
