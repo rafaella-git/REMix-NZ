@@ -1,8 +1,7 @@
 # %%
-# REMix-NZ input builder (scenario-based MVP + multi-carrier demand)
+# REMix-NZ input builder 
 #
-# Beginner edits live in USER CHOICES below.
-# This script writes CSV input tables for the GAMS REMix model.
+# This script writes CSV input tables for the GAMS REMix-NZ model.
 
 import time
 import numpy as np
@@ -13,27 +12,20 @@ from remix.framework.api.instance import Instance
 idx = pd.IndexSlice
 
 # -------------------------------------------------------------------
-# USER CHOICES (edit these)
+# USER CHOICES
 # -------------------------------------------------------------------
 
+group_name = "GP-NT-ELEC-BIO-H2" # Demand folder group (used for output folder structure)
+base_scenario = "GP" # Scenario name: GP, NT, ELEC+, BIO+, H2+ (must match "Scenario" column in CSV/Excel)
+yrs_to_calc = [2020, 2050] # Model years available
+yrs_sel = [2050] # Model years to optimise
+
 # Case folder name (output goes to ../project/<group_name>/<case_name>/data)
-case_name = "nz_case_GP_MVP"
+years_tag = "-".join(str(y) for y in yrs_sel)
+case_name = f"nz_case_{base_scenario}_{years_tag}"
 
-# Demand folder group (used for output folder structure)
-group_name = "GP-NT-ELEC-BIO-H2"
 
-# Scenario name to extract from the demand files (must match "Scenario" column in CSV/Excel)
-# Examples: GP, NT, ELEC+, BIO+, H2+ (use whatever is in your files)
-base_scenario = "GP"
-
-# Model years available and years to optimise
-yrs_to_calc = [2020, 2050]          # keep small for MVP
-yrs_sel = [2020, 2050]              # optimisation years
-
-# Demand input folder (contains hourly electricity CSV and the Excel workbook)
-demand_folder = Path("C:/Local/REMix/remix_nz/input/demand/GP-NT-ELEC-BIO-H2")
-
-# File names in that folder
+demand_folder = Path("C:/Local/REMix/remix_nz/input/demand/GP-NT-ELEC-BIO-H2") # Demand input folder (contains hourly electricity CSV and the Excel workbook)
 hourly_electricity_file = "hourly_electricity_GP-NT-ELEC-BIO-H2.csv"
 carriers_excel_file = "data_summary.xlsx"   # must contain sheet "carriers"
 
@@ -41,23 +33,21 @@ carriers_excel_file = "data_summary.xlsx"   # must contain sheet "carriers"
 use_hydro_cascade = False  # MVP: False
 simplified_hydro_inflow_file = Path("C:/Local/REMix/remix_nz/input/brownfield/hydro/inflows_remix-nz/regional-hydro-inflow.csv")
 
-# Currency conversion for CSIRO fuel prices (AUD/GJ) -> EUR (user can change this)
-# Use a simple scalar so it is easy to edit.
+# Currency conversion for CSIRO fuel prices (AUD/GJ) -> EUR
 eur_per_aud = 0.60
 
 # Carbon policy (MVP)
 use_emission_limit_2050 = False
 use_emission_slack_2050 = False
-slack_cost_eur_per_tco2 = 1_000_000  # huge number, only used if cap is infeasible
+slack_cost_eur_per_tco2 = 1_000_000  # large number only used if cap is infeasible
 
-# Which supply blocks to include (MVP defaults)
+# Which supply blocks to include
 include_renewables = True
-include_geothermal = True            # no expansion in your code, but keep for completeness
+include_geothermal = True          
 include_hydro_simple = True
 include_lithium_batteries = True
 include_thermal = True
 include_gas_turbines = True
-
 include_electrolyser = True
 include_dac = True
 include_ftropsch = True
@@ -70,7 +60,7 @@ include_network = True
 include_accounting = True
 
 # -------------------------------------------------------------------
-# Derived paths (usually no need to edit)
+# Paths
 # -------------------------------------------------------------------
 
 path_input = Path("C:/Local/REMix/remix_nz/input")
@@ -117,6 +107,7 @@ def map_region_to_remix(region_value: str) -> str:
         "Manawatu-Whanganui": "CEN",
         "Manawatū-Whanganui": "CEN",
         "Marlborough": "NEL",
+        " Marlborough": "NEL",
         "Nelson": "NEL",
         "Northland": "NIS",
         "Otago": "OTG",
@@ -180,7 +171,8 @@ def read_carriers_excel_long(excel_path: Path, scenario_name: str) -> pd.DataFra
 # -------------------------------------------------------------------
 # CSIRO fuel price medians (AUD/GJ) used for MVP
 # -------------------------------------------------------------------
-# Source: CSIRO GenCost fuel price spreadsheets.
+# Source: CSIRO GenCost fuel price spreadsheets. 
+# https://www.aemo.com.au/energy-systems/major-publications/integrated-system-plan-isp/2026-integrated-system-plan-isp/2025-26-inputs-assumptions-and-scenarios
 # For each fuel there are multiple plant entries. We use the median value.
 # Ranges (min..max) are left in comments for transparency.
 
@@ -235,9 +227,7 @@ def csiro_fuel_cost_meur_per_gwh(year: int, fuel_key: str) -> float:
 
 
 
-# -----------------------------
-# Demand and inflow helpers
-# -----------------------------
+# demand Elec and Water inflows
 
 def add_scope(m):
     df = pd.DataFrame(
@@ -612,18 +602,11 @@ def add_hydro_scheme(m):
       - Water and storage are handled in *energy units (GWh)* via specific power (MW per cumec).
       - Mm³ from JADE files are converted to GWh with the downstream turbine's specific power.
     """
-
-    import pandas as pd
-    import numpy as np
-    from pathlib import Path
-
-    # --------- config / paths (adjust if your JADE folder is different) ----------
     jade_dir = Path(path_brownfield) / "hydro" / "JADE_hydro"
     f_stations = jade_dir / "hydro_stations.csv"
     f_limits   = jade_dir / "reservoir_limits.csv"
     f_resinit  = jade_dir / "reservoirs.csv"
 
-    # --------- time axis ----------
     try:
         years = list(m["Base"].set.yearssel)
         if not years:
@@ -632,7 +615,6 @@ def add_hydro_scheme(m):
         years = [2000]
     y0 = years[0]
 
-    # --------- canonical cascade (use this as the guide) ----------
     # Columns: inflow_list (comma sep), tech, outflow, scheme, region, (cap, sp filled from JADE)
     turbines = pd.DataFrame([
         # Waitaki (CAN)
@@ -674,7 +656,7 @@ def add_hydro_scheme(m):
         ("Cobb_in"            , "Cobb"        , "Water_out"    , "Cobb",      "NEL"),
     ], columns=["inflow_list","tech","outflow","scheme","region"])
 
-    # Reservoirs (guide list & region mapping – your original scheme regions)
+    # Reservoirs
     reservoirs = pd.DataFrame([
         ("Lake_Tekapo"              , "Tekapo_in"       , "CAN"),
         ("Lake_Pukaki"              , "Pukaki_in"       , "CAN"),
@@ -694,11 +676,11 @@ def add_hydro_scheme(m):
     stations = pd.read_csv(f_stations)
     stations = stations.rename(columns=str.strip)
 
-    # Build lookup for capacity and SP by turbine name
+    # Build lookup for capacity and Specific Power by turbine name
     cap_map = stations.set_index("GENERATOR")["CAPACITY"].to_dict()
     sp_map  = stations.set_index("GENERATOR")["SPECIFIC_POWER"].to_dict()
 
-    # Build mapping inflow commodity -> downstream turbine tech (from our canonical cascade)
+    # Build mapping inflow commodity -> downstream turbine tech 
     inflow_to_turb = {}
     for _, r in turbines.iterrows():
         for c in [x.strip() for x in r["inflow_list"].split(",") if x.strip()]:
@@ -855,7 +837,7 @@ def add_hydro_scheme(m):
         init_pct = 100.0 * float(r.InitFrac) if emx > 0 else 0.0
         print(f"   - {r.Reservoir:<26s} {emx:6.1f} GWh  (init {init_pct:5.1f}%)")
 
-# other enewables
+# other renewables
     
 def load_feedin_csv(year, aggregate=False, norm=True):
     inst = pd.read_csv(Path(path_profiles).joinpath("region_statistics_2012.csv"), index_col=[0, 1])
@@ -951,7 +933,8 @@ def add_renewables(m):
     re_upper.index.names = ["region", "years", "technology"]
     re_max_inst = pd.DataFrame(re_inst_csv.div(1e3)["installable_per_region"]).rename(columns={"installable_per_region": "unitsUpperLimit"})
     re_upper = re_upper.join(re_max_inst, on=["region", "technology"], how="outer")
-    re_upper.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean
+    if 2020 in yrs_sel:
+        re_upper.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean
     re_caps_full = pd.concat([re_caps, re_upper], axis=1).dropna(how="all")
 
     m["Base"].parameter.add(re_caps_full, "converter_capacityparam")
@@ -1141,15 +1124,14 @@ def add_geothermal(m):
 def add_thermal(m):
     the_inst_csv = pd.read_csv(Path(path_brownfield).joinpath("power-plant-nz-database.csv"))
 
-    # sets
     the_vintage = [1950, 2030, 2050]                   # vintages (for techparam & coefficients)
     the_techs   = ["BIO", "COAL", "DIE"]
     the_nodes   = [n for n in m["Base"].set.nodesdata]
     the_act     = ["Powergen"]
-    the_years   = list(m["Base"].set.yearssel)         # <-- use model years for accounting tables
+    the_years   = list(m["Base"].set.yearssel)         # use model years for accounting tables
     idx = pd.IndexSlice
 
-    # --- converter_techparam (OK with vintages) ---
+    # converter_techparam 
     the_tech = pd.DataFrame(
         index=pd.MultiIndex.from_product([the_techs, the_vintage])
     )
@@ -1157,7 +1139,7 @@ def add_thermal(m):
     the_tech.loc[idx[:, :], "activityUpperLimit"] = 1
     m["Base"].parameter.add(the_tech, "converter_techparam")
 
-    # --- converter_capacityparam (your logic kept) ---
+    # converter_capacityparam
     the_cap = pd.DataFrame(index=pd.MultiIndex.from_product([the_nodes, range(1992, 2050), the_techs]))
     df = the_inst_csv
     filtered_df = df[(df['Type'] == 'Thermal') & (df['Primary_fuel'].isin(['Biogas', 'Biomass', 'Coal', 'Diesel', 'Waste heat', 'Wood', 'Wood waste']))]
@@ -1177,14 +1159,14 @@ def add_thermal(m):
     the_cap_full = pd.concat([the_cap, the_cap_upper], axis=1)
     m["Base"].parameter.add(the_cap_full, "converter_capacityparam")
 
-    # --- converter_coefficient (OK with vintages & activities) ---
+    # converter_coefficient (OK with vintages & activities) 
     the_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product([the_techs, the_vintage, the_act, ["Elec"]])
     )
     the_coef.loc[idx[:, :, :, "Elec"], "coefficient"] = 1
     m["Base"].parameter.add(the_coef, "converter_coefficient")
 
-    # --- accounting_converterunits (ADD timescope="horizon" and use model years) ---
+    # accounting_converterunits (ADD timescope="horizon" and use model years)
     the_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [["Invest", "OMFix"], ["global"], ["horizon"], the_techs, the_years],
@@ -1201,9 +1183,6 @@ def add_thermal(m):
     the_acc.loc[idx["Invest", "global", "horizon", :, :], "amorTime"]   = 30
     the_acc.loc[idx["Invest", "global", "horizon", :, :], "interest"]   = 0.06
 
-    # the_acc.loc[idx["OMFix",  "global", "horizon", :, :], "perUnitTotal"] = (
-    #     the_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] * 0.033
-    # )
     invest_vals = the_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
     invest_vals.index = pd.MultiIndex.from_tuples(
         [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
@@ -1214,7 +1193,7 @@ def add_thermal(m):
 
     m["Base"].parameter.add(the_acc, "accounting_converterunits")
 
-    # --- accounting_converteractivity (ADD timescope="horizon" and use model years) ---
+    # accounting_converteractivity (ADD timescope="horizon" and use model years)
     the_emission = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [["CO2_emission", "FuelCost"], ["global"], ["horizon"], the_techs, the_years, the_act],
@@ -1222,7 +1201,7 @@ def add_thermal(m):
         )
     ).sort_index()
 
-    # Broadcast per-activity values to all years (was tied to your 3-vintage vector before)
+    # Broadcast per-activity values to all years 
     # CO2 factors (kt_CO2 per unit of activity)
     the_emission.loc[idx["CO2_emission","global","horizon","BIO", :, "Powergen"], "perActivity"] = 0.0
     the_emission.loc[idx["CO2_emission","global","horizon","COAL",:, "Powergen"], "perActivity"] = 0.3406 / 0.010   # = 34.06
@@ -1240,7 +1219,7 @@ def add_gas_turbines(m):
 
     gt_vintage = [1950,2030]
 
-    #gt_techs = ["GT", "CCGT", "OCGT", "GT_H2", "CCGT_H2"]                         # OCGT added 
+    #gt_techs = ["GT", "CCGT", "OCGT", "GT_H2", "CCGT_H2"]                     
     gt_techs = ["GT", "CCGT", "OCGT"]                       
     gt_nodes = [n for n in m["Base"].set.nodesdata if not n.startswith("LNG")]
     gt_activities = ["Powergen"]
@@ -1264,7 +1243,8 @@ def add_gas_turbines(m):
 
     gt_cap_upper = pd.DataFrame(index=pd.MultiIndex.from_product([gt_nodes, yrs_to_calc, gt_techs]))
     gt_cap_upper.loc[idx[:, :, gt_techs], "unitsUpperLimit"] = 100  # GW_el
-    gt_cap_upper.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean  
+    if 2020 in yrs_sel:
+        gt_cap_upper.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean  
     gt_cap_full = pd.concat([gt_cap, gt_cap_upper], axis=1)
     m["Base"].parameter.add(gt_cap_full, "converter_capacityparam")
 
@@ -1341,10 +1321,9 @@ def add_gas_turbines(m):
 
 # hydrogen
 
-
 def add_electrolyser(m):
     """
-    Updated electrolyser parameters to match the PDF table (page 9):
+    Electrolyser values from supplementary material https://doi.org/10.1016/j.energy.2025.134878 (page 9)
     capex €/kW_el: 446 (early), 291 (late)
     fixed opex: 3.5% of capex
     lifetime: 30 years
@@ -1395,8 +1374,6 @@ def add_electrolyser(m):
 
     m["Base"].parameter.add(eltr_acc, "accounting_converterunits")
 
-
-
 def add_H2_CCGT(m):
     H2_CCGT_vintage = [2030, 2035, 2040, 2045, 2050]
     H2_CCGT_nodes = [n for n in m["Base"].set.nodesdata]
@@ -1440,8 +1417,7 @@ def add_H2_CCGT(m):
     #     )  # Mio EUR per unit
     invest_vals = H2_CCGT_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] 
     invest_vals.index = pd.MultiIndex.from_tuples(
-        [("OMFix", *i[1:]) for i in invest_vals.index],  # replace "Invest" by "OMFix"
-        #names=conv_acc.index.names
+        [("OMFix", *i[1:]) for i in invest_vals.index],  
     )
     H2_CCGT_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.025 # 2.5% fixed O&M
 
@@ -1482,7 +1458,7 @@ def add_H2_FC(m):
         index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], ["horizon"],  ["H2_FC"], H2_FC_vintage])
         ).sort_index()
 
-    H2_FC_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "perUnitBuild"] = 100 #[2980.992, 1468.139, 773.195, 733.604, 694.012, 654.421, 614.830]   #  
+    H2_FC_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "perUnitBuild"] = [2980.992, 1468.139, 773.195, 733.604, 694.012, 654.421, 614.830]   #  
     H2_FC_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "amorTime"] = 35  # years
     H2_FC_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "useAnnuity"] = 1  # binary yes/no
     H2_FC_acc.loc[idx["Invest", ["global"], ["horizon"],  :, :], "interest"] = 0.06  # percent/100
@@ -1500,77 +1476,60 @@ def add_H2_FC(m):
 
 def add_dac(m):
     idx = pd.IndexSlice
-
+    
     dac_vintage = [2020, 2030, 2040, 2050]
     dac_techs = ["DAC"]
     dac_nodes = [n for n in m["Base"].set.nodesdata if not n.startswith("LNG")]
 
-    # --- techparam ---
-    dac_tech = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [dac_techs, dac_vintage],
-            names=["techs", "years"],
-        )
-    )
-    dac_tech.loc[idx[:, [2020, 2030, 2040, 2050]], "lifeTime"] = 20
-    dac_tech["activityUpperLimit"] = 1
+    # technology
+    dac_tech = pd.DataFrame(index=pd.MultiIndex.from_product([dac_techs, dac_vintage], names=["techs", "years"]))
+    dac_tech.loc[idx[:, :], ["lifeTime"]] = 20  # years
+    dac_tech["activityUpperLimit"] = 1  # availability of technology
     m["Base"].parameter.add(dac_tech, "converter_techparam")
 
-    # --- capacityparam ---
-    dac_caps = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [dac_nodes, [2020], dac_techs],
-            names=["nodes", "years", "techs"],
-        )
-    )
-    dac_caps["unitsUpperLimit"] = 100
+    # capacities
+    dac_caps = pd.DataFrame(index=pd.MultiIndex.from_product([dac_nodes, [2020, 2025, 2030, 2035, 2040, 2045, 2050], dac_techs], names=["nodes", "years", "techs"]))
+    dac_caps["unitsUpperLimit"] = 100  # GW_el
     m["Base"].parameter.add(dac_caps, "converter_capacityparam")
 
-    # --- converter_coefficient ---
+    # coefficients
     dac_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [dac_techs, dac_vintage, ["Capture"], ["Elec", "CO2_feed"]],
+            [
+                dac_techs,
+                dac_vintage,
+                ["Capture"],
+                ["Elec", "CO2_feed"],
+            ],
             names=["techs", "years", "activities", "commodities"],
         )
     )
     dac_coef.loc[idx[:, :, :, "CO2_feed"], "coefficient"] = 1
-    dac_coef.loc[idx[:, :, :, "Elec"], "coefficient"] = [-1.535, -1.458, -1.385, -1.316]
+    dac_coef.loc[idx[:, :, :, "Elec"], "coefficient"] = [-1.535, -1.458, -1.385, -1.316]  # GWh/el per ktCO2
     m["Base"].parameter.add(dac_coef, "converter_coefficient")
 
-    # --- accounting_converterunits ---
+    # accounting
     dac_acc = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [["Invest", "OMFix"], ["global"], ["horizon"], dac_techs, dac_vintage],
-            names=["indicator", "regionscope", "timescope", "techs", "years"],
-        )
+        index=pd.MultiIndex.from_product([["Invest", "OMFix"], ["global"], ["horizon"], dac_techs, dac_vintage], names=["indicator", "regionscope", "timescope", "techs", "years"])
     ).sort_index()
 
-    dac_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] = 815 * 8.76
-    dac_acc.loc[idx["Invest", "global", "horizon", :, :], "amorTime"] = 20
-    dac_acc.loc[idx["Invest", "global", "horizon", :, :], "useAnnuity"] = 1
-    dac_acc.loc[idx["Invest", "global", "horizon", :, :], "interest"] = 0.06
-
-    invest_vals = dac_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"]
-    invest_vals.index = pd.MultiIndex.from_tuples(
-        [("OMFix",) + i[1:] for i in invest_vals.index],
-        names=dac_acc.index.names,
-    )
-    dac_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = invest_vals * 0.04
+    dac_acc.loc[idx["Invest", :, :, :, :], "perUnitBuild"] = [i * 8.76 for i in [815]] #[815 * 8.76, 815 * 8.76, 815 * 8.76, 815 * 8.76]  # EUR/tCO2*a -> MEUR/ktCO2*h
+    dac_acc.loc[idx["Invest", :, :, :, :], "amorTime"] = [20]  # years
+    dac_acc.loc[idx["Invest", :, :, :, :], "useAnnuity"] = 1  # binary yes/no
+    dac_acc.loc[idx["Invest", :, :, :, :], "interest"] = 0.06  # percent/100
+    
+    dac_acc.loc[idx["OMFix", "global", "horizon", :, :], "perUnitTotal"] = (
+        dac_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] * 0.04
+    )  # Mio EUR per unit
 
     m["Base"].parameter.add(dac_acc, "accounting_converterunits")
 
-    # --- accounting_converteractivity ---
-    # match the 6-level index used elsewhere:
-    # names=["indicator","regionscope","timescope","techs","years","activities"]
-    dac_activity = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [["CO2_emission"], ["global"], ["horizon"], dac_techs, dac_vintage, ["Capture"]],
-            names=["indicator", "regionscope", "timescope", "techs", "years", "activities"],
-        )
-    )
+    # Remove Carbon from CO2_emission indicator
+        # Remove Carbon from CO2_emission indicator
+    dac_activity = pd.DataFrame(index=pd.MultiIndex.from_product([["CO2_emission"], ["global"], ["horizon"], ["DAC"], dac_vintage, ["Capture"]], names=["indicator", "regionscope", "timescope", "techs", "years", "activities"]))
     dac_activity["perActivity"] = -1
     m["Base"].parameter.add(dac_activity, "accounting_converteractivity")
-    print("DAC added successfully.")
+
 
 def add_methanizer(m):
     """
@@ -1583,9 +1542,7 @@ def add_methanizer(m):
     methanizer_techs   = ["Methanizer"]
     methanizer_nodes   = [n for n in m["Base"].set.nodesdata if not n.startswith("LNG")]
 
-    # -------------------------
-    # Technology parameters
-    # -------------------------
+    #tech param
     methanizer_tech = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [methanizer_techs, methanizer_vintage],
@@ -1596,9 +1553,7 @@ def add_methanizer(m):
     methanizer_tech["activityUpperLimit"] = 1
     m["Base"].parameter.add(methanizer_tech, "converter_techparam")
 
-    # -------------------------
-    # Capacities
-    # -------------------------
+    # caps
     methanizer_caps = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [methanizer_nodes,
@@ -1610,10 +1565,7 @@ def add_methanizer(m):
     methanizer_caps["unitsUpperLimit"] = 100  # GW_el-equiv
     m["Base"].parameter.add(methanizer_caps, "converter_capacityparam")
 
-    # -------------------------
-    # Conversion coefficients
-    # techs, years, activities, commodities
-    # -------------------------
+    # Conversion coefficients: techs, years, activities, commodities
     methanizer_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [methanizer_techs, methanizer_vintage,
@@ -1630,10 +1582,7 @@ def add_methanizer(m):
 
     m["Base"].parameter.add(methanizer_coef, "converter_coefficient")
 
-    # -------------------------
-    # Accounting (converter units)
-    # indicator, regionscope, timescope, techs, years
-    # -------------------------
+    # accounting (converter units): indicator, regionscope, timescope, techs, years
     methanizer_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [["Invest", "OMFix"], ["global"], ["horizon"],
@@ -1642,7 +1591,7 @@ def add_methanizer(m):
         )
     ).sort_index()
 
-    # CAPEX (Mio EUR per unit) as in your script: 558, 309, 251, 211
+    # CAPEX (Mio EUR per unit) 
     methanizer_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] = [
         558, 309, 251, 211
     ]
@@ -1666,6 +1615,7 @@ def add_methanizer(m):
 
     print("Methanizer added successfully.")
 
+
 def add_methanolsyn(m):
     """
     Methanol synthesis: H2 + CO2_feed -> CH3OH.
@@ -1677,9 +1627,7 @@ def add_methanolsyn(m):
     methanolsyn_techs   = ["MethanolSyn"]
     methanol_nodes      = [n for n in m["Base"].set.nodesdata if not n.startswith("LNG")]
 
-    # -------------------------
-    # Technology parameters
-    # -------------------------
+    # tech param
     methanolsyn_tech = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [methanolsyn_techs, methanolsyn_vintage],
@@ -1690,9 +1638,7 @@ def add_methanolsyn(m):
     methanolsyn_tech["activityUpperLimit"] = 1
     m["Base"].parameter.add(methanolsyn_tech, "converter_techparam")
 
-    # -------------------------
-    # Capacities
-    # -------------------------
+    # caps
     methanolsyn_caps = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [methanol_nodes,
@@ -1704,10 +1650,7 @@ def add_methanolsyn(m):
     methanolsyn_caps["unitsUpperLimit"] = 100  # GW_el-equiv
     m["Base"].parameter.add(methanolsyn_caps, "converter_capacityparam")
 
-    # -------------------------
-    # Conversion coefficients
-    # techs, years, activities, commodities
-    # -------------------------
+    # conversion coefficients: techs, years, activities, commodities
     methanolsyn_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [methanolsyn_techs, methanolsyn_vintage,
@@ -1723,10 +1666,7 @@ def add_methanolsyn(m):
 
     m["Base"].parameter.add(methanolsyn_coef, "converter_coefficient")
 
-    # -------------------------
-    # Accounting (converter units)
-    # indicator, regionscope, timescope, techs, years
-    # -------------------------
+    # accounting (converter units): indicator, regionscope, timescope, techs, years
     methanolsyn_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [["Invest", "OMFix"], ["global"], ["horizon"],
@@ -1735,7 +1675,8 @@ def add_methanolsyn(m):
         )
     ).sort_index()
 
-    # CAPEX (Mio EUR per unit) from your original 835
+
+    # CAPEX (Mio EUR per unit) 
     methanolsyn_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] = 835
     methanolsyn_acc.loc[idx["Invest", "global", "horizon", :, :], "amorTime"] = 30
     methanolsyn_acc.loc[idx["Invest", "global", "horizon", :, :], "useAnnuity"] = 1
@@ -1761,35 +1702,25 @@ def add_methanolsyn(m):
 def add_ftropsch_syn(m):
     """
     Fischer-Tropsch synthesis (generic liquid e-fuel 'REfuel').
-
-    - One technology: FTropschSyn
-    - Vintages: 2020, 2040
     - Output: REfuel
     - Inputs: H2, CO2_feed, Elec
     """
-
-    idx = pd.IndexSlice
-
-    ftropsch_vintage = [2020, 2040]
+    ftropsch_vintage = [2020, 2040, 2050]
     ftropsch_techs   = ["FTropschSyn"]
     ftropsch_nodes   = [n for n in m["Base"].set.nodesdata if not n.startswith("LNG")]
 
-    # -------------------------
-    # Technology parameters
-    # -------------------------
+    # tech param
     ftropsch_syn_tech = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [ftropsch_techs, ftropsch_vintage],
             names=["techs", "years"],
         )
     )
-    ftropsch_syn_tech["lifeTime"] = [30, 30]
+    ftropsch_syn_tech["lifeTime"] = [30, 30, 30]
     ftropsch_syn_tech["activityUpperLimit"] = 1
     m["Base"].parameter.add(ftropsch_syn_tech, "converter_techparam")
 
-    # -------------------------
-    # Capacities
-    # -------------------------
+    # caps
     ftropsch_syn_caps = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [ftropsch_nodes, [2020, 2025, 2030, 2035, 2040, 2045, 2050], ftropsch_techs],
@@ -1799,13 +1730,10 @@ def add_ftropsch_syn(m):
     ftropsch_syn_caps["unitsUpperLimit"] = 100  # GW_el-equivalent
     m["Base"].parameter.add(ftropsch_syn_caps, "converter_capacityparam")
 
-    # -------------------------
-    # Conversion coefficients
-    # techs, years, activities, commodities
-    # -------------------------
+    # conversion coefficients: techs, years, activities, commodities
     ftropsch_syn_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
-            [ftropsch_techs, ftropsch_vintage, ["Synthesis"], ["REfuel", "H2", "CO2_feed", "Elec", "H2O"]],
+            [ftropsch_techs, ftropsch_vintage, ["Synthesis"], ["REfuel", "H2", "CO2_feed", "Elec"]], #, "H2O"
             names=["techs", "years", "activities", "commodities"],
         )
     )
@@ -1813,19 +1741,17 @@ def add_ftropsch_syn(m):
     # Output: generic liquid e-fuel
     ftropsch_syn_coef.loc[idx[:, :, :, "REfuel"], "coefficient"] = 1.0
 
-    # Inputs and by‑product: use your original numbers (Andi / SynLink)
+    # Inputs and by‑product  - data from Andi SynLink? 
     ftropsch_syn_coef.loc[idx[:, :, :, "H2"],      "coefficient"] = -1.52
     ftropsch_syn_coef.loc[idx[:, :, :, "CO2_feed"], "coefficient"] = -0.35
     ftropsch_syn_coef.loc[idx[:, :, :, "Elec"],    "coefficient"] = -0.11
-    ftropsch_syn_coef.loc[idx[:, :, :, "H2O"],     "coefficient"] = 1.0
+    #ftropsch_syn_coef.loc[idx[:, :, :, "H2O"],     "coefficient"] = 1.0
 
     # Drop any pure-zero rows, if any
     ftropsch_syn_coef = ftropsch_syn_coef.replace(0, np.nan).dropna(how="all")
     m["Base"].parameter.add(ftropsch_syn_coef, "converter_coefficient")
-    # -------------------------
-    # Accounting (converter units)
-    # indicator, regionscope, timescope, techs, years
-    # -------------------------
+
+    # accounting (converter units): indicator, regionscope, timescope, techs, years
     ftropsch_syn_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [["Invest", "OMFix"], ["global"], ["horizon"], ftropsch_techs, ftropsch_vintage],
@@ -1833,16 +1759,14 @@ def add_ftropsch_syn(m):
         )
     ).sort_index()
 
-    # CAPEX per unit (Mio EUR per unit), same values you had
-    ftropsch_syn_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] = [1017, 915]
-    ftropsch_syn_acc.loc[idx["Invest", "global", "horizon", :, :], "amorTime"] = [30, 30]
+    # CAPEX per unit (Mio EUR per unit)
+    ftropsch_syn_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"] = [1017, 915, 915]
+    ftropsch_syn_acc.loc[idx["Invest", "global", "horizon", :, :], "amorTime"] = [30, 30, 30]
     ftropsch_syn_acc.loc[idx["Invest", "global", "horizon", :, :], "useAnnuity"] = 1
     ftropsch_syn_acc.loc[idx["Invest", "global", "horizon", :, :], "interest"] = 0.06
 
-    # OMFix = 4% of capex, with proper index names and timescope=horizon
-    invest_vals = ftropsch_syn_acc.loc[
-        idx["Invest", "global", "horizon", :, :], "perUnitBuild"
-    ]
+    # OMFix = 4% of capex
+    invest_vals = ftropsch_syn_acc.loc[idx["Invest", "global", "horizon", :, :], "perUnitBuild"]
     invest_vals.index = pd.MultiIndex.from_tuples(
         [("OMFix",) + i[1:] for i in invest_vals.index],
         names=ftropsch_syn_acc.index.names,
@@ -1852,7 +1776,7 @@ def add_ftropsch_syn(m):
     ] = invest_vals * 0.04
 
     m["Base"].parameter.add(ftropsch_syn_acc, "accounting_converterunits")
-    print("Fischer–Tropsch Synthesis added successfully.")
+    print("Fischer-Tropsch Synthesis added successfully.")
 
 
 # storage
@@ -1862,6 +1786,7 @@ def add_lithium_batteries(m):
     battery_techs = ["Battery"]
     battery_nodes = [n for n in m["Base"].set.nodesdata if not n.startswith("LNG")]
 
+    # technology
     conv_tech = pd.DataFrame(
         index=pd.MultiIndex.from_product([battery_techs, battery_vintage])
     )
@@ -1869,6 +1794,7 @@ def add_lithium_batteries(m):
     conv_tech.loc[idx[:, :], "activityUpperLimit"] = 1
     m["Base"].parameter.add(conv_tech, "converter_techparam")
 
+    # capacities
     conv_cap = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [battery_nodes, yrs_sel, battery_techs]
@@ -1877,7 +1803,7 @@ def add_lithium_batteries(m):
     conv_cap.loc[idx[:, :, battery_techs], "unitsUpperLimit"] = 50  # GW_el
     m["Base"].parameter.add(conv_cap, "converter_capacityparam")
 
-
+    # conversion coefficients: techs, years, activities, commodities
     conv_coef = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [battery_techs,battery_vintage, ["Charge", "Discharge"], ["Elec", "Elec_battery"]]
@@ -1889,6 +1815,7 @@ def add_lithium_batteries(m):
     conv_coef.loc[idx[:, :, "Discharge", "Elec_battery"], "coefficient"] = -1.025 # GW_el
     m["Base"].parameter.add(conv_coef, "converter_coefficient")
 
+    # accounting
     conv_acc = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [["Invest", "OMFix"], ["global"],["horizon"], battery_techs, battery_vintage]
@@ -1910,12 +1837,7 @@ def add_lithium_batteries(m):
 
     m["Base"].parameter.add(conv_acc, "accounting_converterunits")
 
-
-
-
-
-
-
+    # storage tech
     stor_tech = pd.DataFrame(
         index=pd.MultiIndex.from_product([battery_techs, battery_vintage])
     )
@@ -1937,7 +1859,8 @@ def add_lithium_batteries(m):
         index=pd.MultiIndex.from_product([battery_nodes,  yrs_sel, battery_techs])
     )
     stor_res.loc[idx[:, :, :], "unitsUpperLimit"] = 30  # units
-    stor_res.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean
+    if 2020 in yrs_sel:
+        stor_res.loc[idx[:, ["2020"], :], "noExpansion"] = 1  # boolean
     m["Base"].parameter.add(stor_res, "storage_reservoirparam")
 
     stor_acc = pd.DataFrame(
@@ -2044,7 +1967,8 @@ def add_h2_storage(m):
         index=pd.MultiIndex.from_product([h2_stor_nodes, yrs_h2, h2_stor_techs])
     )
     stor_res.loc[idx[:, :, :], "unitsUpperLimit"] = 50  # units 
-    stor_res.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean
+    if 2020 in yrs_sel:
+        stor_res.loc[idx[:, [2020], :], "noExpansion"] = 1  # boolean
     m["Base"].parameter.add(stor_res, "storage_reservoirparam")
 
     stor_acc = pd.DataFrame(
@@ -2527,14 +2451,14 @@ def modify_tech_cost_by_year(m, data_dir, tech, year_costs, tag=None):
 
 #other carriers
 
-# -------------------------------------------------------------------
-# H2 annual demand from carriers Excel
-# -------------------------------------------------------------------
-
 def add_h2_annual_demand_from_excel(m, carriers_long: pd.DataFrame):
     """
     Adds annual hydrogen demand as exogenous sinks on the real H2 commodity.
     Supply must come from the model (electrolyers, etc.); no H2 imports.
+
+    Aggregates original Excel regions (e.g. West Coast + Canterbury) into
+    single REMix nodes (e.g. CAN) before writing parameters, ensuring
+    one row per (node, year, sector, commodity).
 
     Pattern:
       - sourcesink_annualsum: upper = -Demand (GWh), lower not used
@@ -2554,56 +2478,71 @@ def add_h2_annual_demand_from_excel(m, carriers_long: pd.DataFrame):
     # Map to REMix commodity H2
     df["commodity"] = "H2"
 
-    # Index: (nodesdata, years, sector, commodity)
-    idx_ss = pd.MultiIndex.from_arrays(
-        [df["REMixRegion"], df["Year"], df["Sector"], df["commodity"]],
-        names=["nodesdata", "years", "sector", "commodity"],
+    print("\n[DEBUG] H2 demand before aggregation:")
+    print(f"  Rows: {len(df)}")
+    print(f"  By (REMixRegion, Year, Sector):")
+    pre_agg = (
+        df.groupby(["REMixRegion", "Year", "Sector"])["Demand"]
+        .sum()
+        .sort_index()
     )
+    print(pre_agg.to_string())
+
+    # AGGREGATE to ensure 1 row per (node, year, sector, commodity)
+    # This sums original regions that map to same REMixRegion
+    grp = (
+        df.groupby(["REMixRegion", "Year", "Sector", "commodity"])["Demand"]
+        .sum()
+        .reset_index()
+    )
+
+    print(f"\n[DEBUG] H2 demand after aggregation:")
+    print(f"  Aggregated rows: {len(grp)}")
+    print(f"  Total demand: {grp['Demand'].sum():,.2f} GWh")
+    print(grp.to_string(index=False))
+
+    # Index: (nodesdata, years, sector, commodity)
+    idx_ss = pd.MultiIndex.from_frame(
+        grp[["REMixRegion", "Year", "Sector", "commodity"]]
+    )
+    idx_ss.names = ["nodesdata", "years", "sector", "commodity"]
 
     # Annual upper sums: negative for demand (GWh per year)
     ss = pd.DataFrame(index=idx_ss)
-    ss["upper"] = -df["Demand"].values
+    ss["upper"] = -grp["Demand"].values
     m["Base"].parameter.add(ss, "sourcesink_annualsum")
 
-    # Configuration: upper sum only, no lower, no profile lower/upper other than sum flag
+    # Configuration: upper sum only, no lower, no profile
     cfg = pd.DataFrame(index=idx_ss)
     cfg["usesUpperSum"] = 1
     cfg["usesLowerSum"] = 0
-    cfg["usesUpperProfile"] = 1
+    cfg["usesUpperProfile"] = 0
     m["Base"].parameter.add(cfg, "sourcesink_config")
 
     # Ensure nodes and years are in sets
-    m["Base"].set.add(list(df["REMixRegion"].unique()), "nodesdata")
-    m["Base"].set.add(list(df["Year"].unique()), "years")
+    m["Base"].set.add(sorted(grp["REMixRegion"].unique().tolist()), "nodesdata")
+    m["Base"].set.add(sorted(grp["Year"].unique().tolist()), "years")
 
-    print(f"Hydrogen annual demand added: {len(df)} rows")
+    print(
+        f"\n[DEBUG] Hydrogen annual demand added: {len(grp)} aggregated rows "
+        f"(total {grp['Demand'].sum():,.2f} GWh)"
+    )
 
-
-# -------------------------------------------------------------------
-# Final fuels (fossil/bio/wood/paid REfuel/CH4) + e-fuels from Excel
-# -------------------------------------------------------------------
-
-def fuel_and_efuel_from_excel(m, carriers_long: pd.DataFrame):
+def fuel_from_excel(m, carriers_long: pd.DataFrame):
     """
     Single, consistent entry point for:
       - Fossil/bio/wood/paid fuels via FuelConsumer (FuelService_* demand)
       - Optional REfuel/CH4 e-fuel demand
 
-    All non-hourly *final* demands (H2 handled separately) follow Manuel's convention:
-      - sourcesink_annualsum: upper = -Demand (GWh), lower not used
-      - sourcesink_config:    usesUpperSum = 1, usesLowerSum = 0, usesUpperProfile = 1
-
-    FuelConsumer remains as the only converter linking fuels to FuelService_*.
-    No other function writes FuelService_*, REfuel or CH4 demand.
+    Aggregates original Excel regions (e.g. West Coast + Canterbury) into
+    single REMix nodes (e.g. CAN) before writing parameters, ensuring
+    one row per (node, year, sector, commodity).
     """
 
     df = carriers_long.copy()
     df["Carrier_key"] = df["Carrier"].astype(str).str.strip().str.lower()
 
     # ---- 1. Classification of carriers --------------------------------
-    # Carriers that are modelled as *paid fuels* through FuelConsumer
-
-        # same mapping used in fuel_and_efuel_from_excel
     paid_carrier_to_commodity = {
         "coal": "Coal_fossil",
         "fossil (gas)": "Gas_fossil",
@@ -2615,7 +2554,6 @@ def fuel_and_efuel_from_excel(m, carriers_long: pd.DataFrame):
         # "e-fuel (gas)": "CH4",
     }
 
-    # Carriers that are specifically e-fuels (optional consumption caps)
     efuel_keys = {
         # "e-fuel (lf)": "REfuel",
         # "e-fuel (gas)": "CH4",
@@ -2630,33 +2568,22 @@ def fuel_and_efuel_from_excel(m, carriers_long: pd.DataFrame):
     df_efuel = df_efuel.loc[df_efuel["Year"].isin(yrs_sel)].copy()
 
     # ---- 2. Optional e-fuel demand (REfuel / CH4) ----------------------
-    # Uses Manuel pattern: upper = -Demand, lower unused, usesUpperSum=1,
-    # usesLowerSum=0, usesUpperProfile=1
     if not df_efuel.empty:
-        df_efuel["commodity"] = df_efuel["Carrier_key"].map(efuel_keys)
-
-        idx_ss_ef = pd.MultiIndex.from_arrays(
-            [df_efuel["REMixRegion"], df_efuel["Year"], df_efuel["Sector"], df_efuel["commodity"]],
-            names=["nodesdata", "years", "sector", "commodity"],
-        )
-
+        grp_ef = df_efuel.groupby(["REMixRegion", "Year", "Sector", "commodity"])["Demand"].sum().reset_index()
+        
+        idx_ss_ef = pd.MultiIndex.from_frame(grp_ef[["REMixRegion", "Year", "Sector", "commodity"]])
+        idx_ss_ef.names = ["nodesdata", "years", "sector", "commodity"]
+        
         ss_ef = pd.DataFrame(index=idx_ss_ef)
-        ss_ef["upper"] = -df_efuel["Demand"].values
-        # no lower bound for these optional demands
+        ss_ef["upper"] = -grp_ef["Demand"].values
         m["Base"].parameter.add(ss_ef, "sourcesink_annualsum")
-
+        
         cfg_ef = pd.DataFrame(index=idx_ss_ef)
         cfg_ef["usesUpperSum"] = 1
         cfg_ef["usesLowerSum"] = 0
         cfg_ef["usesUpperProfile"] = 1
         m["Base"].parameter.add(cfg_ef, "sourcesink_config")
 
-        m["Base"].set.add(list(df_efuel["REMixRegion"].unique()), "nodesdata")
-        m["Base"].set.add(list(df_efuel["Year"].unique()), "years")
-
-        print(f"E-fuel (REfuel/CH4) annual demand added: {len(df_efuel)} rows")
-    else:
-        print("No e-fuel carriers in Excel; skipping explicit e-fuel final demand.")
 
     # ---- 3. Paid fuel demand via FuelConsumer -------------------------
     if df_paid.empty:
@@ -2664,22 +2591,27 @@ def fuel_and_efuel_from_excel(m, carriers_long: pd.DataFrame):
         return
 
     df_paid["commodity"] = df_paid["Carrier_key"].map(paid_carrier_to_commodity)
-    df_paid = df_paid.loc[df_paid["Year"].isin(yrs_sel)].copy()
-    if df_paid.empty:
+    df_paid["service_commodity"] = df_paid["commodity"].apply(lambda c: f"FuelService_{c}")
+
+    # AGGREGATE to ensure 1 row per (node, year, sector, commodity)
+    # This sums Canterbury + West Coast -> CAN totals
+    grp_paid = (
+        df_paid.groupby(["REMixRegion", "Year", "Sector", "service_commodity"])["Demand"]
+        .sum()
+        .reset_index()
+    )
+
+    if grp_paid.empty:
         print("No paid fuel demand in selected years; skipping FuelConsumer block.")
         return
 
-    # 3a. Strict annual demand on FuelService_<commodity>
-    df_paid["service_commodity"] = df_paid["commodity"].apply(lambda c: f"FuelService_{c}")
-
-    idx_ss = pd.MultiIndex.from_arrays(
-        [df_paid["REMixRegion"], df_paid["Year"], df_paid["Sector"], df_paid["service_commodity"]],
-        names=["nodesdata", "years", "sector", "commodity"],
+    idx_ss = pd.MultiIndex.from_frame(
+        grp_paid[["REMixRegion", "Year", "Sector", "service_commodity"]]
     )
+    idx_ss.names = ["nodesdata", "years", "sector", "commodity"]
 
     ss = pd.DataFrame(index=idx_ss)
-    # Manuel pattern: negative upper only, no lower
-    ss["upper"] = -df_paid["Demand"].values
+    ss["upper"] = -grp_paid["Demand"].values  # negative for demand
     m["Base"].parameter.add(ss, "sourcesink_annualsum")
 
     cfg = pd.DataFrame(index=idx_ss)
@@ -2688,8 +2620,8 @@ def fuel_and_efuel_from_excel(m, carriers_long: pd.DataFrame):
     cfg["usesUpperProfile"] = 1
     m["Base"].parameter.add(cfg, "sourcesink_config")
 
-    m["Base"].set.add(list(df_paid["REMixRegion"].unique()), "nodesdata")
-    m["Base"].set.add(list(df_paid["Year"].unique()), "years")
+    m["Base"].set.add(sorted(grp_paid["REMixRegion"].unique().tolist()), "nodesdata")
+    m["Base"].set.add(sorted(grp_paid["Year"].unique().tolist()), "years")
 
     # 3b. FuelConsumer converter tech (capacity non-binding, per-node where needed)
     fuel_tech = "FuelConsumer"
@@ -2700,7 +2632,7 @@ def fuel_and_efuel_from_excel(m, carriers_long: pd.DataFrame):
     tech["activityUpperLimit"] = 1
     m["Base"].parameter.add(tech, "converter_techparam")
 
-    nodes_with_demand = sorted(df_paid["REMixRegion"].unique().tolist())
+    nodes_with_demand = sorted(grp_paid["REMixRegion"].unique().tolist())
     cap = pd.DataFrame(
         index=pd.MultiIndex.from_product([nodes_with_demand, yrs_to_calc, [fuel_tech]])
     )
@@ -2710,9 +2642,17 @@ def fuel_and_efuel_from_excel(m, carriers_long: pd.DataFrame):
     m["Base"].parameter.add(cap, "converter_capacityparam")
 
     # 3c. Converter coefficients: one activity per fuel
-    fuels = sorted(df_paid["commodity"].unique())
+    # Find all unique base commodities involved
+    # We must map back from FuelService_X to X or take from original df_paid
+    # simpler: just list unique commodities from the aggregated set
+    # But wait, we need the BASE commodity (Wood) not service commodity (FuelService_Wood)
+    # The 'service_commodity' string always starts with 'FuelService_'
+    unique_services = sorted(grp_paid["service_commodity"].unique())
+    unique_fuels = [s.replace("FuelService_", "") for s in unique_services]
+
+    fuels = unique_fuels
     activities = [f"{f}_cons" for f in fuels]
-    services = [f"FuelService_{f}" for f in fuels]
+    services = unique_services  # matches order of fuels
     commodities = fuels + services
 
     coef = pd.DataFrame(
@@ -2778,7 +2718,7 @@ def fuel_and_efuel_from_excel(m, carriers_long: pd.DataFrame):
 
     print(
         f"FuelConsumer block added for {len(fuels)} fuels, "
-        f"{len(nodes_with_demand)} nodes and {len(df_paid)} demand rows."
+        f"{len(nodes_with_demand)} nodes and {len(grp_paid)} aggregated demand rows."
     )
 
 def add_fuel_imports(m, carriers_long: pd.DataFrame):
@@ -2922,11 +2862,332 @@ def add_fuel_imports(m, carriers_long: pd.DataFrame):
     acc = acc.fillna(0.0)
     m["Base"].parameter.add(acc, "accounting_converteractivity")
 
+    fuel_list = sorted(fuels)
+    node_list = sorted(nodes)
+    vintage_list = sorted(vintages)
+
     print(
-        f"Fuel import sinks added for {len(fuels)} fuels, "
-        f"{len(nodes)} nodes and years {vintages}."
+        f"Fuel import sinks added for {len(fuel_list)} fuels {fuel_list}, "
+        f"{len(node_list)} nodes {node_list} and years {vintage_list}."
     )
 
+def add_perfect_xstorage(m):
+    """
+    Add near-perfect storage for H2, REfuel, CH4.
+    m is the dict with m["Base"] as the REMix Instance.
+    """
+
+    mBase = m["Base"]
+    idx = pd.IndexSlice
+
+    # Ensure sets are materialised as lists
+    nodes = list(mBase.set.nodesdata)
+    years = list(mBase.set.yearssel)
+
+    stortechs = ["H2Storage", "REfuelStorage", "CH4Storage"]
+
+    stored_commodities = {
+        "H2Storage": ("H2", "H2stored"),
+        "REfuelStorage": ("REfuel", "REfuelstored"),
+        "CH4Storage": ("CH4", "CH4stored"),
+    }
+
+    # 1. storage_techparam
+    stortech_idx = pd.MultiIndex.from_tuples(
+        [(tech, y) for tech in stortechs for y in years],
+        names=["storageTech", "vintage"],
+    )
+    stortech = pd.DataFrame(index=stortech_idx)
+    stortech["lifeTime"] = 40
+    stortech["levelUpperLimit"] = 1.0
+    mBase.parameter.add(stortech, "storage_techparam")
+
+    # 2. storage_sizeparam
+    size_tuples = []
+    for tech, (_, stored) in stored_commodities.items():
+        for y in years:
+            size_tuples.append((tech, y, stored))
+
+    storsize_idx = pd.MultiIndex.from_tuples(
+        size_tuples, names=["storageTech", "vintage", "commodity"]
+    )
+    storsize = pd.DataFrame(index=storsize_idx)
+    storsize["size"] = 10.0
+    storsize["selfdischarge"] = 0.0
+    mBase.parameter.add(storsize, "storage_sizeparam")
+
+    # 3. storage_reservoirparam
+    res_tuples = []
+    for n in nodes:
+        for y in years:
+            for tech in stortechs:
+                res_tuples.append((n, y, tech))
+
+    storres_idx = pd.MultiIndex.from_tuples(
+        res_tuples, names=["nodesdata", "years", "storageTech"]
+    )
+    storres = pd.DataFrame(index=storres_idx)
+    storres["unitsUpperLimit"] = 100.0
+    storres["noExpansion"] = 0
+    base_year = min(years)
+    storres.loc[(slice(None), base_year, slice(None)), "noExpansion"] = 1
+    mBase.parameter.add(storres, "storage_reservoirparam")
+
+    # 4. converter_coefficient: Charge / Discharge
+    coef_tuples = []
+    coef_vals = []
+
+    for tech, (fuel, stored) in stored_commodities.items():
+        for y in years:
+            # Charge
+            coef_tuples.append((tech, y, "Charge", fuel))
+            coef_vals.append(-1.0)
+            coef_tuples.append((tech, y, "Charge", stored))
+            coef_vals.append(0.99)
+            # Discharge
+            coef_tuples.append((tech, y, "Discharge", fuel))
+            coef_vals.append(1.0)
+            coef_tuples.append((tech, y, "Discharge", stored))
+            coef_vals.append(-1.0)
+
+    convcoef_idx = pd.MultiIndex.from_tuples(
+        coef_tuples, names=["converterTech", "vintage", "activity", "commodity"]
+    )
+    convcoef = pd.DataFrame(index=convcoef_idx)
+    convcoef["coefficient"] = coef_vals
+    mBase.parameter.add(convcoef, "converter_coefficient")
+
+    print(
+        "H2/REfuel/CH4 storage added:",
+        len(stortech), "tech-year rows,",
+        len(storsize), "size rows,",
+        len(storres), "reservoir rows,",
+        len(convcoef), "coefficient rows.",
+    )
+
+
+def add_efuel_annual_demand_from_excel(m, carriers_long: pd.DataFrame):
+    """
+    Adds annual REfuel and CH4 demand as exogenous sinks on the real commodities.
+    Supply comes from add_dac(), add_ftropsch_syn(), add_methanizer().
+    
+    Aggregates original Excel regions into REMix nodes before writing.
+    
+    Pattern:
+      - sourcesink_annualsum: upper = -Demand (GWh), lower not used
+      - sourcesink_config:    usesUpperSum = 1, usesLowerSum = 0, usesUpperProfile = 1
+    """
+    
+    df = carriers_long.copy()
+    df["Carrier_key"] = df["Carrier"].astype(str).str.strip().str.lower()
+
+    # E-fuel carrier mapping
+    efuel_carrier_to_commodity = {
+        "e-fuel (lf)": "REfuel",
+        "e-fuel (gas)": "CH4",
+        "refuel": "REfuel",
+        "ch4": "CH4",
+    }
+
+    # Filter to e-fuel carriers only
+    df = df.loc[df["Carrier_key"].isin(efuel_carrier_to_commodity.keys())].copy()
+    if df.empty:
+        print("No e-fuel (REfuel/CH4) carriers found in Excel; skipping.")
+        return
+
+    # Map to commodities
+    df["commodity"] = df["Carrier_key"].map(efuel_carrier_to_commodity)
+    
+    # Filter to optimisation years
+    df = df.loc[df["Year"].isin(yrs_sel)].copy()
+    if df.empty:
+        print("No e-fuel demand in selected years; skipping.")
+        return
+
+    print("\n[E-fuel] Annual demand before aggregation:")
+    print(f"  Rows: {len(df)}")
+    pre_agg = (
+        df.groupby(["REMixRegion", "Year", "Sector", "commodity"])["Demand"]
+        .sum()
+        .sort_index()
+    )
+    print(pre_agg.to_string())
+
+    # AGGREGATE: ensure 1 row per (node, year, sector, commodity)
+    grp = (
+        df.groupby(["REMixRegion", "Year", "Sector", "commodity"])["Demand"]
+        .sum()
+        .reset_index()
+    )
+
+    print(f"\n[E-fuel] Annual demand after aggregation:")
+    print(f"  Aggregated rows: {len(grp)}")
+    print(f"  Total demand: {grp['Demand'].sum():,.2f} GWh")
+    print(grp.to_string(index=False))
+
+    # Index: (nodesdata, years, sector, commodity)
+    idx_ss = pd.MultiIndex.from_frame(
+        grp[["REMixRegion", "Year", "Sector", "commodity"]]
+    )
+    idx_ss.names = ["nodesdata", "years", "sector", "commodity"]
+
+    # Annual upper sums: negative for demand
+    ss = pd.DataFrame(index=idx_ss)
+    ss["upper"] = -grp["Demand"].values
+    m["Base"].parameter.add(ss, "sourcesink_annualsum")
+
+    # Configuration
+    cfg = pd.DataFrame(index=idx_ss)
+    cfg["usesUpperSum"] = 1
+    cfg["usesLowerSum"] = 0
+    cfg["usesUpperProfile"] = 1
+    m["Base"].parameter.add(cfg, "sourcesink_config")
+
+    # Ensure nodes and years in sets
+    m["Base"].set.add(sorted(grp["REMixRegion"].unique().tolist()), "nodesdata")
+    m["Base"].set.add(sorted(grp["Year"].unique().tolist()), "years")
+
+    print(f"\n[E-fuel] E-fuel annual demand added: {len(grp)} aggregated rows")
+
+def add_efuel_perfect_storage(m):
+    """
+    Adds perfect (100% efficient, zero-cost) storage reservoirs for REfuel and CH4.
+    
+    Follows the H2_storage pattern but with:
+      - Zero capital and operational costs
+      - 100% round-trip efficiency (via converter coefficients)
+      - Annual cycle (system balances over the year)
+      - Effectively unlimited capacity per node
+    
+    Creates:
+      - Converter (compressor/pump): charges/discharges storage
+      - Storage reservoir: holds fuel throughout the year
+      - Both with zero cost
+    """
+    
+    efuels = ["REfuel", "CH4"]
+    h2_stor_nodes = sorted(m["Base"].set.nodesdata)
+    storage_suffix = "_Storage"
+    converter_suffix = "_Compressor"
+    idx = pd.IndexSlice
+    
+    print("\n[E-fuel Storage] Adding perfect storage for REfuel and CH4...")
+    print(f"  E-fuels: {efuels}")
+    print(f"  Nodes: {h2_stor_nodes}")
+
+    # --- For each e-fuel, create storage + compressor pair ---
+    for ef in efuels:
+        stor_tech_name = f"{ef}{storage_suffix}"
+        conv_tech_name = f"{ef}{converter_suffix}"
+        stored_commodity = f"{ef}_stored"  # e.g. REfuel_stored
+        
+        print(f"\n  Setting up {ef}:")
+        print(f"    Storage tech: {stor_tech_name}")
+        print(f"    Converter tech: {conv_tech_name}")
+        
+        # ============================================================
+        # 1. CONVERTER (compressor/pump) - charges/discharges storage
+        # ============================================================
+        conv_tech = pd.DataFrame(
+            index=pd.MultiIndex.from_product([[conv_tech_name], yrs_to_calc])
+        )
+        conv_tech.index.names = ["techs", "years"]
+        conv_tech.loc[:, "lifeTime"] = 40
+        m["Base"].parameter.add(conv_tech, "converter_techparam")
+        
+        # Converter capacity (units)
+        conv_cap = pd.DataFrame(
+            index=pd.MultiIndex.from_product(
+                [h2_stor_nodes, yrs_to_calc, [conv_tech_name]]
+            )
+        )
+        conv_cap.index.names = ["nodesdata", "years", "techs"]
+        conv_cap.loc[:, "unitsUpperLimit"] = 1000.0  # unlimited effectively
+        m["Base"].parameter.add(conv_cap, "converter_capacityparam")
+        
+        # Converter coefficients: charge/discharge 100% efficient
+        conv_coef = pd.DataFrame(
+            index=pd.MultiIndex.from_product(
+                [[conv_tech_name], yrs_to_calc, ["Charge", "Discharge"], 
+                 [ef, stored_commodity, "dummy"]]
+            )
+        )
+        conv_coef.index.names = ["techs", "years", "operation", "commodity"]
+        
+        # Charge: take 1 GWh of fuel, store as stored commodity at 100% efficiency
+        conv_coef.loc[(conv_tech_name, slice(None), "Charge", ef), "coefficient"] = -1.0
+        conv_coef.loc[(conv_tech_name, slice(None), "Charge", stored_commodity), "coefficient"] = 1.0
+        
+        # Discharge: take 1 GWh stored, release as fuel at 100% efficiency
+        conv_coef.loc[(conv_tech_name, slice(None), "Discharge", stored_commodity), "coefficient"] = -1.0
+        conv_coef.loc[(conv_tech_name, slice(None), "Discharge", ef), "coefficient"] = 1.0
+        
+        # Drop dummy rows
+        conv_coef = conv_coef.dropna(subset=["coefficient"])
+        m["Base"].parameter.add(conv_coef, "converter_coefficient")
+        
+        # Converter accounting: ZERO COST (perfect storage)
+        conv_acc = pd.DataFrame(
+            index=pd.MultiIndex.from_product(
+                [["Invest", "OMFix"], ["global"], ["horizon"], [conv_tech_name], yrs_to_calc]
+            )
+        )
+        conv_acc.index.names = ["indicator", "regionscope", "timescope", "techs", "years"]
+        conv_acc.loc[idx["Invest", :, :, :, :], "perUnitBuild"] = 0.0
+        conv_acc.loc[idx["Invest", :, :, :, :], "useAnnuity"] = 1
+        conv_acc.loc[idx["Invest", :, :, :, :], "amorTime"] = 40
+        conv_acc.loc[idx["Invest", :, :, :, :], "interest"] = 0.06
+        conv_acc.loc[idx["OMFix", :, :, :, :], "perUnitTotal"] = 0.0
+        m["Base"].parameter.add(conv_acc, "accounting_converterunits")
+        
+        # ============================================================
+        # 2. STORAGE (reservoir)
+        # ============================================================
+        stor_tech = pd.DataFrame(
+            index=pd.MultiIndex.from_product([[stor_tech_name], yrs_to_calc])
+        )
+        stor_tech.index.names = ["techs", "years"]
+        stor_tech.loc[:, "lifeTime"] = 40
+        stor_tech.loc[:, "levelUpperLimit"] = 1  # state of charge limit (0-1)
+        m["Base"].parameter.add(stor_tech, "storage_techparam")
+        
+        # Storage size (capacity per unit in GWh)
+        stor_size = pd.DataFrame(
+            index=pd.MultiIndex.from_product(
+                [[stor_tech_name], yrs_to_calc, [stored_commodity]]
+            )
+        )
+        stor_size.index.names = ["techs", "years", "commodity"]
+        stor_size.loc[:, "size"] = 1000.0  # 1000 GWh per unit (effectively unlimited)
+        m["Base"].parameter.add(stor_size, "storage_sizeparam")
+        
+        # Storage reservoir (units per node)
+        stor_res = pd.DataFrame(
+            index=pd.MultiIndex.from_product(
+                [h2_stor_nodes, yrs_to_calc, [stor_tech_name]]
+            )
+        )
+        stor_res.index.names = ["nodesdata", "years", "techs"]
+        stor_res.loc[:, "unitsUpperLimit"] = 1.0  # 1 unit per node (holds 1000 GWh)
+        m["Base"].parameter.add(stor_res, "storage_reservoirparam")
+        
+        # Storage accounting: ZERO COST
+        stor_acc = pd.DataFrame(
+            index=pd.MultiIndex.from_product(
+                [["Invest", "OMFix"], ["global"], ["horizon"], [stor_tech_name], yrs_to_calc]
+            )
+        )
+        stor_acc.index.names = ["indicator", "regionscope", "timescope", "techs", "years"]
+        stor_acc.loc[idx["Invest", :, :, :, :], "perUnitBuild"] = 0.0
+        stor_acc.loc[idx["Invest", :, :, :, :], "useAnnuity"] = 1
+        stor_acc.loc[idx["Invest", :, :, :, :], "amorTime"] = 40
+        stor_acc.loc[idx["Invest", :, :, :, :], "interest"] = 0.06
+        stor_acc.loc[idx["OMFix", :, :, :, :], "perUnitTotal"] = 0.0
+        m["Base"].parameter.add(stor_acc, "accounting_storageunits")
+        
+        print(f"    ✓ Storage + converter added")
+    
+    print(f"\n[E-fuel Storage] Perfect storage setup complete")
 
 # #%%
 
@@ -2952,8 +3213,11 @@ if __name__ == "__main__":
 
     # annual hydrogen demand (perfect battery)
     add_h2_annual_demand_from_excel(m, carriers_long)
-    fuel_and_efuel_from_excel(m, carriers_long)
+    fuel_from_excel(m, carriers_long)
     add_fuel_imports(m, carriers_long)
+    add_efuel_annual_demand_from_excel(m, carriers_long)
+    # add_efuel_perfect_storage(m)
+    # add_perfect_xstorage(m)
 
     # supply side blocks
     if include_renewables:

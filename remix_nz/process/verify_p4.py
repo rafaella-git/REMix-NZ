@@ -1,326 +1,252 @@
-# Verify that 2050 fuel/e-fuel use in the REMix result GDX respects
-# the annual upper bounds implied by the carriers Excel.
-#
-# It reconstructs the 2050 annual "demand" per (node, sector, commodity)
-# from datasummary.xlsx (using the same mappings as the build script),
-# then compares it to sourcesink_flow (or sourcesink_flow_annual) in GDX.
-# ----------------------------------------------------------------------
-
-import os
 from pathlib import Path
+import pandas as pd
+import gdxpds
+import numpy as np
 
-import gdxpds        
-import numpy as np   
-import pandas as pd 
+# --- USER SETTINGS ---
+EXCEL_PATH = Path(
+    "C:/Local/REMix/remix_nz/input/demand/GP-NT-ELEC-BIO-H2/data_summary.xlsx"
+)
+DATA_DIR = Path(
+    "C:/Local/REMix/remix_nz/project/GP-NT-ELEC-BIO-H2/nz_case_GP_2050/data"
+)
+GDX_PATH = Path(
+    "C:/Local/REMix/remix_nz/project/GP-NT-ELEC-BIO-H2/nz_case_GP_2050/result/nz_case_GP_2050.gdx"
+)
 
-# ----------------- USER SETTINGS --------------------------------------
+SCENARIO = "GP"
+YEARS_CHECK = [2050]
 
-# GDX result file
-GDX_PATH = Path("C:/Local/REMix/remix_nz/project/GP-NT-ELEC-BIO-H2/nz_case_GP_MVP/result/nz_case_GP_MVP.gdx")
-# Carriers Excel used by working_script.txt
-CARRIERS_EXCEL = Path("C:/Local/REMix/remix_nz/input/demand/GP-NT-ELEC-BIO-H2/data_summary.xlsx")
-BASE_SCENARIO = "GP"      # basescenario in working_script.txt 
-YEAR_CHECK = 2050
+# Mapping (same as in your build)
+REGION_MAP = {
+    "Auckland": "AKL",
+    "Bay of Plenty": "BOP",
+    "Canterbury": "CAN",
+    "Gisborne": "HBY",
+    "Hawkes Bay": "HBY",
+    "Hawke's Bay": "HBY",
+    "Manawatu-Whanganui": "CEN",
+    "Manawatū-Whanganui": "CEN",
+    "Marlborough": "NEL",
+    " Marlborough": "NEL",
+    "Nelson": "NEL",
+    "Northland": "NIS",
+    "Otago": "OTG",
+    "Southland": "OTG",
+    "Taranaki": "TRN",
+    "Tasman": "NEL",
+    "Waikato": "WTO",
+    "Wellington": "WEL",
+    "West Coast": "CAN",
+}
 
-# Commodities to check (as in your add_paid_fuel_consumption_from_excel + e-fuels). 
-CHECK_COMMODITIES = [
-    "LF_fossil",
-    "Gas_fossil",
-    "Coal_fossil",
-    "LF_bio",
-    "Gas_bio",
-    "Wood",
-    "REfuel",
-    "CH4",
-    "H2",       # include H2 if you want to check it
-]
+
+CARRIER_MAP = {
+    "biofuel (gas)": "Gas_bio", "biofuel (lf)": "LF_bio", "wood": "Wood",
+    "coal": "Coal_fossil", "fossil (gas)": "Gas_fossil", "fossil (lf)": "LF_fossil",
+    "hydrogen": "H2", "h2": "H2",
+}
 
 
-
-# ----------------- HELPERS FROM BUILD SCRIPT --------------------------
-
-def map_region_to_remix(region_value: str) -> str:
-    """Simplified version of mapRegionToRemix from working_script.txt."""  #
-    region_to_remix = {
-        "Auckland": "AKL",
-        "Bay of Plenty": "BOP",
-        "Canterbury": "CAN",
-        "Gisborne": "HBY",
-        "Hawkes Bay": "HBY",
-        "Hawke's Bay": "HBY",
-        "Manawatu-Whanganui": "CEN",
-        "Manawatū-Whanganui": "CEN",
-        "Marlborough": "NEL",
-        "Nelson": "NEL",
-        "Northland": "NIS",
-        "Otago": "OTG",
-        "Southland": "OTG",
-        "Taranaki": "TRN",
-        "Tasman": "NEL",
-        "Waikato": "WTO",
-        "Wellington": "WEL",
-        "West Coast": "CAN",
-    }
-    s = str(region_value).strip()
-    if " " in s and s.split()[-1].isupper():
-        # e.g. "Auckland AKL" → "AKL" [file:1]
-        return s.split()[-1].strip()
-    return region_to_remix.get(s, None)
-
-def read_carriers_excel_long(excel_path: Path, scenario_name: str) -> pd.DataFrame:
-    """Replicate the carriers-long reader from working_script.txt for one scenario."""  # [file:1]
-    df = pd.read_excel(excel_path, sheet_name="carriers")
+def load_excel_demand(path, scenario, years):
+    """Load Excel and aggregate to (REMixRegion, Year, Carrier_Clean)."""
+    print("[EXCEL] Loading Excel carriers sheet...")
+    df = pd.read_excel(path, sheet_name="carriers")
     df.columns = [c.strip() for c in df.columns]
+    df = df[df["Scenario"].astype(str).str.strip() == scenario].copy()
 
-    df = df.loc[df["Scenario"].astype(str).str.strip() == str(scenario_name)].copy()
-    if df.empty:
-        raise ValueError(f"No rows found in carriers Excel for scenario {scenario_name}")
+    df["REMixRegion"] = df["Region"].map(REGION_MAP)
+    if df["REMixRegion"].isna().any():
+        unmapped = df[df["REMixRegion"].isna()]["Region"].unique()
+        print(f"  WARNING: Unmapped regions: {list(unmapped)}")
+        df = df.dropna(subset=["REMixRegion"])
 
-    df["REMixRegion"] = df["Region"].apply(map_region_to_remix)
-    missing = df.loc[df["REMixRegion"].isna(), "Region"].unique().tolist()
-    if missing:
-        raise ValueError("Unmapped regions in carriers Excel: " + ", ".join(str(x) for x in missing))
+    df["Carrier_Clean"] = df["Carrier"].str.strip().str.lower().map(CARRIER_MAP)
+    df = df.dropna(subset=["Carrier_Clean"])
 
-    year_cols = [c for c in df.columns if str(c).isdigit()]
-    if not year_cols:
-        raise ValueError("No year columns found in carriers sheet (expected 2020, 2025, ...).")
-
-    dflong = df.melt(
-        id_vars=["Scenario", "Sector", "Carrier", "Region", "REMixRegion"],
-        value_vars=year_cols,
-        var_name="Year",
-        value_name="Demand",
+    val_cols = [c for c in df.columns if str(c) in [str(y) for y in years]]
+    long = df.melt(
+        id_vars=["REMixRegion", "Carrier_Clean", "Sector"],
+        value_vars=val_cols, var_name="Year", value_name="Demand",
     )
-    dflong["Year"] = dflong["Year"].astype(int)
-    dflong["Demand"] = pd.to_numeric(dflong["Demand"], errors="coerce").fillna(0.0)
-
-    dflong = dflong.loc[(dflong["Demand"] != 0.0)].copy()
-    return dflong
-
-
-def build_annual_demand_from_excel(df_long: pd.DataFrame, year: int) -> pd.DataFrame:
-    """
-    Build annual demand upper bounds for fuels & e-fuels as in the helpers:
-    index: (node, commodity), column 'upper'.
-    Sector is aggregated because commodity_balance_annual is already aggregated. [file:1]
-    """
-    df = df_long.loc[df_long["Year"] == year].copy()
-    if df.empty:
-        print(f"No carriers Excel demands for year {year}.")
-        return pd.DataFrame()
-
-    df["CarrierKey"] = df["Carrier"].astype(str).str.strip().str.lower()
-
-    paid_carrier_to_commodity = {
-        "fossil (lf)": "LF_fossil",
-        "fossil (gas)": "Gas_fossil",
-        "coal": "Coal_fossil",
-        "biofuel (lf)": "LF_bio",
-        "biofuel (gas)": "Gas_bio",
-        "wood": "Wood",
-    }
-
-    efuel_carrier_to_commodity = {
-        "e-fuel (lf)": "REfuel",
-        "e-fuel (gas)": "CH4",
-    }
-
-    # H2 (if you want to check it here)
-    h2_carrier_to_commodity = {
-        "hydrogen": "H2",
-        "h2": "H2",
-        "h2-feedstock": "H2",
-    }
-
-
-    df_paid = df.loc[df["CarrierKey"].isin(paid_carrier_to_commodity)].copy()
-    df_paid["commodity"] = df_paid["CarrierKey"].map(paid_carrier_to_commodity)
-
-    df_efuel = df.loc[df["CarrierKey"].isin(efuel_carrier_to_commodity)].copy()
-    df_efuel["commodity"] = df_efuel["CarrierKey"].map(efuel_carrier_to_commodity)
-
-    df_h2 = df.loc[df["CarrierKey"].isin(h2_carrier_to_commodity)].copy()
-    df_h2["commodity"] = df_h2["CarrierKey"].map(h2_carrier_to_commodity)
-
-    df_all = pd.concat([df_paid, df_efuel, df_h2], axis=0, ignore_index=True)
-
-
-    agg = (
-        df_all.groupby(["node", "commodity"], as_index=True)["Demand"]
-        .sum()
-        .to_frame(name="upper")
-    )
-
-    if CHECK_COMMODITIES:
-        agg = agg.loc[agg.index.get_level_values("commodity").isin(CHECK_COMMODITIES)]
-
-
+    long["Year"] = long["Year"].astype(int)
+    agg = long.groupby(["REMixRegion", "Year", "Carrier_Clean"])["Demand"].sum()
+    agg.name = "Excel"
+    print(f"[EXCEL] ✓ Loaded. Total: {agg.sum():,.2f} GWh")
     return agg
 
 
-# ----------------- GDX HELPERS ----------------------------------------
+def load_csv_demand(data_dir, years):
+    """Load sourcesink_annualsum.csv (build input data)."""
+    csv_path = data_dir / "sourcesink_annualsum.csv"
+    if not csv_path.exists():
+        print(f"[CSV] ERROR: {csv_path} not found.")
+        return pd.Series()
 
-def load_gdx(path: Path) -> dict:
-    data = gdxpds.to_dataframes(str(path))  # [web:3]
-    print(f"Loaded {len(data)} tables from {path.name}")
-    return data
+    print(f"[CSV] Loading {csv_path}...")
+    df = pd.read_csv(csv_path, index_col=[0, 1, 2, 3])
+    df.index.names = ["nodesdata", "years", "sector", "commodity"]
+    df = df.reset_index()
 
+    df = df[df["years"].astype(str).isin([str(y) for y in years])].copy()
 
-def normalize_cols(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.copy()
-    df.columns = df.columns.str.lower()
-    return df
+    def map_csv_comm(c):
+        c = str(c).strip()
+        if c == "H2": return "H2"
+        if c.startswith("FuelService_"): return c.replace("FuelService_", "")
+        return None
 
+    df["Carrier_Clean"] = df["commodity"].apply(map_csv_comm)
+    df = df.dropna(subset=["Carrier_Clean"])
 
-def extract_value_column(df: pd.DataFrame) -> pd.Series:
-    cols = df.columns.tolist()
-    if len(cols) >= 6 and cols[-5] == "level":
-        return df["level"].astype(float)
-    return df.iloc[:, -1].astype(float)
+    df["Demand"] = -df["upper"].astype(float)
 
-
-def prepare_commodity_balance_annual(data: dict, year: int) -> pd.DataFrame:
-    """
-    Use commodity_balance_annual to get net 2050 fuel use per (node, commodity).
-    Net > 0 means net supply; for demand-type carriers (fuels at sinks),
-    the sign convention in your build leads to positive flows for consumption
-    when looking at the commodity side. [file:1]
-    """
-    if "commodity_balance_annual" not in data:
-        raise KeyError("No table 'commodity_balance_annual' in GDX result.")
-
-    df = data["commodity_balance_annual"]
-    d = normalize_cols(df).reset_index()
-
-    needed = ["accnodesmodel", "accyears", "commodity", "balancetype"]
-    missing = [c for c in needed if c not in d.columns]
-    if missing:
-        raise KeyError(
-            f"commodity_balance_annual missing columns {missing}. "
-            f"Available: {list(d.columns)}"
-        )
-
-    # Local node balances, not global. [file:1]
-    d = d.loc[
-        (d["balancetype"] == "net")
-        & (~d["accnodesmodel"].eq("global"))
-        & (d["accyears"] == str(year))
-    ].copy()
-    if d.empty:
-        print(f"No annual commodity balances for year {year}.")
-        return pd.DataFrame()
-
-    d = d.loc[d["commodity"].isin(CHECK_COMMODITIES)]
-    if d.empty:
-        print(f"No annual balances for CHECK_COMMODITIES in year {year}.")
-        return pd.DataFrame()
-
-    val = extract_value_column(d)
-
-    d["used"] = val
-    out = (
-        d[["accnodesmodel", "commodity", "used"]]
-        .rename(columns={"accnodesmodel": "node"})
-        .groupby(["node", "commodity"], as_index=True)["used"]
-        .sum()
-        .to_frame()
+    agg = df.groupby(["nodesdata", "years", "Carrier_Clean"])["Demand"].sum()
+    agg.index.names = ["REMixRegion", "Year", "Carrier_Clean"]
+    agg.name = "CSV"
+    agg.index = agg.index.set_levels(
+        pd.to_numeric(agg.index.levels[1], errors="coerce"), level="Year"
     )
-    return out
+    print(f"[CSV] ✓ Loaded. Total: {agg.sum():,.2f} GWh")
+    return agg
 
 
-# ----------------- COMPARISON & PRINTING ------------------------------
+def load_gdx_model_demand(path, years):
+    """Load model DEMAND (FuelService consumption) from commodity_balance_annual."""
+    print(f"[GDX] Loading {path}...")
+    if not path.exists():
+        print(f"[GDX] ERROR: {path} not found.")
+        return pd.Series()
 
-def compare_and_print(upper_df: pd.DataFrame, used_df: pd.DataFrame, year: int):
-    comp = upper_df.join(used_df, how="outer")
-    comp = comp.fillna(0.0)
-    comp["gap"] = comp["upper"] - comp["used"]
-    comp["rel_use"] = np.where(comp["upper"] > 0, comp["used"] / comp["upper"], np.nan)
+    try:
+        dfs = gdxpds.to_dataframes(str(path))
+    except Exception as e:
+        print(f"[GDX] ERROR reading GDX: {e}")
+        return pd.Series()
 
-    if comp.empty:
-        print("No comparison rows (no overlapping fuels between Excel and balances).")
-        return
+    # Look for commodity_balance_annual (model results)
+    if "commodity_balance_annual" not in dfs:
+        print(f"[GDX] ERROR: commodity_balance_annual not found in GDX.")
+        print(f"[GDX]   Available tables: {list(dfs.keys())[:15]}")
+        return pd.Series()
 
-    print(f"\n=== 2050 Fuel/E-fuel Demand vs Use (Node, Commodity) ===")
-    print(f"Rows: {len(comp)}")
+    cb = dfs["commodity_balance_annual"]
+    cb.columns = [c.lower() for c in cb.columns]
 
-    total_upper = comp["upper"].sum()
-    total_used = comp["used"].sum()
-    print(f"Total 2050 Excel upper (all checked fuels): {total_upper:,.3f} GWh")
-    print(f"Total 2050 net use     (from balances):     {total_used:,.3f} GWh")
-    if total_upper > 0:
-        print(f"Overall utilization: {100 * total_used / total_upper:5.1f} %")
+    print(f"[GDX]   commodity_balance_annual shape: {cb.shape}")
+    print(f"[GDX]   Columns: {list(cb.columns)}")
 
-    overshoot = (comp["used"] > comp["upper"] + 1e-6).sum()
-    exactish = (np.isclose(comp["used"], comp["upper"], atol=1e-3)).sum()
-    unused = ((comp["upper"] > 0) & (comp["used"] == 0)).sum()
-    print(f"Entries where use > upper (violations?): {overshoot}")
-    print(f"Entries ~exactly using upper:           {exactish}")
-    print(f"Entries with upper>0 but used=0:        {unused}")
+    # Filter for years
+    cb = cb[cb["accyears"].astype(str).isin([str(y) for y in years])].copy()
 
-    big_gap = comp.reindex(
-        comp["gap"].abs().sort_values(ascending=False).index
-    ).reset_index()
+    # We want negative balance (demand): FuelService_* and H2
+    def map_gdx_comm(c):
+        c = str(c).strip()
+        if c == "H2": return "H2"
+        if c.startswith("FuelService_"): return c.replace("FuelService_", "")
+        return None
 
-    print("\nTop 15 largest absolute gaps (upper - used) in 2050:")
-    print(
-        big_gap.head(15).to_string(
-            index=False,
-            formatters={
-                "upper":   lambda x: f"{x:8.3f}",
-                "used":    lambda x: f"{x:8.3f}",
-                "gap":     lambda x: f"{x:+8.3f}",
-                "rel_use": lambda x: "   n/a" if pd.isna(x) else f"{100*x:6.1f} %",
-            },
-        )
+    cb["Carrier_Clean"] = cb["commodity"].apply(map_gdx_comm)
+    cb = cb.dropna(subset=["Carrier_Clean"])
+
+    # Filter for negative balance (demand side)
+    cb = cb[cb["balancetype"] == "negative"].copy()
+
+    # Value column
+    numeric_cols = cb.select_dtypes(include=[np.number]).columns.tolist()
+    value_col = numeric_cols[0] if numeric_cols else None
+    if value_col is None:
+        print("[GDX] ERROR: No numeric column found.")
+        return pd.Series()
+
+    # Demand is absolute value (negative balance means demand)
+    cb["Demand"] = cb[value_col].astype(float).abs()
+
+    # Aggregate
+    agg = cb.groupby(["accnodesmodel", "accyears", "Carrier_Clean"])["Demand"].sum()
+    agg.index.names = ["REMixRegion", "Year", "Carrier_Clean"]
+    agg.name = "GDX_Model"
+
+    agg.index = agg.index.set_levels(
+        pd.to_numeric(agg.index.levels[1], errors="coerce"), level="Year"
     )
 
-    comp_reset = comp.reset_index()
-    per_comm = (
-        comp_reset.groupby("commodity")[["upper", "used"]]
-        .sum()
-        .assign(utilization=lambda df: np.where(df["upper"] > 0, df["used"] / df["upper"], np.nan))
-        .sort_values("upper", ascending=False)
-    )
+    print(f"[GDX] ✓ Loaded. Total model demand: {agg.sum():,.2f} GWh")
+    return agg
 
-    print("\nPer-commodity totals (2050):")
-    print(
-        per_comm.to_string(
-            formatters={
-                "upper":       lambda x: f"{x:8.3f}",
-                "used":        lambda x: f"{x:8.3f}",
-                "utilization": lambda x: "   n/a" if pd.isna(x) else f"{100*x:6.1f} %",
-            }
-        )
-    )
-
-    out_csv = GDX_PATH.with_name(f"{GDX_PATH.stem}_fuel_check_cb_{year}.csv")
-    comp_reset.to_csv(out_csv, index=False)
-    print(f"\nWrote detailed comparison to: {out_csv}")
-
-
-# ----------------- MAIN -----------------------------------------------
 
 def main():
-    print("\n--- Checking 2050 fuel/e-fuel demand vs use (Excel vs commodity_balance_annual) ---")
-    print(f"GDX:    {GDX_PATH}")
-    print(f"Excel:  {CARRIERS_EXCEL}")
-    print(f"Year:   {YEAR_CHECK}")
+    print("=" * 80)
+    print("VERIFICATION: Excel → CSV (build) → GDX (model result)")
+    print("=" * 80)
 
-    carriers_long = read_carriers_excel_long(CARRIERS_EXCEL, BASE_SCENARIO)
-    upper_df = build_annual_demand_from_excel(carriers_long, YEAR_CHECK)
+    print("\n--- Step 1: Load Excel ---")
+    excel = load_excel_demand(EXCEL_PATH, SCENARIO, YEARS_CHECK)
 
-    if upper_df.empty:
-        print("No Excel-based annual demand found for checked fuels; nothing to compare.")
-        return
+    print("\n--- Step 2: Load CSV (build input) ---")
+    csv = load_csv_demand(DATA_DIR, YEARS_CHECK)
 
-    data = load_gdx(GDX_PATH)
-    used_df = prepare_commodity_balance_annual(data, YEAR_CHECK)
+    print("\n--- Step 3: Load GDX (model demand from commodity_balance_annual) ---")
+    gdx = load_gdx_model_demand(GDX_PATH, YEARS_CHECK)
 
-    if used_df.empty:
-        print("No commodity_balance_annual entries for checked fuels; nothing to compare.")
-        return
+    # Combine
+    print("\n" + "=" * 80)
+    print("COMPARISON")
+    print("=" * 80 + "\n")
 
-    compare_and_print(upper_df, used_df, YEAR_CHECK)
+    df_compare = pd.concat([excel, csv, gdx], axis=1).fillna(0.0)
+
+    df_compare["Excel-CSV"] = df_compare["Excel"] - df_compare["CSV"]
+    df_compare["CSV-GDX"] = df_compare["CSV"] - df_compare["GDX_Model"]
+    df_compare["Excel-GDX"] = df_compare["Excel"] - df_compare["GDX_Model"]
+
+    tol = 1e-2
+    df_compare["Excel=CSV"] = df_compare["Excel-CSV"].abs() < tol
+    df_compare["CSV=GDX"] = df_compare["CSV-GDX"].abs() < tol
+
+    print(df_compare.to_string())
+
+    print("\n" + "=" * 80)
+    print("SUMMARY")
+    print("=" * 80)
+
+    tot_excel = df_compare["Excel"].sum()
+    tot_csv = df_compare["CSV"].sum()
+    tot_gdx = df_compare["GDX_Model"].sum()
+
+    print(f"\nTotal Demands:")
+    print(f"  Excel:              {tot_excel:>15,.2f} GWh")
+    print(f"  CSV (build input):  {tot_csv:>15,.2f} GWh")
+    print(f"  GDX (model result): {tot_gdx:>15,.2f} GWh")
+
+    print(f"\nAbsolute Differences:")
+    print(f"  Excel - CSV:        {(tot_excel - tot_csv):>15,.2f} GWh")
+    print(f"  CSV - GDX:          {(tot_csv - tot_gdx):>15,.2f} GWh")
+    print(f"  Excel - GDX:        {(tot_excel - tot_gdx):>15,.2f} GWh")
+
+    print(f"\nMatch Count (within {tol} GWh):")
+    print(f"  Excel = CSV:        {df_compare['Excel=CSV'].sum()} / {len(df_compare)}")
+    print(f"  CSV = GDX:          {df_compare['CSV=GDX'].sum()} / {len(df_compare)}")
+
+    print("\n" + "=" * 80)
+    print("MISMATCHES")
+    print("=" * 80)
+
+    ex_csv = df_compare[~df_compare["Excel=CSV"]]
+    if ex_csv.empty:
+        print("\n✓ Excel → CSV: Perfect match!")
+    else:
+        print("\n✗ Excel → CSV mismatches:")
+        print(ex_csv[["Excel", "CSV", "Excel-CSV"]].to_string())
+
+    csv_gdx = df_compare[~df_compare["CSV=GDX"]]
+    if csv_gdx.empty:
+        print("\n✓ CSV → GDX: Model fully used all demands!")
+    else:
+        print("\n✗ CSV → GDX (model may not use all demands):")
+        print(csv_gdx[["CSV", "GDX_Model", "CSV-GDX"]].to_string())
+
+    print("\n" + "=" * 80)
 
 
 if __name__ == "__main__":
