@@ -16,9 +16,9 @@ idx = pd.IndexSlice
 # -------------------------------------------------------------------
 
 group_name = "GP-NT-ELEC-BIO-H2" # Demand folder group (used for output folder structure)
-base_scenario = "H2+" # Scenario name: GP, NT, ELEC+, BIO+, H2+ (must match "Scenario" column in CSV/Excel)
+base_scenario = "GP" # Scenario name: GP, NT, ELEC+, BIO+, H2+ (must match "Scenario" column in CSV/Excel)
 yrs_to_calc = [2020, 2050] # Model years available [2020, 2025, 2030, 2035, 2040, 2045, 2050]
-yrs_sel = [2050]#[2050] # Model years to optimise
+yrs_sel = [2020, 2050]#[2050] # Model years to optimise
 
 # Case folder name (output goes to ../project/<group_name>/<case_name>/data)
 years_tag = "-".join(str(y) for y in yrs_sel)
@@ -348,7 +348,7 @@ def add_demand(m):
 
         # sum all sectors -> All
         df_agg = df.groupby(["node", "year", "carrier"], as_index=False)[hour_cols].sum()
-        df_agg["sector"] = "All"
+        df_agg["sector"] = "All" 
 
         # map carrier to REMix commodity name
         df_agg["carrier"] = df_agg["carrier"].replace({"Electricity": "Elec", "electricity": "Elec"})
