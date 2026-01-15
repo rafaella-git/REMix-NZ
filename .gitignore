@@ -186,6 +186,7 @@ node_modules/
 *.json
 !valid.json
 metrics.txt
+*converter_activityprofile.csv
 
 framework/
 framework-v10/
