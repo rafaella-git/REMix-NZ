@@ -178,6 +178,8 @@ node_modules/
 *.~gm
 *.gpr
 *.lxi
+*.gdx
+*.gsp
 **/__pycache__/
 *schema.yaml
 # Ignore files from testing and gitlab CI
