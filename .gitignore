@@ -197,3 +197,5 @@ demand-paper/
 JADE_hydro/
 data-for-paper/
 /remix_nz/input/demand/GP-NT-ELEC-BIO-H2/hourly_electricity_GP-NT-ELEC-BIO-H2.csv
+# Ignore all generated content for GP-NT-ELEC-BIO-H2 (big outputs, results, etc.)
+remix_nz/project/GP-NT-ELEC-BIO-H2/
