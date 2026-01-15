@@ -178,8 +178,6 @@ node_modules/
 *.~gm
 *.gpr
 *.lxi
-*.gdx
-*.gsp
 **/__pycache__/
 *schema.yaml
 # Ignore files from testing and gitlab CI
@@ -196,6 +194,12 @@ remixplot-dev/
 demand-paper/ 
 JADE_hydro/
 data-for-paper/
+
+# GP-NT-ELEC-BIO-H2: do not version generated data folders anywhere under this project
+remix_nz/project/GP-NT-ELEC-BIO-H2/**/data/
 /remix_nz/input/demand/GP-NT-ELEC-BIO-H2/hourly_electricity_GP-NT-ELEC-BIO-H2.csv
-# Ignore all generated content for GP-NT-ELEC-BIO-H2 (big outputs, results, etc.)
-remix_nz/project/GP-NT-ELEC-BIO-H2/
+
+# Never commit GAMS output/input artifacts
+*.gdx
+*.gsp
+
