@@ -881,8 +881,6 @@ def add_geothermal(m):
 
     m["Base"].parameter.add(geoth_acc, "accounting_converterunits")
 
-
-
 # conventional
 
 def add_thermal(m):

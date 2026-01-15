@@ -11,6 +11,9 @@ cases = [
     # ("GP-NT-ELEC-BIO-H2", "nz_case_BIO+_2050", "gurobi"),
     # ("GP-NT-ELEC-BIO-H2", "nz_case_H2+_2050", "gurobi"),
     ("GP-NT-ELEC-BIO-H2", "nz_case_GP_2020-2050", "cplex"),
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_GP_2020-2050", "gurobi"),
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_GP_2020-2030-2050", "cplex"),
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_GP_2020-2050", "cplex"),
     #("GP-NT-ELEC-BIO-H2", "nz_case_GP_2020-2025-2030-2035-2040-2045-2050", "cplex"),
 ]
 

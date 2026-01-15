@@ -187,6 +187,7 @@ metrics.txt
 
 framework/
 framework-v10/
+framework*/
 *.zip
 remixplot-dev/ 
 demand-paper/ 

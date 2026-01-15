@@ -1,0 +1,15 @@
+Node,Year_built,techs,Capacity_GW
+AKL,1992,Thermal_Bio,0.0055
+AKL,1997,Thermal_Coal,0.112
+AKL,2003,Thermal_Bio,0.007
+CAN,1996,Thermal_Bio,0.0032
+HBY,2004,Thermal_Diesel,0.155
+HBY,2005,Thermal_Bio,0.0128
+NIS,1992,Thermal_Bio,0.0028
+NIS,2011,Thermal_Diesel,0.018
+OTG,2000,Thermal_Bio,0.0014
+WEL,1994,Thermal_Bio,0.0027
+WTO,1998,Thermal_Bio,0.04
+WTO,2004,Thermal_Bio,0.0009
+WTO,2008,Thermal_Bio,0.001
+WTO,2009,Thermal_Bio,0.004
