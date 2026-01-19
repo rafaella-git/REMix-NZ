@@ -5,18 +5,47 @@ from remix.framework.api.instance import Instance
 
 # List all models to run
 cases = [
-    # ("GP-NT-ELEC-BIO-H2", "nz_case_GP_2050", "gurobi"),
+
+    # -------------------------
+    # 2050 only
+    # -------------------------
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_GP_2050", "cplex"),
     # ("GP-NT-ELEC-BIO-H2", "nz_case_NT_2050", "gurobi"),
     # ("GP-NT-ELEC-BIO-H2", "nz_case_ELEC+_2050", "gurobi"),
     # ("GP-NT-ELEC-BIO-H2", "nz_case_BIO+_2050", "gurobi"),
     # ("GP-NT-ELEC-BIO-H2", "nz_case_H2+_2050", "gurobi"),
+
+    # -------------------------
+    # 2020-2050
+    # -------------------------
+    
+    ("GP-NT-ELEC-BIO-H2", "nz_case_ELEC+_2020-2050", "cplex"),
+    ("GP-NT-ELEC-BIO-H2", "nz_case_ELEC+_2020-2050", "cplex"),
+    ("GP-NT-ELEC-BIO-H2", "nz_case_BIO+_2020-2050", "cplex"),
+    ("GP-NT-ELEC-BIO-H2", "nz_case_H2+_2020-2050", "cplex"),
     ("GP-NT-ELEC-BIO-H2", "nz_case_GP_2020-2050", "cplex"),
+    ("GP-NT-ELEC-BIO-H2", "nz_case_NT_2020-2050", "cplex"),
+    ("GP-NT-ELEC-BIO-H2", "nz_case_H2+_2020-2025-2030-2035-2040-2045-2050", "cplex"),    
+
+    # -------------------------
+    # 2020-2035-2050
+    # -------------------------
     # ("GP-NT-ELEC-BIO-H2", "nz_case_GP_2020-2035-2050", "cplex"),
-    # ("GP-NT-ELEC-BIO-H2", "nz_case_GP_2020-2050", "gurobi"),
-    # ("GP-NT-ELEC-BIO-H2", "nz_case_GP_2020-2030-2050", "cplex"),
-    # ("GP-NT-ELEC-BIO-H2", "nz_case_GP_2020-2050", "cplex"),
-    #("GP-NT-ELEC-BIO-H2", "nz_case_GP_2020-2025-2030-2035-2040-2045-2050", "cplex"),
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_NT_2020-2035-2050", "gurobi"),
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_ELEC+_2020-2035-2050", "gurobi"),
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_BIO+_2020-2035-2050", "gurobi"),
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_H2+_2020-2035-2050", "gurobi"),
+
+    # -------------------------
+    # full set 2020-2025-...-2050
+    # -------------------------
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_GP_2020-2025-2030-2035-2040-2045-2050", "cplex"),
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_NT_2020-2025-2030-2035-2040-2045-2050", "gurobi"),
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_ELEC+_2020-2025-2030-2035-2040-2045-2050", "gurobi"),
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_BIO+_2020-2025-2030-2035-2040-2045-2050", "gurobi"),
+    # ("GP-NT-ELEC-BIO-H2", "nz_case_H2+_2020-2025-2030-2035-2040-2045-2050", "gurobi"),
 ]
+
 
 # -----------------------------------------------------------------------------
 # base path
