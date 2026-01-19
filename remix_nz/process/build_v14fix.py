@@ -1850,6 +1850,46 @@ def add_emission_budget(m, upper_value):
 
     m["Base"].parameter.add(df, "accounting_indicatorbounds")
 
+def add_co2_slack_indicator(m):
+    # (Tutorial 202)  Slack_CO2 is an indicator, CO2_emission - Slack_CO2 <= cap/budget.
+    years_sel = sorted(int(y) for y in m["Base"].set.yearssel)
+    years_sel = [str(y) for y in years_sel]
+    acc_years = ["horizon"] + years_sel
+
+    # Slack is free variable with lower bound 0
+    bnd = pd.DataFrame(
+        index=pd.MultiIndex.from_product(
+            [["global"], acc_years, ["Slack_CO2"]],
+            names=["accNodesData", "accYears", "indicator"],
+        )
+    )
+    bnd["isVariable"] = 1
+    bnd["useLower"] = 1
+    bnd["lowerValue"] = 0.0  
+
+    m["Base"].parameter.add(bnd.fillna(0), "accounting_indicatorbounds")
+
+    # Couple emissions to slack: CO2_emission = (...) - Slack_CO2 (to relax cap)
+    link = pd.DataFrame(
+        index=pd.MultiIndex.from_product(
+            [["CO2_emission"], ["Slack_CO2"], ["global"], acc_years],
+            names=["indicator", "perIndicator", "accNodesData", "accYears"],
+        )
+    )
+    link["perIndicator"] = -1.0
+    m["Base"].parameter.add(link.fillna(0), "accounting_perindicator")
+
+    # Penalize slack 
+    cost = pd.DataFrame(
+        index=pd.MultiIndex.from_product(
+            [["SystemCost"], ["Slack_CO2"], ["global"], acc_years],
+            names=["indicator", "perIndicator", "accNodesData", "accYears"],
+        )
+    )
+    cost["perIndicator"] = 1000000000.0
+    m["Base"].parameter.add(cost.fillna(0), "accounting_perindicator")
+
+
 # multi-energy
 
 def add_fuel_demands_from_excel(m):
@@ -2924,19 +2964,15 @@ def print_capacity_built_and_alive(m, year=2020, tech_prefix=None, top_n_cols=No
 
 # ---------------------------------------------------------------------------------
 # USER CHOICES
-# ---------------------------------------------------------------------------------
-
 group_name = "GP-NT-ELEC-BIO-H2"
 
-# scenarios to build
-scenarios = ["GP", "NT", "ELEC+", "BIO+", "H2+"]
-
 # year combinations to build
+scenarios = ["GP", "NT", "ELEC+", "BIO+", "H2+"]
 year_sets = [
     [2020, 2050],
     # [2020, 2025, 2030, 2035, 2040, 2045, 2050],
 ]
-
+# ---------------------------------------------------------------------------------
 
 include_renewables = True
 include_conventional_pp = True
@@ -3005,6 +3041,7 @@ if __name__ == "__main__":
 
             # if include_emissions_constraints:
             #     add_emission_limit(m, year=2050, upper_value=0.0)
+            #     add_co2_slack_indicator(m)
 
             # print_capacity_built_and_alive(m, year=2020)                 
             # print_capacity_built_and_alive(m, year=2020, tech_prefix="wind") 
