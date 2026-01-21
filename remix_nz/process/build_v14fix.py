@@ -119,6 +119,7 @@ def add_scope(m):
     m["Base"].set.add([str(y) for y in sorted(set(yrs_to_calc))], "years")
     m["Base"].set.add([str(y) for y in sorted(set(yrs_sel))], "yearssel")
 
+    print("[add_scope] nodesdata:", nodes)
 
 
 def add_demand(m):
@@ -191,7 +192,7 @@ def add_demand(m):
 
     # Aggregate node-year
     df_agg = df.groupby(["node", "year"], as_index=False)[hour_cols].sum()
-    # print("[add_demand] rows:", len(df_agg), "unique nodes:", df_agg["node"].nunique())
+    print("[add_demand] rows:", len(df_agg), "unique nodes:", df_agg["node"].nunique())
 
     #  Demand profile (negative) 
     ts = df_agg.set_index(["node", "year"])[hour_cols].copy()
@@ -237,10 +238,10 @@ def add_demand(m):
             names=["indicator", "accNodesData", "accYears", "sourcesink_techs", "commodity"],
         )
     )
-    acc["perFlow"] = 1e6
+    acc["perFlow"] = 10 # elec slack
     m["Base"].parameter.add(acc.fillna(0.0), "accounting_sourcesinkflow")
 
-    # print("[add_demand] wrote demand+slack for nodes:", len(sorted(m["Base"].set.nodesdata)), "years:", years_sel)
+    print("[add_demand] wrote demand+slack for nodes:", len(sorted(m["Base"].set.nodesdata)), "years:", years_sel)
 
     #Sanity check: Slack must have lower=0 and usesLowerSum=1 everywhere 
     ss = m["Base"].parameter.sourcesink_annualsum
@@ -694,7 +695,7 @@ def add_thermal(m, add_fuel_imports=True, debug=False):
     cap_bounds = pd.DataFrame(
         index=pd.MultiIndex.from_product([nodes, years_data_str, techs], names=["nodesdata", "years", "converter_techs"])
     )
-    cap_bounds["unitsUpperLimit"] = 1000.0
+    cap_bounds["unitsUpperLimit"] = 100.0
     cap_bounds["noExpansion"] = 0.0
     cap_bounds.loc[idx[:, [str(base_year)], :], "noExpansion"] = 1.0  # block only in 2020
 
@@ -946,7 +947,7 @@ def add_gas_turbines(m, add_fuel_import=True, debug=False):
     cap_bounds = pd.DataFrame(
         index=pd.MultiIndex.from_product([nodes, years_data_str, techs], names=["nodesdata", "years", "converter_techs"])
     )
-    cap_bounds["unitsUpperLimit"] = 1000.0
+    cap_bounds["unitsUpperLimit"] = 100.0
     cap_bounds["noExpansion"] = 0.0
     cap_bounds.loc[idx[:, [str(base_year)], :], "noExpansion"] = 1.0
 
@@ -1653,7 +1654,7 @@ def add_renewables(m):
     m["Base"].profile.add(prof, "converter_activityprofile")
 
     bf_by_tech = cap.loc[idx[:, :, wind_on], "unitsBuild"].groupby("techs").sum()
-    # print("[add_renewables] brownfield by onshore tech:\n", bf_by_tech)
+    print("[add_renewables] brownfield by onshore tech:\n", bf_by_tech)
 
     # 6) accounting_converterunits 
     acc_idx = pd.MultiIndex.from_product(
@@ -1699,6 +1700,7 @@ def add_renewables(m):
 
     m["Base"].parameter.add(acc.fillna(0.0), "accounting_converterunits")
 
+    print("[add_renewables] finished")
 
 def add_lithium_batteries(m):
     global idx
@@ -1817,6 +1819,7 @@ def add_lithium_batteries(m):
 
     m["Base"].parameter.add(stor_acc.fillna(0.0), "accounting_storageunits")
 
+    print("[add_lithium_batteries] done")
 
 # CO2 emission limits and budgets
 
@@ -1883,7 +1886,7 @@ def add_co2_slack_indicator(m):
             names=["indicator", "perIndicator", "accNodesData", "accYears"],
         )
     )
-    cost["perIndicator"] = 1000000000.0
+    cost["perIndicator"] = 0.6 #M EUR / kt CO2 (tutorial)
     m["Base"].parameter.add(cost.fillna(0), "accounting_perindicator")
 
 
@@ -1976,9 +1979,9 @@ def add_fuel_demands_from_excel(m):
     years = sorted(grp["year"].unique().tolist())
     fuels = sorted(grp["commodity"].unique().tolist())
 
-    # print("[fuel demand] nodes:", nodes)
-    # print("[fuel demand] years:", years)
-    # print("[fuel demand] fuels:", fuels)
+    print("[fuel demand] nodes:", nodes)
+    print("[fuel demand] years:", years)
+    print("[fuel demand] fuels:", fuels)
 
     m["Base"].set.add(nodes, "nodesdata")
     m["Base"].set.add(fuels, "commodities")
@@ -2023,7 +2026,7 @@ def add_fuel_demands_from_excel(m):
     m["Base"].profile.add(dem_upper, "sourcesink_profile")
 
 
-    # print("[fuel demand] demand sinks written:", len(dem))
+    print("[fuel demand] demand sinks written:", len(dem))
 
     # CO2 emissions for fuel use in Heat/Transport ( ktCO2 per GWh of fuel commodity flow )
 
@@ -2075,7 +2078,7 @@ def add_fuel_demands_from_excel(m):
     # Slack sources (node, year, sector, commodity) where sector = SlackFuel_<commodity>
     print("\n--- ADDING FUEL SLACK (positive-only, penalised) ")
 
-    slack_cost = 1e6
+    slack_cost = 10
 
     slack_rows = []
     for n in nodes:
@@ -2131,8 +2134,8 @@ def add_fuel_demands_from_excel(m):
     cost["perFlow"] = [v for (*_, v) in cost_rows]
     m["Base"].parameter.add(cost, "accounting_sourcesinkflow")
 
-    # print("[fuel demand] slack sinks written:", len(slack))
-    # print("[fuel demand] SlackCost perFlow:", slack_cost)
+    print("[fuel demand] slack sinks written:", len(slack))
+    print("[fuel demand] SlackCost perFlow:", slack_cost)
 
     return {"nodes": nodes, "years": years, "fuels": fuels}
 
@@ -2254,7 +2257,7 @@ def add_electrolyser(m):
             names=["nodesdata", "years", "converter_techs"],
         )
     )
-    eltr_caps["unitsUpperLimit"] = 10000.0  # GW_el (large generic upper bound)
+    eltr_caps["unitsUpperLimit"] = 100.0  # GW_el (large generic upper bound)
 
     eltr_caps.loc[idx[:, [base_year], "Electrolyser"], "noExpansion"] = 1.0
 
@@ -2299,6 +2302,9 @@ def add_electrolyser(m):
 
     m["Base"].parameter.add(electrolyser_acc.fillna(0.0), "accounting_converterunits")
 
+    print("[Electrolyser] vintages:", eltr_vintage)
+    print("[Electrolyser] nodes:", nodes)
+    print("[Electrolyser] years in capacityparam:", years_all_str)
 
 def add_H2_CCGT(m):
     global yrs_to_calc, idx
@@ -2331,7 +2337,7 @@ def add_H2_CCGT(m):
         names=["nodesdata", "years", "converter_techs"],
     )
     cap = pd.DataFrame(index=cap_idx)
-    cap["unitsUpperLimit"] = 1000.0
+    cap["unitsUpperLimit"] = 100.0
     m["Base"].parameter.add(cap, "converter_capacityparam")
 
     #  3) converter_coefficient 
@@ -2397,7 +2403,7 @@ def add_H2_FC(m):
         names=["nodesdata", "years", "converter_techs"],
     )
     cap = pd.DataFrame(index=cap_idx)
-    cap["unitsUpperLimit"] = 1000.0
+    cap["unitsUpperLimit"] = 100.0
     m["Base"].parameter.add(cap, "converter_capacityparam")
 
     #  3) converter_coefficient
@@ -2960,11 +2966,12 @@ def print_capacity_built_and_alive(m, year=2020, tech_prefix=None, top_n_cols=No
 group_name = "GP-NT-ELEC-BIO-H2"
 
 # year combinations to build
-scenarios = ["GP", 
-             "NT", 
-             "ELEC+",
-             "BIO+",
+scenarios = ["BIO+",
              "H2+"]
+            #  "GP", 
+            #  "NT", 
+            #  "ELEC+"]
+             
 year_sets = [
     # [2020, 2050],
     [2020, 2025, 2030, 2035, 2040, 2045, 2050],
@@ -2986,7 +2993,7 @@ if __name__ == "__main__":
 
             years_tag = "-".join(str(y) for y in yrs_sel)
             case_name = f"nz_case_{base_scenario}_{years_tag}"
-            print("\n================================================================="
+            print("\n================================================"
                   f"\n--- Starting build for {case_name} ")
 
             path_input = Path("C:/Local/REMix/remix_nz/input")
@@ -3051,7 +3058,7 @@ if __name__ == "__main__":
             print(
                 f"\n--- [REMix {md.version('remix.framework')}] Built for {case_name} "
                 f"completed in {int(elapsed // 60)} m {round(elapsed % 60, 1):.0f} s "
-                "\n================================================================="
+                "=============================================================="
             )
             print("     data_dir:", data_dir.resolve())
 
