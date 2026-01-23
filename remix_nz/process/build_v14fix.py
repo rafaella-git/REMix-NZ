@@ -228,7 +228,7 @@ def add_demand(m):
 
     slack_sum = pd.DataFrame(index=slack_idx)
     slack_sum["lower"] = 0.0
-    slack_sum["upper"] = np.inf
+    slack_sum["upper"] = 50
     m["Base"].parameter.add(slack_sum, "sourcesink_annualsum")
 
     # Slack cost (use horizon)
@@ -1041,7 +1041,7 @@ def add_gas_turbines(m, add_fuel_import=True, debug=False):
         )
         ss = pd.DataFrame(index=ss_idx)
         ss["lower"] = 0.0
-        ss["upper"] = 1e5
+        ss["upper"] = 1e4 
         m["Base"].parameter.add(ss, "sourcesink_annualsum")
 
         cfg = pd.DataFrame(index=ss_idx)
@@ -2291,7 +2291,7 @@ def add_purchasable_fuels(m, fuels_importable=None):
             for fuel in fuels_for_import:
                 sector_name = f"FuelImport_{fuel}"
                 lower = 0.0
-                upper = np.inf if fuel in fuels_importable else 0.0
+                upper = 1e4 if fuel in fuels_importable else 0.0
                 imp_rows.append((node, int(year), sector_name, fuel, lower, upper))
 
     imp_idx = pd.MultiIndex.from_tuples(
@@ -2371,7 +2371,7 @@ def add_electrolyser(m):
             names=["nodesdata", "years", "converter_techs"],
         )
     )
-    eltr_caps["unitsUpperLimit"] = 100.0  # GW_el (large generic upper bound)
+    eltr_caps["unitsUpperLimit"] = 20.0  # GW_el 
 
     eltr_caps.loc[idx[:, [base_year], "Electrolyser"], "noExpansion"] = 1.0
 
@@ -2453,7 +2453,7 @@ def add_H2_CCGT(m):
         names=["nodesdata", "years", "converter_techs"],
     )
     cap = pd.DataFrame(index=cap_idx)
-    cap["unitsUpperLimit"] = 100.0
+    cap["unitsUpperLimit"] = 20.0
     m["Base"].parameter.add(cap, "converter_capacityparam")
 
     #  3) converter_coefficient 
@@ -2519,7 +2519,7 @@ def add_H2_FC(m):
         names=["nodesdata", "years", "converter_techs"],
     )
     cap = pd.DataFrame(index=cap_idx)
-    cap["unitsUpperLimit"] = 100.0
+    cap["unitsUpperLimit"] = 20.0
     m["Base"].parameter.add(cap, "converter_capacityparam")
 
     #  3) converter_coefficient
@@ -2570,12 +2570,18 @@ def add_h2_storage(m):
     tech = "H2_storage"
     nodes = sorted(list(m["Base"].set.nodesdata))
 
+    # Optimisation years (investment decision years)
+    yearssel = sorted(int(y) for y in m["Base"].set.yearssel)
+    years_model_str = [str(y) for y in yearssel]
+    baseyear_str = str(yearssel[0])  # usually "2020"
+
+    # Techno-economic vintage years
     vint = [2020, 2035, 2050]
     vint_str = [str(y) for y in vint]
 
     m["Base"].set.add(["H2", "H2_stored", "Elec"], "commodities")
 
-    #  1) converter_techparam (vintage axis) 
+    # 1) converter_techparam (vintage axis)
     conv_tech_idx = pd.MultiIndex.from_product(
         [[tech], vint_str],
         names=["converter_techs", "vintage"],
@@ -2585,19 +2591,18 @@ def add_h2_storage(m):
     conv_tech["activityUpperLimit"] = 1.0
     m["Base"].parameter.add(conv_tech, "converter_techparam")
 
-    #  2) converter_capacityparam (investment years) 
+    # 2) converter_capacityparam (investment years = yearssel)
     conv_cap_idx = pd.MultiIndex.from_product(
-        [nodes, vint_str, [tech]],
+        [nodes, years_model_str, [tech]],
         names=["nodesdata", "years", "converter_techs"],
     )
     conv_cap = pd.DataFrame(index=conv_cap_idx)
     conv_cap["unitsUpperLimit"] = 50.0
-
-    conv_cap.loc[idx[:, ["2020"], tech], "noExpansion"] = 1.0
-
+    conv_cap["noExpansion"] = 0.0
+    conv_cap.loc[idx[:, [baseyear_str], tech], "noExpansion"] = 1.0  # block only 2020
     m["Base"].parameter.add(conv_cap, "converter_capacityparam")
 
-    #  3) converter_coefficient (vintage axis) 
+    # 3) converter_coefficient (vintage axis)
     conv_coef_idx = pd.MultiIndex.from_product(
         [[tech], vint_str, ["Charge", "Discharge"], ["H2", "H2_stored", "Elec"]],
         names=["converter_techs", "vintage", "activity", "commodity"],
@@ -2612,10 +2617,11 @@ def add_h2_storage(m):
 
         conv_coef.loc[(tech, v, "Discharge", "H2"), "coefficient"] = 0.15
         conv_coef.loc[(tech, v, "Discharge", "H2_stored"), "coefficient"] = -0.15 * 1.11
+        # Discharge Elec coefficient intentionally left at 0 / NaN
 
-    m["Base"].parameter.add(conv_coef, "converter_coefficient")
+    m["Base"].parameter.add(conv_coef.fillna(0.0), "converter_coefficient")
 
-    #  4) accounting_converterunits 
+    # 4) accounting_converterunits (vintage axis)
     conv_acc_idx = pd.MultiIndex.from_product(
         [["Invest", "OMFix"], ["global"], ["horizon"], [tech], vint_str],
         names=["indicator", "accNodesData", "accYears", "converter_techs", "vintage"],
@@ -2627,12 +2633,11 @@ def add_h2_storage(m):
         conv_acc.loc[("Invest", "global", "horizon", tech, v), "useAnnuity"] = 1.0
         conv_acc.loc[("Invest", "global", "horizon", tech, v), "amorTime"] = 40
         conv_acc.loc[("Invest", "global", "horizon", tech, v), "interest"] = 0.06
-
         conv_acc.loc[("OMFix", "global", "horizon", tech, v), "perUnitTotal"] = 5.14 * 0.04
 
     m["Base"].parameter.add(conv_acc.fillna(0.0), "accounting_converterunits")
 
-    #  5) storage_techparam 
+    # 5) storage_techparam (vintage axis)
     stor_tech_idx = pd.MultiIndex.from_product(
         [[tech], vint_str],
         names=["storagetechs", "vintage"],
@@ -2642,7 +2647,7 @@ def add_h2_storage(m):
     stor_tech["levelUpperLimit"] = 1.0
     m["Base"].parameter.add(stor_tech, "storage_techparam")
 
-    #  6) storage_sizeparam 
+    # 6) storage_sizeparam (vintage axis)
     stor_size_idx = pd.MultiIndex.from_product(
         [[tech], vint_str, ["H2_stored"]],
         names=["storagetechs", "vintage", "commodity"],
@@ -2652,17 +2657,18 @@ def add_h2_storage(m):
         stor_size.loc[(tech, v, "H2_stored"), "size"] = 6.9993
     m["Base"].parameter.add(stor_size, "storage_sizeparam")
 
-    #  7) storage_reservoirparam  
+    # 7) storage_reservoirparam (investment years = yearssel)
     stor_res_idx = pd.MultiIndex.from_product(
-        [nodes, vint_str, [tech]],
+        [nodes, years_model_str, [tech]],
         names=["nodesdata", "years", "storagetechs"],
     )
     stor_res = pd.DataFrame(index=stor_res_idx)
     stor_res["unitsUpperLimit"] = 50.0
-    stor_res.loc[idx[:, ["2020"], tech], "noExpansion"] = 1.0
+    stor_res["noExpansion"] = 0.0
+    stor_res.loc[idx[:, [baseyear_str], tech], "noExpansion"] = 1.0  # block only 2020
     m["Base"].parameter.add(stor_res, "storage_reservoirparam")
 
-    #  8) accounting_storageunits 
+    # 8) accounting_storageunits (vintage axis)
     stor_acc_idx = pd.MultiIndex.from_product(
         [["Invest", "OMFix"], ["global"], ["horizon"], [tech], vint_str],
         names=["indicator", "accNodesData", "accYears", "storagetechs", "vintage"],
@@ -2674,7 +2680,6 @@ def add_h2_storage(m):
         stor_acc.loc[("Invest", "global", "horizon", tech, v), "useAnnuity"] = 1.0
         stor_acc.loc[("Invest", "global", "horizon", tech, v), "amorTime"] = 40
         stor_acc.loc[("Invest", "global", "horizon", tech, v), "interest"] = 0.06
-
         stor_acc.loc[("OMFix", "global", "horizon", tech, v), "perUnitTotal"] = 131.91 * 0.03
 
     m["Base"].parameter.add(stor_acc.fillna(0.0), "accounting_storageunits")
@@ -2710,7 +2715,7 @@ def add_dac(m):
             names=["nodesdata", "years", "converter_techs"],
         )
     )
-    dac_caps["unitsUpperLimit"] = 100.0
+    dac_caps["unitsUpperLimit"] = 20.0
     m["Base"].parameter.add(dac_caps, "converter_capacityparam")
 
     # coefficients
@@ -2788,7 +2793,7 @@ def add_methanizer(m):
             names=["nodesdata", "years", "converter_techs"],
         )
     )
-    caps["unitsUpperLimit"] = 100.0
+    caps["unitsUpperLimit"] = 20.0
     m["Base"].parameter.add(caps, "converter_capacityparam")
 
     # coefficients
@@ -2857,7 +2862,7 @@ def add_methanol_syn(m):
             names=["nodesdata", "years", "converter_techs"],
         )
     )
-    caps["unitsUpperLimit"] = 100.0
+    caps["unitsUpperLimit"] = 20.0
     m["Base"].parameter.add(caps, "converter_capacityparam")
 
     coef = pd.DataFrame(
@@ -2924,7 +2929,7 @@ def add_ftropsch_syn(m):
             names=["nodesdata", "years", "converter_techs"],
         )
     )
-    caps["unitsUpperLimit"] = 100.0
+    caps["unitsUpperLimit"] = 20.0
     base.parameter.add(caps, "converter_capacityparam")
 
     coef = pd.DataFrame(
@@ -3082,15 +3087,15 @@ def print_capacity_built_and_alive(m, year=2020, tech_prefix=None, top_n_cols=No
 group_name = "GP-NT-ELEC-BIO-H2"
 
 # year combinations to build
-scenarios = ["BIO+",
-             "H2+",
-             "GP", 
-             "NT", 
-             "ELEC+"]
+scenarios = ["BIO+"]#,
+            #  "H2+",
+            #  "GP", 
+            #  "NT", 
+            #  "ELEC+"]
              
 year_sets = [
-    # [2020, 2050],
-    [2020, 2025, 2030, 2035, 2040, 2045, 2050],
+    [2020, 2050],
+    # [2020, 2025, 2030, 2035, 2040, 2045, 2050],
 ]
 # ---------------------------------------------------------------------------------
 
