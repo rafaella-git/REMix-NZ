@@ -2130,43 +2130,35 @@ def add_fuel_demands_from_excel(m):
 
         print(f"[fuel demand] purchasable annual demand rows: {len(dem_annual)}")
 
-    # Endogenous fuels: HOURLY demand profile (fixed)
+    # Endogenous fuels: ANNUAL demand only (no hourly profile)
     endo_grp = grp.loc[grp["commodity"].isin(endogenous_fuels)].copy()
     if not endo_grp.empty:
-        # Build a flat hourly profile that sums to annual demand:
-        # hourly = -(annual / 8760)
-        prof_rows = []
+        annual_rows = []
         for r in endo_grp.itertuples(index=False):
             ss = f"HeatDemand_{r.commodity}" if r.sector == "Heat" else f"TranspDemand_{r.commodity}"
-            hourly_val = -float(r.Demand) / float(n_hours)
-            prof_rows.append((r.node, str(int(r.year)), ss, r.commodity, hourly_val))
+            annual_val = -float(r.Demand)  # negative = demand
+            annual_rows.append((r.node, str(int(r.year)), ss, r.commodity, annual_val, annual_val))
 
-        prof_idx = pd.MultiIndex.from_tuples(
-            [(n, y, ss, c) for (n, y, ss, c, hv) in prof_rows],
+        idx_annual_endo = pd.MultiIndex.from_tuples(
+            [(n, y, ss, c) for (n, y, ss, c, lo, up) in annual_rows],
             names=["nodesdata", "years", "sourcesink_techs", "commodity"],
         )
-        prof = pd.DataFrame(index=prof_idx, columns=hour_cols, data=0.0)
+        dem_annual_endo = pd.DataFrame(index=idx_annual_endo)
+        dem_annual_endo["lower"] = [lo for (*_, lo, __) in annual_rows]
+        dem_annual_endo["upper"] = [up for (*_, __, up) in annual_rows]
+        m["Base"].parameter.add(dem_annual_endo, "sourcesink_annualsum")
 
-        # fill each row with the same hourly value
-        for (n, y, ss, c, hv) in prof_rows:
-            prof.loc[(n, y, ss, c), :] = hv
+        cfg_annual_endo = pd.DataFrame(index=idx_annual_endo)
+        cfg_annual_endo["usesLowerSum"] = 1.0
+        cfg_annual_endo["usesUpperSum"] = 1.0
+        # CRITICAL: no hourly profile for endogenous demand now
+        cfg_annual_endo["usesFixedProfile"] = 0.0
+        cfg_annual_endo["usesUpperProfile"] = 0.0
+        cfg_annual_endo["usesLowerProfile"] = 0.0
+        m["Base"].parameter.add(cfg_annual_endo, "sourcesink_config")
 
-        prof["profileTypes"] = "fixed"
-        prof = prof.set_index("profileTypes", append=True)
-        prof.index = prof.index.set_names(["nodesdata", "years", "sourcesink_techs", "commodity", "profileTypes"])
-        m["Base"].profile.add(prof.round(8), "sourcesink_profile")
+        print(f"[fuel demand] endogenous ANNUAL demand rows: {len(dem_annual_endo)}")
 
-        cfg_endo = pd.DataFrame(index=prof.index.droplevel("profileTypes").unique())
-        cfg_endo.index = cfg_endo.index.set_names(["nodesdata", "years", "sourcesink_techs", "commodity"])
-        cfg_endo["usesFixedProfile"] = 1.0
-  
-        cfg_endo["usesUpperProfile"] = 0.0
-        cfg_endo["usesLowerProfile"] = 0.0
-        cfg_endo["usesLowerSum"] = 0.0
-        cfg_endo["usesUpperSum"] = 0.0
-        m["Base"].parameter.add(cfg_endo, "sourcesink_config")
-
-        print(f"[fuel demand] endogenous hourly demand rows: {len(cfg_endo)}")
 
     # CO2 emissions accounting on demanded fuel flows
 
