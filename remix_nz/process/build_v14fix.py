@@ -396,6 +396,12 @@ def add_network(m):
             names=["linksData", "years", "transfer_techs"],
         )
     )
+
+
+    link_caps["noExpansion"] = 0.0
+
+    if "2020" in years_model:
+        link_caps.loc[idx[:, "2020", :], "noExpansion"] = 1.0
     link_caps.loc[idx[:, :, "HV"], "linksUpperLimit"] = 100.0
     link_caps = link_caps.fillna(0.0)
     m["Base"].parameter.add(link_caps, "transfer_linksparam")
@@ -2020,6 +2026,10 @@ def add_fuel_demands_from_excel(m):
 
     df = pd.read_excel(excel_path, sheet_name="carriers")
     df.columns = [str(c).strip() for c in df.columns]
+
+    print("[fuel demand] base_scenario:", repr(base_scenario))
+    print("[fuel demand] available scenarios in carriers:",
+        sorted(df["Scenario"].astype(str).str.strip().unique()))
 
     df = df.loc[df["Scenario"].astype(str).str.strip() == str(base_scenario)].copy()
     if df.empty:

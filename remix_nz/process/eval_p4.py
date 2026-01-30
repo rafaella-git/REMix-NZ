@@ -1,1044 +1,995 @@
-# compare_results_paper4.py
-# Multi-scenario comparison plotting + printing for REMix NZ (Paper 4)
-#
-# Run from VSCode (Python), not bash.
-# - Loads multiple scenario result GDX files using remix.framework.tools.gdx.GDXEval
-# - Robust to different year selections and different tech sets across scenarios
-# - Prints schema/debug to console so you can show me what your GDX actually contains
-# - Writes CSV and Excel tables
-# - Saves PNG + SVG plots into comparison folder
-#
-# Notes:
-# - Uses only matplotlib (no seaborn) for maximum portability
-# - Sign convention:
-#   commodity_balance: positive = production, negative = consumption (kept negative)
-#   For "demand plots" we plot abs(negative) as positive bars
-#
-# Author: ChatGPT (tailored to your REMix NZ project structure)
-
 from __future__ import annotations
 
-import os
-import sys
-import math
-import traceback
+import warnings
 from pathlib import Path
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, Sequence
+from typing import Iterable
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
+from matplotlib import colormaps, cm
 from remix.framework.tools.gdx import GDXEval
 
-# Optional (maps). If missing, script will continue without maps.
-try:
-    import geopandas as gpd  # noqa
-    from remix.framework.tools.plots import plot_network, plot_choropleth  # noqa
-    HAS_GEO = True
-except Exception:
-    HAS_GEO = False
 
+# ---------------------------------------------------------------------------
+# BASIC CONFIG
+# ---------------------------------------------------------------------------
 
-# -----------------------------
-# User settings (EDIT HERE)
-# -----------------------------
-BASE_PROJECT = Path(r"C:\Local\REMix\remix_nz\project\GP-NT-ELEC-BIO-H2")
+warnings.filterwarnings(
+    "ignore",
+    message=r".*GAMS version.*differs from the API version.*",
+    category=UserWarning,
+)
 
-SCENARIOS = [
-    "nz_case_GP_2020-2050",
-    "nz_case_NT_2020-2050",
-    "nz_case_ELEC+_2020-2050",
-    "nz_case_BIO+_2020-2050",
-    "nz_case_H2+_2020-2050",
+BASE_DIR = Path(r"C:\Local\REMix\remix_nz\project\GP-NT-ELEC-BIO-H2")
+
+CASE_DIRS = [
+    "nz_case_GP_2020-2025-2030-2035-2040-2045-2050",
+    "nz_case_NT_2020-2025-2030-2035-2040-2045-2050",
+    "nz_case_ELEC+_2020-2025-2030-2035-2040-2045-2050",
+    "nz_case_BIO+_2020-2025-2030-2035-2040-2045-2050",
+    "nz_case_H2+_2020-2025-2030-2035-2040-2045-2050",
 ]
 
-# Output folder (auto-created)
-OUT_DIR = BASE_PROJECT / "comparison"
+YEAR_INTS = [2020, 2025, 2030, 2035, 2040, 2045, 2050]
+SCEN_ORDER = ["GP", "NT", "ELEC+", "BIO+", "H2+"]
 
-# Canonical strings
-GLOBAL_NODE = "global"
-ELEC_COMMODITY = "Elec"
+DX_IN = 1.0
+YEAR_GAP = 1.5
+YEAR_PAD = 55
+BAR_WIDTH = 0.85
 
-# Thresholds / robustness
-CAP_NEG_TOL = 0.01  # GW: if negative capacity abs > this, print debug
-CAP_POS_TOL = 0.0001  # GW: plot only capacities > this (after fixing tiny negatives)
-ENERGY_TOL = 0.01  # GWh: filter tiny annual/hours for cleanliness
+GEN_TECH_MIN_TWH = 0.01
+CAP_TECH_MIN_GW = 0.01  # 10 MW
 
-# Time slices (hour index based, assuming timeModel is 1..8760 or similar sortable)
-# We will use "hour numbers" after sorting timeModel.
-WINTER_CENTER_HOUR = 500   # adjust if you want
-SUMMER_CENTER_HOUR = 4500  # adjust if you want
-SLICE_WEEKS = 2
-HOURS_PER_WEEK = 168
-HOURS_PER_SLICE = SLICE_WEEKS * HOURS_PER_WEEK  # 336
+EXPORT_FIGURES = False  # toggled by user only; if False, only plt.show() is used
 
-# If you want to compare a specific model year across hourly plots, keep None to auto-pick max year per scenario,
-# or set e.g. "2050".
-HOURLY_YEAR_OVERRIDE: Optional[str] = None
+FUEL_CONV_TECHS = ["Methanizer", "FTropschSyn", "Electrolyser", "DAC"]
+FUEL_CONV_STACK_ORDER = ["Electrolyser", "Methanizer", "FTropschSyn", "DAC"]
 
-# Plot appearance
-plt.rcParams.update({"figure.autolayout": True})
-plt.rcParams.update({"savefig.dpi": 300})
-plt.rcParams.update({"figure.dpi": 120})
-plt.rcParams.update({"font.size": 11})
-plt.rcParams.update({"axes.titlesize": 12})
-plt.rcParams.update({"axes.labelsize": 11})
+COST_COMPONENTS = ["FuelCost", "Invest", "OMFix", "SlackCost", "SpillPenalty"]
 
-
-# -----------------------------
-# Helpers
-# -----------------------------
-def ensure_dir(p: Path) -> None:
-    p.mkdir(parents=True, exist_ok=True)
+technology_colors = {
+    "Hydropower": "#298c81",
+    "Geothermal": "#ba91b1",
+    "Solar PV": "#f9d002",
+    "Offshore wind": "#6895dd",
+    "Onshore wind": "#4F7EC9",
+    "Battery": "#708090",
+    "H2 Storage": "#bf13a0",
+    "Fuel Cell (H2)": "#c251ae",
+    "Electrolyser": "#AF9968",
+    "CCGT": "#ee8340",
+    "OCGT": "#FAA460",
+    "GT": "#ee8340",
+    "Gas turbines": "#ee8340",
+    "Diesel": "#B5A642",
+    "Coal": "#505050",
+    "Biomass": "#008000",
+}
+DEFAULT_COLOR = "#9E9E9E"
 
 
-def safe_get_symbol(results: GDXEval, name: str) -> Optional[pd.Series]:
-    """Try to fetch a symbol; return None if missing."""
-    try:
-        x = results[name]
-        # Many REMix symbols return a Series-like object with MultiIndex and a value column,
-        # but in practice it's usually a pandas Series with name 'value'.
-        return x
-    except Exception:
+# ---------------------------------------------------------------------------
+# UTILS / LOADING
+# ---------------------------------------------------------------------------
+
+def scenario_name(case_dir: str) -> str:
+    if "_GP_" in case_dir:
+        return "GP"
+    if "_NT_" in case_dir:
+        return "NT"
+    if "_ELEC+_" in case_dir:
+        return "ELEC+"
+    if "_BIO+_" in case_dir:
+        return "BIO+"
+    if "_H2+_" in case_dir:
+        return "H2+"
+    return case_dir
+
+
+def load_results(case_dir: str) -> GDXEval | None:
+    gdx_path = BASE_DIR / case_dir / "result" / f"{case_dir}.gdx"
+    if not gdx_path.is_file():
+        print("Missing:", gdx_path)
         return None
+    return GDXEval(str(gdx_path))
 
 
-def series_to_df(s: pd.Series) -> pd.DataFrame:
-    """Normalize to DataFrame with a 'value' column and preserved index levels."""
-    if s is None:
-        return pd.DataFrame()
-    if isinstance(s, pd.DataFrame):
-        if "value" in s.columns:
-            return s.copy()
-        # If it's already a df but no value column, try first column
-        df = s.copy()
-        df = df.rename(columns={df.columns[0]: "value"})
-        return df
-    # Series
-    df = s.to_frame(name="value")
+def read_symbol(results: GDXEval, name: str) -> pd.DataFrame | None:
+    try:
+        df = results[name]
+    except KeyError:
+        return None
+    if isinstance(df, pd.Series):
+        df = df.to_frame("value")
+    if "value" not in df.columns:
+        df = df.copy()
+        df.columns = ["value"]
     return df
 
 
-def print_schema(name: str, s: Optional[pd.Series], max_levels_preview: int = 12) -> None:
-    if s is None:
-        print(f"  - {name}: MISSING")
-        return
-    idx = s.index
-    print(f"  - {name}: type={type(s).__name__}  rows={len(s):,}")
-    if hasattr(idx, "names"):
-        print(f"    index.names = {idx.names}")
-        # Show unique counts (capped)
-        for lvl in idx.names:
-            try:
-                nuniq = idx.get_level_values(lvl).nunique()
-                print(f"    - {lvl}: n_unique={nuniq}")
-            except Exception:
-                pass
-        # Preview a few items per level
-        for lvl in idx.names[:max_levels_preview]:
-            try:
-                vals = list(pd.Index(idx.get_level_values(lvl)).unique()[:8])
-                print(f"    - {lvl} sample: {vals}")
-            except Exception:
-                pass
-    else:
-        print("    (no MultiIndex names found)")
-
-
-def infer_years(s: pd.Series) -> List[str]:
-    """Return sorted list of available accYears as strings, if present."""
-    if s is None:
-        return []
-    if not hasattr(s.index, "names") or "accYears" not in s.index.names:
-        return []
-    years = pd.Index(s.index.get_level_values("accYears")).unique().astype(str)
-    # sort numerically if possible
-    try:
-        years_sorted = sorted(years, key=lambda x: int(str(x)))
-    except Exception:
-        years_sorted = sorted(map(str, years))
-    return list(years_sorted)
-
-
-def pick_hourly_year(scen_years: Sequence[str]) -> Optional[str]:
-    if not scen_years:
-        return None
-    if HOURLY_YEAR_OVERRIDE is not None:
-        if HOURLY_YEAR_OVERRIDE in scen_years:
-            return HOURLY_YEAR_OVERRIDE
-        # If override not present, fallback to max year but print warning
-        print(f"[warn] HOURLY_YEAR_OVERRIDE={HOURLY_YEAR_OVERRIDE} not in {scen_years}; using max year.")
-    # Default: max year
-    try:
-        return sorted(scen_years, key=lambda x: int(str(x)))[-1]
-    except Exception:
-        return scen_years[-1]
-
-
-def scenario_gdx_path(case_name: str) -> Path:
-    # Expected structure: ...\{case}\result\{case}.gdx
-    return BASE_PROJECT / case_name / "result" / f"{case_name}.gdx"
-
-
-def save_fig(fig: plt.Figure, outdir: Path, stem: str) -> None:
-    ensure_dir(outdir)
-    png = outdir / f"{stem}.png"
-    svg = outdir / f"{stem}.svg"
-    fig.savefig(png, bbox_inches="tight")
-    fig.savefig(svg, bbox_inches="tight")
-    plt.close(fig)
-
-
-def pivot_year_tech(
-    df: pd.DataFrame,
-    year_col: str = "accYears",
-    tech_col: str = "techs",
-    value_col: str = "value",
-    agg: str = "sum"
-) -> pd.DataFrame:
-    """Return DataFrame indexed by year with tech columns."""
-    if df.empty:
-        return pd.DataFrame()
-    if year_col not in df.columns or tech_col not in df.columns or value_col not in df.columns:
-        return pd.DataFrame()
-    if agg == "sum":
-        g = df.groupby([year_col, tech_col], as_index=False)[value_col].sum()
-    else:
-        g = df.groupby([year_col, tech_col], as_index=False)[value_col].mean()
-    piv = g.pivot(index=year_col, columns=tech_col, values=value_col).fillna(0.0)
-    # sort years numerically if possible
-    try:
-        piv = piv.reindex(sorted(piv.index, key=lambda x: int(str(x))))
-    except Exception:
-        piv = piv.sort_index()
-    return piv
-
-
-def sort_time_index(time_idx: pd.Index) -> pd.Index:
-    """Try to sort timeModel robustly (supports t0001, 1, etc.)."""
-    # Convert to string; extract digits if present
-    s = pd.Index(time_idx).astype(str)
-
-    def key(x: str) -> Tuple[int, str]:
-        digits = "".join([c for c in x if c.isdigit()])
-        if digits != "":
-            try:
-                return (int(digits), x)
-            except Exception:
-                return (10**18, x)
-        return (10**18, x)
-
-    order = sorted(list(s.unique()), key=key)
-    return pd.Index(order)
-
-
-def duration_curve(series: pd.Series) -> pd.Series:
-    """Sort descending, index as rank (1..N)."""
-    vals = np.asarray(series.values, dtype=float)
-    vals = np.sort(vals)[::-1]
-    return pd.Series(vals, index=np.arange(1, len(vals) + 1))
-
-
-# -----------------------------
-# Core Scenario container
-# -----------------------------
-@dataclass
-class ScenarioData:
-    name: str
-    gdx_path: Path
-    results: GDXEval
-
-    converter_caps: Optional[pd.Series] = None
-    commodity_balance_annual: Optional[pd.Series] = None
-    commodity_balance_hourly: Optional[pd.Series] = None
-    storage_flows: Optional[pd.Series] = None
-    indicator_accounting: Optional[pd.Series] = None
-    indicator_accounting_detailed: Optional[pd.Series] = None
-
-    years_caps: List[str] = None
-    years_annual: List[str] = None
-    years_hourly: List[str] = None
-
-    def load_symbols(self) -> None:
-        self.converter_caps = safe_get_symbol(self.results, "converter_caps")
-        self.commodity_balance_annual = safe_get_symbol(self.results, "commodity_balance_annual")
-        self.commodity_balance_hourly = safe_get_symbol(self.results, "commodity_balance")
-        self.storage_flows = safe_get_symbol(self.results, "storage_flows")
-        self.indicator_accounting = safe_get_symbol(self.results, "indicator_accounting")
-        self.indicator_accounting_detailed = safe_get_symbol(self.results, "indicator_accounting_detailed")
-
-        self.years_caps = infer_years(self.converter_caps)
-        self.years_annual = infer_years(self.commodity_balance_annual)
-        self.years_hourly = infer_years(self.commodity_balance_hourly)
-
-    def print_debug_overview(self) -> None:
-        print(f"\n=== Scenario: {self.name} ===")
-        print(f"gdx: {self.gdx_path}")
-        print("Symbols/schema preview:")
-        print_schema("converter_caps", self.converter_caps)
-        print_schema("commodity_balance_annual", self.commodity_balance_annual)
-        print_schema("commodity_balance (hourly)", self.commodity_balance_hourly)
-        print_schema("storage_flows (hourly)", self.storage_flows)
-        print_schema("indicator_accounting", self.indicator_accounting)
-        print_schema("indicator_accounting_detailed", self.indicator_accounting_detailed)
-        print(f"Detected years (caps):   {self.years_caps}")
-        print(f"Detected years (annual): {self.years_annual}")
-        print(f"Detected years (hourly): {self.years_hourly}")
-
-    # ------------
-    # Capacity
-    # ------------
-    def capacities_total_gw(self) -> pd.DataFrame:
-        """
-        Return total installed capacities (GW) by (accYears, techs) for GLOBAL_NODE and capType='total'.
-        - prints debug if significant negatives exist.
-        - returns pivot: index=year, columns=tech, values=GW
-        """
-        s = self.converter_caps
-        if s is None:
-            return pd.DataFrame()
-
-        df = series_to_df(s).reset_index()
-
-        required = {"accNodesModel", "accYears", "techs", "commodity", "capType", "value"}
-        if not required.issubset(set(df.columns)):
-            print(f"[warn] {self.name}: converter_caps missing expected columns {required - set(df.columns)}")
-            return pd.DataFrame()
-
-        # Filter to global node + total
-        df = df[df["accNodesModel"].astype(str) == GLOBAL_NODE]
-        df = df[df["capType"].astype(str) == "total"]
-
-        # Units are expected GW already (per your note)
-        # Handle negative capacities: ignore tiny negative, debug large negative
-        neg = df[df["value"] < -CAP_NEG_TOL]
-        if not neg.empty:
-            for _, r in neg.iterrows():
-                print(
-                    f"[remix-framework debug] negative caps for {self.name}: "
-                    f"{r['techs']} {r['commodity']} {r['accYears']} = {r['value']:.6g} GW"
-                )
-
-        # Clamp tiny negatives to 0, then drop negative values for plotting
-        df.loc[df["value"].between(-CAP_NEG_TOL, 0.0), "value"] = 0.0
-
-        # For plotting/reporting: keep only positive above a tiny threshold
-        df = df[df["value"] > CAP_POS_TOL].copy()
-
-        piv = pivot_year_tech(df, year_col="accYears", tech_col="techs", value_col="value", agg="sum")
-        return piv
-
-    # ------------
-    # Annual Elec mix
-    # ------------
-    def annual_elec_net_by_tech(self) -> pd.DataFrame:
-        """
-        Annual net Elec balance by tech (GWh) at GLOBAL_NODE.
-        Returns pivot: index=year, columns=tech, values=GWh (net, can be + or -)
-        """
-        s = self.commodity_balance_annual
-        if s is None:
-            return pd.DataFrame()
-
-        df = series_to_df(s).reset_index()
-        required = {"accNodesModel", "accYears", "techs", "commodity", "balanceType", "value"}
-        if not required.issubset(set(df.columns)):
-            print(f"[warn] {self.name}: commodity_balance_annual missing expected columns {required - set(df.columns)}")
-            return pd.DataFrame()
-
-        df = df[df["accNodesModel"].astype(str) == GLOBAL_NODE]
-        df = df[df["commodity"].astype(str) == ELEC_COMMODITY]
-        df = df[df["balanceType"].astype(str) == "net"]
-
-        # Remove tiny noise
-        df = df[df["value"].abs() > ENERGY_TOL].copy()
-
-        piv = pivot_year_tech(df, year_col="accYears", tech_col="techs", value_col="value", agg="sum")
-        return piv
-
-    # ------------
-    # Indicators
-    # ------------
-    def indicators_table(self, indicators: Sequence[str]) -> pd.DataFrame:
-        """
-        Attempt to extract indicator values by year for requested indicators.
-        Works with indicator_accounting or indicator_accounting_detailed as available.
-        Returns table indexed by year with indicator columns, values rounded later.
-        """
-        sources = []
-        if self.indicator_accounting is not None:
-            sources.append(("indicator_accounting", self.indicator_accounting))
-        if self.indicator_accounting_detailed is not None:
-            sources.append(("indicator_accounting_detailed", self.indicator_accounting_detailed))
-
-        if not sources:
-            return pd.DataFrame()
-
-        best_df = pd.DataFrame()
-
-        for src_name, s in sources:
-            df = series_to_df(s).reset_index()
-
-            # Heuristic: find which column holds indicator names
-            # Common patterns in REMix: "indicators" or "indicator" or similar.
-            possible_cols = [c for c in df.columns if c.lower() in {"indicator", "indicators", "accounting", "accIndicator".lower()}]
-            if not possible_cols:
-                # fallback: any col containing 'indicator'
-                possible_cols = [c for c in df.columns if "indicator" in c.lower()]
-
-            if not possible_cols:
-                print(f"[warn] {self.name}: can't find indicator column in {src_name}. columns={list(df.columns)}")
-                continue
-
-            ind_col = possible_cols[0]
-
-            # Heuristic for years
-            if "accYears" not in df.columns:
-                # maybe "year"?
-                year_candidates = [c for c in df.columns if "year" in c.lower()]
-                if not year_candidates:
-                    print(f"[warn] {self.name}: can't find year column in {src_name}.")
-                    continue
-                year_col = year_candidates[0]
-            else:
-                year_col = "accYears"
-
-            # Optional filter: global node if present
-            if "accNodesModel" in df.columns:
-                df = df[df["accNodesModel"].astype(str) == GLOBAL_NODE]
-
-            df[ind_col] = df[ind_col].astype(str)
-            df[year_col] = df[year_col].astype(str)
-
-            df = df[df[ind_col].isin(list(indicators))].copy()
-            if df.empty:
-                continue
-
-            # If multiple dims remain, sum over them
-            group_cols = [year_col, ind_col]
-            df2 = df.groupby(group_cols, as_index=False)["value"].sum()
-            piv = df2.pivot(index=year_col, columns=ind_col, values="value").fillna(0.0)
-
-            # Prefer the table with the most indicator columns found
-            if piv.shape[1] > best_df.shape[1]:
-                best_df = piv.copy()
-
-        # Sort years
-        if not best_df.empty:
-            try:
-                best_df = best_df.reindex(sorted(best_df.index, key=lambda x: int(str(x))))
-            except Exception:
-                best_df = best_df.sort_index()
-
-        return best_df
-
-    # ------------
-    # Hourly Elec series
-    # ------------
-    def hourly_elec_by_tech(self, year: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        """
-        Returns (generation_df, demand_df) for hourly Elec net by tech.
-        generation_df: index=timeModel_sorted, columns=tech, values=positive GWh (>=0)
-        demand_df:      index=timeModel_sorted, columns=tech, values=negative GWh (<=0)
-        """
-        s = self.commodity_balance_hourly
-        if s is None:
-            return pd.DataFrame(), pd.DataFrame()
-
-        df = series_to_df(s).reset_index()
-
-        # Required columns (timeModel plus key dims)
-        if "timeModel" not in df.columns:
-            # Try to find a time-like column
-            time_candidates = [c for c in df.columns if "time" in c.lower()]
-            if not time_candidates:
-                print(f"[warn] {self.name}: hourly commodity_balance has no timeModel.")
-                return pd.DataFrame(), pd.DataFrame()
-            time_col = time_candidates[0]
-        else:
-            time_col = "timeModel"
-
-        # Some REMix variants include balanceType here; you said possibly.
-        # We prefer net if balanceType exists; otherwise we assume already net.
-        if "balanceType" in df.columns:
-            df = df[df["balanceType"].astype(str) == "net"]
-
-        required = {"accNodesModel", "accYears", "techs", "commodity", "value"}
-        missing = required - set(df.columns)
-        if missing:
-            print(f"[warn] {self.name}: hourly commodity_balance missing cols: {missing}")
-            return pd.DataFrame(), pd.DataFrame()
-
-        df = df[df["accNodesModel"].astype(str) == GLOBAL_NODE]
-        df = df[df["accYears"].astype(str) == str(year)]
-        df = df[df["commodity"].astype(str) == ELEC_COMMODITY]
-        df = df[df["value"].abs() > ENERGY_TOL].copy()
-
-        if df.empty:
-            return pd.DataFrame(), pd.DataFrame()
-
-        # Group to (time, tech)
-        g = df.groupby([time_col, "techs"], as_index=False)["value"].sum()
-        piv = g.pivot(index=time_col, columns="techs", values="value").fillna(0.0)
-
-        # Sort time
-        ordered_time = sort_time_index(piv.index)
-        piv = piv.reindex(ordered_time)
-
-        gen = piv.clip(lower=0.0)
-        dem = piv.clip(upper=0.0)  # negative or 0
-        return gen, dem
-
-    def hourly_storage_by_tech(self, year: str) -> pd.DataFrame:
-        """
-        Try to read storage_flows (hourly). Returns pivot index=time, columns=techs (and maybe commodity),
-        values=sum flows. If commodity exists, we keep separate columns tech|commodity.
-        """
-        s = self.storage_flows
-        if s is None:
-            return pd.DataFrame()
-
-        df = series_to_df(s).reset_index()
-
-        # Find time column
-        if "timeModel" not in df.columns:
-            time_candidates = [c for c in df.columns if "time" in c.lower()]
-            if not time_candidates:
-                return pd.DataFrame()
-            time_col = time_candidates[0]
-        else:
-            time_col = "timeModel"
-
-        if "accYears" not in df.columns:
-            year_candidates = [c for c in df.columns if "year" in c.lower()]
-            if not year_candidates:
-                return pd.DataFrame()
-            year_col = year_candidates[0]
-        else:
-            year_col = "accYears"
-
-        # Optional filter global node if present
-        if "accNodesModel" in df.columns:
-            df = df[df["accNodesModel"].astype(str) == GLOBAL_NODE]
-
-        df = df[df[year_col].astype(str) == str(year)].copy()
-        if df.empty:
-            return pd.DataFrame()
-
-        # Build column key
-        if "commodity" in df.columns:
-            df["tech_comm"] = df["techs"].astype(str) + "|" + df["commodity"].astype(str)
-            col = "tech_comm"
-        else:
-            col = "techs"
-
-        g = df.groupby([time_col, col], as_index=False)["value"].sum()
-        piv = g.pivot(index=time_col, columns=col, values="value").fillna(0.0)
-
-        ordered_time = sort_time_index(piv.index)
-        piv = piv.reindex(ordered_time)
-
-        return piv
-
-
-# -----------------------------
-# Load scenarios
-# -----------------------------
-def load_all_scenarios() -> List[ScenarioData]:
-    scenarios: List[ScenarioData] = []
-    for name in SCENARIOS:
-        gdx = scenario_gdx_path(name)
-        if not gdx.exists():
-            print(f"[ERROR] Missing GDX for {name}: {gdx}")
+def ensure_year_col(df: pd.DataFrame, year_col_candidates=("accYears", "years")) -> pd.DataFrame:
+    df = df.copy()
+    year_col = None
+    for c in year_col_candidates:
+        if c in df.columns:
+            year_col = c
+            break
+    if year_col is None:
+        raise KeyError(
+            f"Could not find a year column. Tried {year_col_candidates}. "
+            f"Columns: {list(df.columns)}"
+        )
+    df["year"] = pd.to_numeric(df[year_col], errors="coerce")
+    df = df[df["year"].isin(YEAR_INTS)].copy()
+    df["year"] = df["year"].astype(int)
+    return df
+
+
+def load_needed_data():
+    cba_list, caps_list, ind_list, ind_det_list = [], [], [], []
+
+    for case_dir in CASE_DIRS:
+        scen = scenario_name(case_dir)
+        res = load_results(case_dir)
+        if res is None:
             continue
-        try:
-            res = GDXEval(str(gdx))
-            sd = ScenarioData(name=name, gdx_path=gdx, results=res)
-            sd.load_symbols()
-            scenarios.append(sd)
-        except Exception as e:
-            print(f"[ERROR] Failed loading {name}: {e}")
-            traceback.print_exc()
-    return scenarios
+
+        cba = read_symbol(res, "commodity_balance_annual")
+        if cba is not None:
+            df = ensure_year_col(cba.reset_index(), year_col_candidates=("accYears",))
+            df["scenario"] = scen
+            cba_list.append(df)
+
+        caps = read_symbol(res, "converter_caps")
+        if caps is not None:
+            df = ensure_year_col(caps.reset_index(), year_col_candidates=("accYears",))
+            df["scenario"] = scen
+            caps_list.append(df)
+
+        ind = read_symbol(res, "indicator_accounting")
+        if ind is not None:
+            df = ensure_year_col(ind.reset_index(), year_col_candidates=("accYears",))
+            df["scenario"] = scen
+            ind_list.append(df)
+
+        ind_det = read_symbol(res, "indicator_accounting_detailed")
+        if ind_det is not None:
+            df = ensure_year_col(ind_det.reset_index(), year_col_candidates=("years", "accYears"))
+            df["scenario"] = scen
+            ind_det_list.append(df)
+
+    if not cba_list or not caps_list:
+        raise RuntimeError("No data loaded. Check BASE_DIR / CASE_DIRS and GDX files.")
+
+    cba_long = pd.concat(cba_list, ignore_index=True)
+    caps_long = pd.concat(caps_list, ignore_index=True)
+    ind_long = pd.concat(ind_list, ignore_index=True) if ind_list else pd.DataFrame()
+    ind_det_long = pd.concat(ind_det_list, ignore_index=True) if ind_det_list else pd.DataFrame()
+
+    cba_long["scenario"] = pd.Categorical(cba_long["scenario"], categories=SCEN_ORDER, ordered=True)
+    caps_long["scenario"] = pd.Categorical(caps_long["scenario"], categories=SCEN_ORDER, ordered=True)
+    if not ind_long.empty:
+        ind_long["scenario"] = pd.Categorical(ind_long["scenario"], categories=SCEN_ORDER, ordered=True)
+    if not ind_det_long.empty:
+        ind_det_long["scenario"] = pd.Categorical(
+            ind_det_long["scenario"], categories=SCEN_ORDER, ordered=True
+        )
+
+    return cba_long, caps_long, ind_long, ind_det_long
 
 
-# -----------------------------
-# Tables export
-# -----------------------------
-def export_tables(
-    outdir: Path,
-    caps_tables: Dict[str, pd.DataFrame],
-    gen_tables: Dict[str, pd.DataFrame],
-    dem_tables: Dict[str, pd.DataFrame],
-    ind_tables: Dict[str, pd.DataFrame],
-) -> None:
-    ensure_dir(outdir)
+# ---------------------------------------------------------------------------
+# X-AXIS MULTIINDEX HELPERS
+# ---------------------------------------------------------------------------
 
-    # Save per-scenario CSV
-    for scen, df in caps_tables.items():
-        df.round(6).to_csv(outdir / f"table_caps_total_GW__{scen}.csv")
-    for scen, df in gen_tables.items():
-        df.round(6).to_csv(outdir / f"table_elec_generation_TWh__{scen}.csv")
-    for scen, df in dem_tables.items():
-        df.round(6).to_csv(outdir / f"table_elec_demand_TWh__{scen}.csv")
-    for scen, df in ind_tables.items():
-        df.round(6).to_csv(outdir / f"table_indicators__{scen}.csv")
-
-    # Also write a single Excel workbook
-    xlsx_path = outdir / "comparison_tables.xlsx"
-    with pd.ExcelWriter(xlsx_path, engine="openpyxl") as writer:
-        for scen, df in caps_tables.items():
-            df.round(6).to_excel(writer, sheet_name=f"caps_{scen[:24]}")
-        for scen, df in gen_tables.items():
-            df.round(6).to_excel(writer, sheet_name=f"gen_{scen[:25]}")
-        for scen, df in dem_tables.items():
-            df.round(6).to_excel(writer, sheet_name=f"dem_{scen[:25]}")
-        for scen, df in ind_tables.items():
-            df.round(6).to_excel(writer, sheet_name=f"ind_{scen[:25]}")
-
-    print(f"\n[ok] Wrote tables to: {outdir}")
-    print(f"[ok] Excel workbook: {xlsx_path}")
+def build_grouped_x(
+    years: Iterable[int],
+    scen_order: list[str],
+    dx_in: float = 1.0,
+    year_gap: float = 2.0,
+):
+    years = list(years)
+    x, year_centers = [], []
+    pos = 0.0
+    for _y in years:
+        xs = [pos + i * dx_in for i in range(len(scen_order))]
+        x.extend(xs)
+        year_centers.append(float(np.mean(xs)))
+        pos = xs[-1] + dx_in + year_gap
+    return np.array(x), np.array(year_centers)
 
 
-# -----------------------------
-# Plotting
-# -----------------------------
-def plot_multi_panel_stacked_bars(
-    tables: Dict[str, pd.DataFrame],
+def apply_two_level_x(
+    ax: plt.Axes,
+    x: np.ndarray,
+    years: list[int],
+    year_centers: np.ndarray,
+    scen_order: list[str],
+    year_pad: int = 74,
+    scen_pad: int = 2,
+    show_scen: bool = True,
+):
+    if show_scen:
+        scen_labels = [s for _y in years for s in scen_order]
+        ax.set_xticks(x)
+        ax.set_xticklabels(scen_labels, rotation=90, va="top")
+        ax.tick_params(axis="x", pad=scen_pad)
+    else:
+        ax.set_xticks([])
+        ax.set_xticklabels([])
+
+    sec = ax.secondary_xaxis("bottom")
+    sec.set_xlim(ax.get_xlim())
+    sec.set_xticks(year_centers)
+    sec.set_xticklabels([str(y) for y in years], rotation=0)
+    sec.spines["bottom"].set_visible(False)
+    sec.tick_params(axis="x", pad=year_pad, length=0)
+
+
+# ---------------------------------------------------------------------------
+# MAPPINGS / COLORS
+# ---------------------------------------------------------------------------
+
+def tech_group_pretty(tech: str) -> str:
+    if tech in {"pv_central_fixed", "pv_decentral"}:
+        return "Solar PV"
+    if tech.startswith("wind_onshore_"):
+        return "Onshore wind"
+    if tech.startswith("wind_offshore_"):
+        return "Offshore wind"
+    if tech == "Hydro":
+        return "Hydropower"
+    if tech in {"GT", "OCGT", "CCGT"}:
+        return "Gas turbines"
+    if tech == "Thermal_Bio":
+        return "Biomass"
+    if tech == "Thermal_Coal":
+        return "Coal"
+    if tech == "Thermal_Diesel":
+        return "Diesel"
+    if tech == "H2_FC":
+        return "Fuel Cell (H2)"
+    return tech.replace("_", " ")
+
+
+def color_map_for(categories: list[str]) -> dict[str, str]:
+    return {c: technology_colors.get(c, DEFAULT_COLOR) for c in categories}
+
+
+def evenly_spaced_colors_from_cmap(cmap_name: str, n: int, start: float = 0.0, stop: float = 1.0):
+    cmap = cm.get_cmap(cmap_name)
+    return [cmap(x) for x in np.linspace(start, stop, n)]
+
+
+# ---------------------------------------------------------------------------
+# GENERIC STACKED GROUPED BAR
+# ---------------------------------------------------------------------------
+
+def stacked_grouped_bars(
+    ax: plt.Axes,
+    df_long: pd.DataFrame,
+    value_col: str,
+    category_col: str,
+    y_label: str,
+    years: list[int],
+    scen_order: list[str],
+    cmap: dict[str, str],
+    cat_order: list[str],
+    dx_in: float = 1.0,
+    year_gap: float = 2.0,
+    year_pad: int = 74,
+    show_scen_labels: bool = True,
+):
+    x, year_centers = build_grouped_x(years, scen_order, dx_in=dx_in, year_gap=year_gap)
+
+    piv = (
+        df_long.pivot_table(
+            index=["year", "scenario"],
+            columns=category_col,
+            values=value_col,
+            aggfunc="sum",
+            observed=False,
+        )
+        .reindex(pd.MultiIndex.from_product([years, scen_order], names=["year", "scenario"]))
+        .fillna(0.0)
+    )
+    cat_order = [c for c in cat_order if c in piv.columns]
+    piv = piv[cat_order]
+
+    bottom = np.zeros(len(x))
+    for c in piv.columns:
+        vals = piv[c].values
+        ax.bar(x, vals, bottom=bottom, width=BAR_WIDTH, color=cmap.get(c, DEFAULT_COLOR), edgecolor="none")
+        bottom += vals
+
+    ax.grid(axis="y", alpha=0.25)
+    ax.set_ylabel(y_label)
+
+    apply_two_level_x(
+        ax=ax,
+        x=x,
+        years=years,
+        year_centers=year_centers,
+        scen_order=scen_order,
+        year_pad=year_pad,
+        show_scen=show_scen_labels,
+    )
+
+    ymax = float((piv.sum(axis=1)).max())
+    ax.set_ylim(0.0, ymax * 1.05 if ymax > 0 else 1.0)
+
+    return piv.columns.tolist()
+
+
+def shared_legend(
+    fig: plt.Figure,
+    labels: list[str],
+    cmap: dict[str, str],
     title: str,
-    ylabel: str,
-    outdir: Path,
-    stem: str,
-    convert_to_twh: bool = False,
-    force_abs: bool = False,
-    common_ylim: bool = True,
-) -> None:
-    """
-    Create one subplot per scenario, stacked bars by year with tech columns.
-    - convert_to_twh: if True divides values by 1000 (GWh->TWh)
-    - force_abs: if True uses abs(values) (used for demand)
-    """
-    scen_names = list(tables.keys())
-    n = len(scen_names)
-    if n == 0:
-        return
-
-    # Determine global y max for consistent axis limits
-    ymax = 0.0
-    for scen, df in tables.items():
-        if df.empty:
-            continue
-        vals = df.copy()
-        if force_abs:
-            vals = vals.abs()
-        if convert_to_twh:
-            vals = vals / 1000.0
-        # stacked sum per year
-        s = vals.sum(axis=1)
-        if len(s) > 0:
-            ymax = max(ymax, float(s.max()))
-    if ymax <= 0:
-        ymax = 1.0
-    ymax *= 1.10
-
-    cols = 2
-    rows = int(math.ceil(n / cols))
-    fig, axes = plt.subplots(rows, cols, figsize=(13, 4.2 * rows), squeeze=False)
-    fig.suptitle(title)
-
-    for i, scen in enumerate(scen_names):
-        r, c = divmod(i, cols)
-        ax = axes[r][c]
-        df = tables[scen]
-        ax.set_title(scen)
-
-        if df.empty:
-            ax.text(0.5, 0.5, "No data", ha="center", va="center")
-            ax.set_axis_off()
-            continue
-
-        vals = df.copy()
-        if force_abs:
-            vals = vals.abs()
-        if convert_to_twh:
-            vals = vals / 1000.0
-
-        # Remove all-zero columns for cleaner legend
-        vals = vals.loc[:, (vals.sum(axis=0) != 0)]
-        # Plot
-        vals.plot(kind="bar", stacked=True, ax=ax, width=0.85, legend=False)
-
-        ax.set_xlabel("Year")
-        ax.set_ylabel(ylabel)
-        ax.grid(axis="y", alpha=0.35)
-        if common_ylim:
-            ax.set_ylim(0, ymax)
-
-    # Turn off unused axes
-    for j in range(n, rows * cols):
-        r, c = divmod(j, cols)
-        axes[r][c].set_axis_off()
-
-    # Create one global legend (from last non-empty plot)
-    handles, labels = None, None
-    for scen in scen_names:
-        df = tables[scen]
-        if not df.empty:
-            tmp = df.copy()
-            if force_abs:
-                tmp = tmp.abs()
-            if convert_to_twh:
-                tmp = tmp / 1000.0
-            tmp = tmp.loc[:, (tmp.sum(axis=0) != 0)]
-            ax = plt.gca()
-            # get from a dummy plot if needed
-            break
-
-    # Build legend from first non-empty axes
-    for ax in fig.axes:
-        h, l = ax.get_legend_handles_labels()
-        if l:
-            handles, labels = h, l
-            break
-    if labels:
-        fig.legend(handles, labels, loc="upper center", ncol=5, bbox_to_anchor=(0.5, 0.98))
-
-    save_fig(fig, outdir, stem)
-    print(f"[ok] Saved plot: {stem}.png/.svg")
+    x: float,
+    y: float,
+):
+    handles = [plt.Line2D([0], [0], color=cmap.get(l, DEFAULT_COLOR), lw=10) for l in labels]
+    leg = fig.legend(
+        handles,
+        labels,
+        title=title,
+        loc="center left",
+        bbox_to_anchor=(x, y),
+        frameon=True,
+        borderpad=1.2,
+        labelspacing=0.8,
+        handlelength=1.8,
+        handletextpad=0.8,
+    )
+    leg.get_frame().set_linewidth(1.2)
+    return leg
 
 
-def plot_hourly_slices_and_duration(
-    scenarios: List[ScenarioData],
-    outdir: Path,
-) -> None:
-    """
-    For each scenario:
-      - Two-week winter slice: stacked generation + demand line (abs)
-      - Two-week summer slice: stacked generation + demand line (abs)
-      - Duration curves: total load (abs demand), total slack usage if found, and total generation
-    Uses the *same hour windows* across scenarios in terms of sorted time index positions.
-    """
-    ensure_dir(outdir)
+# ---------------------------------------------------------------------------
+# DATA BUILDERS FOR RQ1
+# ---------------------------------------------------------------------------
 
-    # Precompute slice indices
-    def slice_bounds(center: int) -> Tuple[int, int]:
-        start = max(0, center - HOURS_PER_SLICE // 2)
-        end = start + HOURS_PER_SLICE
-        return start, end
-
-    w0, w1 = slice_bounds(WINTER_CENTER_HOUR)
-    s0, s1 = slice_bounds(SUMMER_CENTER_HOUR)
-
-    for sd in scenarios:
-        years = sd.years_hourly or []
-        year = pick_hourly_year(years)
-        if year is None:
-            print(f"[warn] {sd.name}: no hourly years detected; skipping hourly plots.")
-            continue
-
-        gen, dem = sd.hourly_elec_by_tech(year)
-        if gen.empty and dem.empty:
-            print(f"[warn] {sd.name}: no hourly elec data for year={year}; skipping.")
-            continue
-
-        # Total series
-        total_gen = gen.sum(axis=1)
-        total_dem_abs = dem.sum(axis=1).abs()
-
-        # Identify slack usage (if Slack techs exist in columns)
-        slack_cols = [c for c in gen.columns if str(c).lower().startswith("slack")] + \
-                     [c for c in dem.columns if str(c).lower().startswith("slack")]
-        slack_series = None
-        if slack_cols:
-            # Slack might appear either positive or negative depending on modeling; take abs total
-            slack_series = (gen[slack_cols].sum(axis=1) + dem[slack_cols].sum(axis=1)).abs()
-
-        # ---- Two-week slice plots
-        def plot_slice(start: int, end: int, season: str) -> None:
-            fig, ax1 = plt.subplots(figsize=(13, 4.8))
-            ax1.set_title(f"{sd.name} | Elec hourly operation | {season} slice | year={year} | hours {start}:{end}")
-            # stacked generation
-            gg = gen.iloc[start:end].copy()
-            gg = gg.loc[:, (gg.sum(axis=0) != 0)]
-            gg.plot.area(stacked=True, ax=ax1, linewidth=0.0)
-            ax1.set_ylabel("Generation (GWh per timestep)")
-            ax1.grid(alpha=0.25)
-
-            ax2 = ax1.twinx()
-            dd = dem.iloc[start:end].sum(axis=1).abs()
-            ax2.plot(dd.index.astype(str), dd.values, linewidth=1.8)
-            ax2.set_ylabel("Demand abs (GWh per timestep)")
-            ax2.set_ylim(ax1.get_ylim())
-
-            # reduce x tick clutter
-            xt = np.linspace(0, max(1, len(dd) - 1), 8).astype(int)
-            ax1.set_xticks(dd.index[xt])
-            ax1.set_xticklabels([str(x) for x in dd.index[xt]], rotation=0)
-
-            save_fig(fig, outdir, f"hourly_{sd.name}__{season}_2weeks__year_{year}")
-
-        plot_slice(w0, w1, "winter")
-        plot_slice(s0, s1, "summer")
-
-        # ---- Duration curves
-        fig, ax = plt.subplots(figsize=(10.5, 5))
-        ax.set_title(f"{sd.name} | Duration curves | year={year}")
-
-        dc_load = duration_curve(total_dem_abs)
-        dc_gen = duration_curve(total_gen)
-        ax.plot(dc_load.index, dc_load.values, label="Load (abs demand)")
-        ax.plot(dc_gen.index, dc_gen.values, label="Total generation")
-
-        if slack_series is not None:
-            dc_slack = duration_curve(slack_series)
-            ax.plot(dc_slack.index, dc_slack.values, label="Slack usage (abs)")
-
-        ax.set_xlabel("Hour rank (descending)")
-        ax.set_ylabel("GWh per timestep")
-        ax.grid(alpha=0.3)
-        ax.legend()
-
-        save_fig(fig, outdir, f"duration_{sd.name}__year_{year}")
-        print(f"[ok] Saved hourly slice + duration plots for {sd.name} (year={year}).")
+def build_capacity_elec(caps_long: pd.DataFrame) -> pd.DataFrame:
+    df = caps_long[
+        (caps_long["accNodesModel"] == "global")
+        & (caps_long["capType"] == "total")
+        & (caps_long["commodity"] == "Elec")
+        & (caps_long["year"].isin(YEAR_INTS))
+    ].copy()
+    df = df[df["value"].abs() > CAP_TECH_MIN_GW].copy()
+    df["tech"] = df["techs"].astype(str).map(tech_group_pretty)
+    out = df.groupby(["year", "scenario", "tech"], as_index=False, observed=False)["value"].sum()
+    return out
 
 
-def plot_storage_overview(
-    scenarios: List[ScenarioData],
-    outdir: Path,
-) -> None:
-    """
-    If storage_flows exists, plots total storage flow by tech|commodity for the chosen hourly year.
-    This is a fallback when SOC isn't available.
-    """
-    ensure_dir(outdir)
-
-    for sd in scenarios:
-        years = sd.years_hourly or []
-        year = pick_hourly_year(years)
-        if year is None:
-            continue
-        stor = sd.hourly_storage_by_tech(year)
-        if stor.empty:
-            print(f"[info] {sd.name}: no storage_flows data for year={year}.")
-            continue
-
-        # Plot a 2-week winter slice of storage flows for readability
-        start = max(0, WINTER_CENTER_HOUR - HOURS_PER_SLICE // 2)
-        end = start + HOURS_PER_SLICE
-        ss = stor.iloc[start:end].copy()
-        ss = ss.loc[:, (ss.sum(axis=0).abs() != 0)]
-
-        # If too many columns, keep top 12 by absolute sum
-        if ss.shape[1] > 12:
-            top = ss.abs().sum(axis=0).sort_values(ascending=False).head(12).index
-            ss = ss[top]
-
-        fig, ax = plt.subplots(figsize=(13, 4.8))
-        ax.set_title(f"{sd.name} | storage_flows (fallback) | winter 2-week slice | year={year}")
-        ss.plot(ax=ax, linewidth=1.3)
-        ax.set_xlabel("timeModel")
-        ax.set_ylabel("Storage flow (model units per timestep)")
-        ax.grid(alpha=0.25)
-        ax.legend(loc="upper center", ncol=3, bbox_to_anchor=(0.5, 1.15))
-        save_fig(fig, outdir, f"storage_flows_{sd.name}__winter_2weeks__year_{year}")
-        print(f"[ok] Saved storage plot for {sd.name} (year={year}).")
+def build_generation_elec(cba_long: pd.DataFrame) -> pd.DataFrame:
+    df = cba_long[
+        (cba_long["accNodesModel"] == "global")
+        & (cba_long["commodity"] == "Elec")
+        & (cba_long["balanceType"] == "net")
+        & (cba_long["year"].isin(YEAR_INTS))
+        & (cba_long["value"] > 0)
+    ].copy()
+    df["tech"] = df["techs"].astype(str).map(tech_group_pretty)
+    df["value_twh"] = df["value"] / 1000.0
+    df = df[df["value_twh"].abs() > GEN_TECH_MIN_TWH].copy()
+    out = df.groupby(["year", "scenario", "tech"], as_index=False, observed=False)["value_twh"].sum()
+    return out
 
 
-def try_maps_optional(
-    scenarios: List[ScenarioData],
-    outdir: Path,
-) -> None:
-    """
-    Optional: maps/network plots if shapefiles are present and geopandas + remix plot utils import works.
-    Uses path_geo = C:/Local/REMix/remix_nz/input/shapefiles and geofile="11regionsNZ.geojson" (as you suggested).
-    """
-    if not HAS_GEO:
-        print("[info] Maps skipped: geopandas/remix plot utils not available in this environment.")
-        return
+def build_fuelconv_caps(caps_long: pd.DataFrame) -> pd.DataFrame:
+    df = caps_long[
+        (caps_long["accNodesModel"] == "global")
+        & (caps_long["capType"] == "total")
+        & (caps_long["year"].isin(YEAR_INTS))
+        & (caps_long["techs"].astype(str).isin(FUEL_CONV_TECHS))
+    ].copy()
+    df = df[df["value"].abs() > 0.01].copy()
+    df["tech"] = df["techs"].astype(str)
+    return df[["year", "scenario", "tech", "value"]]
 
-    path_base = Path("C:/Local/REMix")
-    path_geo = path_base / "remix_nz" / "input" / "shapefiles"
-    geojson = path_geo / "11regionsNZ.geojson"
-    shp = path_geo / "11regionsNZ.shp"
-    shp_attrcol = "id"
 
-    if not geojson.exists() and not shp.exists():
-        print(f"[info] Maps skipped: no geojson/shp found in {path_geo}")
-        return
+def build_fuel_supply_groups(cba_long: pd.DataFrame) -> pd.DataFrame:
+    df = cba_long[
+        (cba_long["year"].isin(YEAR_INTS))
+        & (cba_long["balanceType"] == "net")
+        & (cba_long["value"] > 0)
+    ].copy()
 
-    ensure_dir(outdir / "maps")
-
-    # Example: map annual PV generation by region in the latest year (per scenario),
-    # only if commodity_balance_annual includes regional nodes.
-    for sd in scenarios:
-        s = sd.commodity_balance_annual
-        if s is None:
-            continue
-        years = sd.years_annual or []
-        if not years:
-            continue
-        year = years[-1]
-
-        df = series_to_df(s).reset_index()
-        required = {"accNodesModel", "accYears", "techs", "commodity", "balanceType", "value"}
-        if not required.issubset(df.columns):
-            continue
-
-        # skip if only global node exists
-        if df["accNodesModel"].astype(str).nunique() <= 1:
-            continue
-
-        df = df[(df["accYears"].astype(str) == str(year)) &
-                (df["commodity"].astype(str) == ELEC_COMMODITY) &
-                (df["balanceType"].astype(str) == "net")].copy()
-        if df.empty:
-            continue
-
-        # pick PV-like techs by name contains 'pv'
-        df["techs_l"] = df["techs"].astype(str).str.lower()
-        df_pv = df[df["techs_l"].str.contains("pv")].copy()
-        if df_pv.empty:
-            continue
-
-        # Aggregate by region node
-        map_data = df_pv.groupby("accNodesModel", as_index=True)["value"].sum() / 1000.0  # TWh
-        map_data = map_data.to_frame(name="value")
-
-        try:
-            fig = plt.figure(figsize=(10.5, 5.5))
-            plot_choropleth(
-                data=map_data,
-                shp=str(shp) if shp.exists() else str(geojson),
-                shp_attr=shp_attrcol,
-                title=f"{sd.name} | PV generation | {year}",
-                clabel="TWh",
+    # Slack warnings
+    slack = df[df["techs"].astype(str).str.startswith("SlackFuel_")].copy()
+    if not slack.empty:
+        check = (
+            slack.groupby(["scenario", "year"], observed=False)["value"]
+            .sum()
+            .abs()
+            .reset_index()
+        )
+        warn = check[check["value"] > 1.0]
+        for _, row in warn.iterrows():
+            print(
+                f"Warning: SlackFuel_* absolute value > 1 GWh for scenario={row['scenario']} year={row['year']}"
             )
-            save_fig(fig, outdir / "maps", f"map_pv_gen_{sd.name}__{year}")
-            print(f"[ok] Saved map for {sd.name} (year={year}).")
-        except Exception as e:
-            print(f"[warn] Map failed for {sd.name}: {e}")
+    df = df[~df["techs"].astype(str).str.startswith("SlackFuel_")].copy()
+
+    def fuel_group(row) -> str | None:
+        t = str(row["techs"])
+        comm = str(row["commodity"])
+
+        if comm == "e-CH4":
+            return "e-CH4"
+        if comm == "REfuel":
+            return "e-FTL fuels"
+        if comm == "H2":
+            return "e-hydrogen"
+
+        if t in {"FuelImport_Bio_LF", "FuelImport_Biofuel"}:
+            return "Biofuels liquid"
+        if t == "FuelImport_Bio_gas":
+            return "Biogas"
+        if t in {"FuelImport_CH4", "FuelImport_Fossil_CH4"}:
+            return "Fossil methane"
+        if t == "FuelImport_Coal":
+            return "Fossil coal"
+        if t in {"FuelImport_Diesel", "FuelImport_Fossil_LF"}:
+            return "Fossil oil"
+        return None
+
+    df["fuel_group"] = df.apply(fuel_group, axis=1)
+    df = df[df["fuel_group"].notna()].copy()
+    df["value_twh"] = df["value"] / 1000.0
+    df = df[df["value_twh"].abs() > 0.01].copy()
+
+    out = df.groupby(["year", "scenario", "fuel_group"], as_index=False, observed=False)["value_twh"].sum()
+    return out
 
 
-# -----------------------------
-# Main
-# -----------------------------
-def main() -> None:
-    ensure_dir(OUT_DIR)
-    print(f"[info] Output folder: {OUT_DIR}")
+# ---------------------------------------------------------------------------
+# DATA BUILDERS FOR RQ3
+# ---------------------------------------------------------------------------
 
-    scenarios = load_all_scenarios()
-    if not scenarios:
-        print("[ERROR] No scenarios loaded. Check your BASE_PROJECT path and scenario folder names.")
-        sys.exit(1)
+def drop_doublecounted_fuel_import_fuelcost(df_cost: pd.DataFrame) -> pd.DataFrame:
+    df = df_cost.copy()
+    if "indicator" not in df.columns or "techs" not in df.columns:
+        raise KeyError(f"Need columns ['indicator','techs']. Got: {list(df.columns)}")
+    is_fuelcost = df["indicator"].astype(str) == "FuelCost"
+    is_import = df["techs"].astype(str).str.startswith("FuelImport_", na=False)
+    return df[~(is_fuelcost & is_import)].copy()
 
-    # 1) Print schema/debug for each scenario so you can show me structure
-    for sd in scenarios:
-        sd.print_debug_overview()
 
-    # 2) Build key tables
-    caps_tables: Dict[str, pd.DataFrame] = {}
-    elec_net_tables: Dict[str, pd.DataFrame] = {}
-    elec_gen_tables: Dict[str, pd.DataFrame] = {}
-    elec_dem_tables: Dict[str, pd.DataFrame] = {}
-    ind_tables: Dict[str, pd.DataFrame] = {}
+def build_cost_long_from_detailed(ind_det_long: pd.DataFrame) -> pd.DataFrame:
+    if ind_det_long.empty:
+        return pd.DataFrame(columns=["year", "scenario", "component", "value_bEUR"])
 
-    indicators_needed = ["CO2_emission", "FuelCost", "SlackCost", "SystemCost"]
+    df = ind_det_long.copy()
+    df = df[(df["year"].isin(YEAR_INTS)) & (df["indicator"].isin(COST_COMPONENTS))].copy()
+    df = drop_doublecounted_fuel_import_fuelcost(df)
 
-    for sd in scenarios:
-        caps = sd.capacities_total_gw()
-        caps_tables[sd.name] = caps
+    label_map = {
+        "FuelCost": "FuelCost",
+        "Invest": "Invest",
+        "OMFix": "OMFix",
+        "SlackCost": "SlackCost",
+        "SpillPenalty": "SpillPenalty",
+    }
+    df["component"] = df["indicator"].map(lambda x: label_map.get(str(x), str(x)))
 
-        elec_net = sd.annual_elec_net_by_tech()
-        elec_net_tables[sd.name] = elec_net
+    agg = df.groupby(["year", "scenario", "component"], as_index=False, observed=False)["value"].sum()
 
-        # generation = positive net elec
-        gen = elec_net.clip(lower=0.0)
-        # demand = negative net elec (keep negative in table, but also store abs version as "demand table" below)
-        dem = elec_net.clip(upper=0.0)
+    agg["value_bEUR"] = agg["value"] / 1000.0
+    agg = agg[agg["value_bEUR"].abs() > 0.01].copy()
 
-        # For annual stacks in your paper, you wanted:
-        # - generation mix = positive net elec (stack)
-        # - demand/consumption = negative net elec plotted as abs (stack)
-        elec_gen_tables[sd.name] = gen
-        elec_dem_tables[sd.name] = dem  # still negative here; plotting will abs()
+    return agg[["year", "scenario", "component", "value_bEUR"]]
 
-        inds = sd.indicators_table(indicators_needed)
-        ind_tables[sd.name] = inds
 
-        # Console prints (rounded to 2 decimals)
-        print(f"\n--- TABLES (rounded) | {sd.name} ---")
-        if not caps.empty:
-            print("Installed capacities (GW) capType=total, global:")
-            print(caps.round(2))
-        else:
-            print("Installed capacities: (no data)")
+def build_lcoe(ind_det_long: pd.DataFrame, cba_long: pd.DataFrame) -> pd.DataFrame:
+    if ind_det_long.empty:
+        return pd.DataFrame(columns=["year", "scenario", "LCOE_EUR_MWh"])
 
-        if not elec_net.empty:
-            print("\nAnnual Elec net balance by tech (GWh), global:")
-            print(elec_net.round(2))
-            print("\nAnnual Elec generation mix (positive net, GWh), global:")
-            print(gen.round(2))
-            print("\nAnnual Elec demand/consumption (negative net, GWh), global (kept negative):")
-            print(dem.round(2))
-        else:
-            print("Annual Elec balance: (no data)")
+    df = ind_det_long.copy()
+    df = df[df["year"].isin(YEAR_INTS)].copy()
+    df = df[df["indicator"].isin(["FuelCost", "Invest", "OMFix"])].copy()
 
-        if not inds.empty:
-            print("\nIndicators (raw units as in GDX), global:")
-            print(inds.round(2))
-        else:
-            print("\nIndicators: (no data)")
+    include_techs = {
+        "GT",
+        "Thermal_Coal",
+        "CCGT",
+        "OCGT",
+        "Thermal_Diesel",
+        "Thermal_Bio",
+        "Hydro",
+        "H2_CCGT",
+        "H2_FC",
+        "pv_central_fixed",
+        "pv_decentral",
+        "wind_offshore_1",
+        "wind_offshore_2",
+        "wind_offshore_3",
+        "wind_offshore_4",
+        "wind_onshore_1",
+        "wind_onshore_2",
+        "wind_onshore_3",
+        "wind_onshore_4",
+        "FuelImport_CH4",
+        "FuelImport_Coal",
+        "FuelImport_Biofuel",
+        "FuelImport_Diesel",
+        "HV",
+        "Battery",
+    }
+    exclude_techs = {
+        "HeatDemand_Fossil_CH4",
+        "HeatDemand_Fossil_Coal",
+        "HeatDemand_Fossil_LF",
+        "TranspDemand_Fossil_LF",
+        "HeatDemand_e-CH4",
+        "TranspDemand_REfuel",
+        "TranspDemand_e-CH4",
+        "FuelImport_Fossil_CH4",
+        "FuelImport_Fossil_Coal",
+        "FuelImport_Fossil_LF",
+        "FuelImport_Bio_LF",
+        "FuelImport_Bio_gas",
+        "FuelImport_Biomass",
+        "Elec_slack",
+        "SlackFuel_H2",
+        "SlackFuel_REfuel",
+        "H2_storage",
+        "Electrolyser",
+        "FTropschSyn",
+        "Methanizer",
+    }
 
-    # 3) Export tables (CSV + Excel)
-    export_tables(OUT_DIR, caps_tables, elec_gen_tables, elec_dem_tables, ind_tables)
+    tech = df["techs"].astype(str)
+    df = df[tech.isin(include_techs) & ~tech.isin(exclude_techs)].copy()
 
-    # 4) Plots: multi-panel per scenario
-    plot_multi_panel_stacked_bars(
-        tables=caps_tables,
-        title="Installed capacities (capType=total, global) by year",
-        ylabel="GW",
-        outdir=OUT_DIR,
-        stem="caps_total_GW__stacked_by_year__panels",
-        convert_to_twh=False,
-        force_abs=False,
-        common_ylim=True,
+    df = drop_doublecounted_fuel_import_fuelcost(df)
+
+    df["cost_eur"] = df["value"] * 1e6
+    cost_agg = df.groupby(["year", "scenario"], as_index=False, observed=False)["cost_eur"].sum()
+
+    gen = cba_long[
+        (cba_long["accNodesModel"] == "global")
+        & (cba_long["commodity"] == "Elec")
+        & (cba_long["balanceType"] == "net")
+        & (cba_long["year"].isin(YEAR_INTS))
+        & (cba_long["value"] > 0)
+    ].copy()
+    gen_gwh = gen.groupby(["year", "scenario"], as_index=False, observed=False)["value"].sum()
+    gen_gwh = gen_gwh.rename(columns={"value": "gen_gwh"})
+    gen_gwh["gen_mwh"] = gen_gwh["gen_gwh"] * 1000.0
+
+    merged = cost_agg.merge(gen_gwh, on=["year", "scenario"], how="left")
+    merged["LCOE_EUR_MWh"] = (merged["cost_eur"] / merged["gen_mwh"]).replace(
+        [np.inf, -np.inf], np.nan
+    )
+    merged = merged.dropna(subset=["LCOE_EUR_MWh"])
+    merged = merged[merged["LCOE_EUR_MWh"].abs() > 0.01].copy()
+
+    return merged[["year", "scenario", "LCOE_EUR_MWh"]]
+
+
+def build_total_co2(ind_long: pd.DataFrame) -> pd.DataFrame:
+    df = ind_long[
+        (ind_long["accNodesModel"] == "global")
+        & (ind_long["indicator"] == "CO2_emission")
+        & (ind_long["year"].isin(YEAR_INTS))
+    ].copy()
+    df["value_mt"] = df["value"] / 1000.0
+    df = df[df["value_mt"].abs() > 0.01].copy()
+    out = df.groupby(["year", "scenario"], as_index=False, observed=False)["value_mt"].sum()
+    return out
+
+
+def build_co2_contributors_2050(ind_det_long: pd.DataFrame) -> pd.DataFrame:
+    if ind_det_long.empty:
+        return pd.DataFrame(columns=["scenario", "category", "value_mt"])
+
+    df = ind_det_long.copy()
+    df = df[(df["indicator"] == "CO2_emission") & (df["year"] == 2050)].copy()
+    df["value_mt"] = df["value"] / 1000.0
+
+    tech = df["techs"].astype(str)
+
+    def cat_map(t: str) -> str | None:
+        if t in {
+            "HeatDemand_Fossil_LF",
+            "HeatDemand_Fossil_CH4",
+            "HeatDemand_REfuel",
+            "HeatDemand_e-CH4",
+        }:
+            return "Heat"
+        if t in {
+            "TranspDemand_Fossil_LF",
+            "TranspDemand_REfuel",
+            "TranspDemand_e-CH4",
+        }:
+            return "Transport"
+        if t in {"CCGT", "GT", "OCGT"}:
+            return "Electricity generation (gas)"
+        if t == "Thermal_Coal":
+            return "Electricity generation (coal)"
+        if t == "Thermal_Diesel":
+            return "Electricity generation (diesel)"
+        if t == "DAC":
+            return "Direct air capture"
+        return t
+
+    df["category"] = tech.map(cat_map)
+    df = df[df["category"].notna()].copy()
+    df = df[df["value_mt"].abs() > 0.01].copy()
+
+    out = df.groupby(["scenario", "category"], as_index=False, observed=False)["value_mt"].sum()
+    return out
+
+
+# ---------------------------------------------------------------------------
+# PLOTTING FUNCTIONS
+# ---------------------------------------------------------------------------
+
+def plot_rq1_a_capacity_lines(caps_long: pd.DataFrame, outdir: Path | None = None):
+    sns.set_theme(style="whitegrid")
+
+    cap = build_capacity_elec(caps_long)
+    if cap.empty:
+        print("RQ1.A: no capacity data.")
+        return
+
+    years = sorted(cap["year"].unique())
+    techs = sorted(cap["tech"].unique())
+    cmap = color_map_for(techs)
+
+    fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+
+    for tech in techs:
+        df_t = cap[cap["tech"] == tech]
+        series = df_t.groupby("year", as_index=False, observed=False)["value"].sum()
+        ax.plot(
+            series["year"],
+            series["value"],
+            label=tech,
+            color=cmap.get(tech, DEFAULT_COLOR),
+            marker="o",
+        )
+
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Installed electricity generation capacity (GW)")
+    ax.grid(True, axis="y", alpha=0.25)
+
+    handles, labels = ax.get_legend_handles_labels()
+    leg = ax.legend(
+        handles,
+        labels,
+        title="Technology",
+        frameon=True,
+    )
+    leg.get_frame().set_linewidth(1.0)
+
+    if EXPORT_FIGURES and outdir is not None:
+        outdir.mkdir(parents=True, exist_ok=True)
+        fig.savefig(outdir / "RQ1A_installed_capacity_lines.png", dpi=300, bbox_inches="tight")
+
+    plt.show()
+
+
+def plot_rq1_b_capacity_and_generation(caps_long: pd.DataFrame, cba_long: pd.DataFrame, outdir: Path | None = None):
+    sns.set_theme(style="whitegrid")
+
+    cap = build_capacity_elec(caps_long)
+    gen = build_generation_elec(cba_long)
+    if cap.empty or gen.empty:
+        print("RQ1.B: capacity or generation data missing.")
+        return
+
+    techs = sorted(set(cap["tech"].unique()) | set(gen["tech"].unique()))
+    cmap = color_map_for(techs)
+
+    stack_order = [t for t in ["Hydropower", "Geothermal", "Onshore wind", "Solar PV"] if t in techs] + [
+        t for t in techs if t not in {"Hydropower", "Geothermal", "Onshore wind", "Solar PV"}
+    ]
+
+    fig, axes = plt.subplots(2, 1, figsize=(18, 11), sharex=True)
+    fig.subplots_adjust(left=0.08, right=0.75, top=0.98, bottom=0.12, hspace=0.06)
+
+    year_gap = YEAR_GAP * 0.5
+
+    stacked_grouped_bars(
+        ax=axes[0],
+        df_long=cap,
+        value_col="value",
+        category_col="tech",
+        y_label="Installed electricity generation capacity (GW)",
+        years=YEAR_INTS,
+        scen_order=SCEN_ORDER,
+        cmap=cmap,
+        cat_order=stack_order,
+        dx_in=DX_IN,
+        year_gap=year_gap,
+        year_pad=YEAR_PAD,
+        show_scen_labels=False,
     )
 
-    plot_multi_panel_stacked_bars(
-        tables=elec_gen_tables,
-        title="Electricity generation mix (positive net Elec, global) by year",
-        ylabel="TWh",
-        outdir=OUT_DIR,
-        stem="elec_generation_TWh__stacked_by_year__panels",
-        convert_to_twh=True,   # your annual balance is in GWh -> show TWh
-        force_abs=False,
-        common_ylim=True,
+    stacked_grouped_bars(
+        ax=axes[1],
+        df_long=gen,
+        value_col="value_twh",
+        category_col="tech",
+        y_label="Electricity generation (TWh)",
+        years=YEAR_INTS,
+        scen_order=SCEN_ORDER,
+        cmap=cmap,
+        cat_order=stack_order,
+        dx_in=DX_IN,
+        year_gap=year_gap,
+        year_pad=YEAR_PAD,
+        show_scen_labels=True,
     )
 
-    plot_multi_panel_stacked_bars(
-        tables=elec_dem_tables,
-        title="Electricity demand/consumption (abs(negative net Elec), global) by year",
-        ylabel="TWh",
-        outdir=OUT_DIR,
-        stem="elec_demand_TWh__stacked_by_year__panels",
-        convert_to_twh=True,
-        force_abs=True,  # plot abs value
-        common_ylim=True,
+    shared_legend(
+        fig=fig,
+        labels=stack_order,
+        cmap=cmap,
+        title="Installed electricity generation capacity (GW)",
+        x=0.78,
+        y=0.5,
     )
 
-    # 5) Hourly comparisons (2-week slices + duration curves)
-    plot_hourly_slices_and_duration(scenarios, OUT_DIR / "hourly")
+    if EXPORT_FIGURES and outdir is not None:
+        outdir.mkdir(parents=True, exist_ok=True)
+        fig.savefig(outdir / "RQ1B_capacity_and_generation.png", dpi=300, bbox_inches="tight")
 
-    # 6) Storage overview (fallback: storage_flows)
-    plot_storage_overview(scenarios, OUT_DIR / "storage")
+    plt.show()
 
-    # 7) Optional maps (only if deps + files exist)
-    try_maps_optional(scenarios, OUT_DIR)
 
-    print("\n[done] Comparison outputs written to:")
-    print(f"  {OUT_DIR}\n")
+def plot_rq1_c_fuelconv_and_supply(caps_long: pd.DataFrame, cba_long: pd.DataFrame, outdir: Path | None = None):
+    sns.set_theme(style="whitegrid")
+
+    cap = build_fuelconv_caps(caps_long)
+    sup = build_fuel_supply_groups(cba_long)
+
+    if cap.empty or sup.empty:
+        print("RQ1.C: fuel conversion capacity or supply data missing.")
+        return
+
+    cap_order = [t for t in FUEL_CONV_STACK_ORDER if t in cap["tech"].unique().tolist()]
+
+    carrier_present = sorted(sup["fuel_group"].unique().tolist())
+    infer = colormaps.get_cmap("inferno")
+    n = max(1, len(carrier_present))
+    base_colors = [infer(i / max(1, (n - 1))) for i in range(n)]
+    carrier_cmap = {c: base_colors[i] for i, c in enumerate(carrier_present)}
+
+    cap_cmap = {
+        "Methanizer": carrier_cmap.get("e-CH4", DEFAULT_COLOR),
+        "FTropschSyn": carrier_cmap.get("e-FTL fuels", DEFAULT_COLOR),
+        "Electrolyser": carrier_cmap.get("e-hydrogen", DEFAULT_COLOR),
+        "DAC": "#8B5A2B",
+    }
+
+    fig, axes = plt.subplots(2, 1, figsize=(18, 11), sharex=True)
+    fig.subplots_adjust(left=0.08, right=0.75, top=0.98, bottom=0.12, hspace=0.06)
+
+    year_gap = YEAR_GAP * 0.5
+
+    stacked_grouped_bars(
+        ax=axes[0],
+        df_long=cap,
+        value_col="value",
+        category_col="tech",
+        y_label="Total installed capacity for fuel conversion (GW_output)",
+        years=YEAR_INTS,
+        scen_order=SCEN_ORDER,
+        cmap=cap_cmap,
+        cat_order=cap_order,
+        dx_in=DX_IN,
+        year_gap=year_gap,
+        year_pad=YEAR_PAD,
+        show_scen_labels=False,
+    )
+
+    stacked_grouped_bars(
+        ax=axes[1],
+        df_long=sup,
+        value_col="value_twh",
+        category_col="fuel_group",
+        y_label="Supply of fuels and chemicals (TWh)",
+        years=YEAR_INTS,
+        scen_order=SCEN_ORDER,
+        cmap=carrier_cmap,
+        cat_order=carrier_present,
+        dx_in=DX_IN,
+        year_gap=year_gap,
+        year_pad=YEAR_PAD,
+        show_scen_labels=True,
+    )
+
+    handles0 = [plt.Line2D([0], [0], color=cap_cmap.get(k, DEFAULT_COLOR), lw=10) for k in cap_order]
+    leg0 = fig.legend(
+        handles0,
+        cap_order,
+        title="Total installed capacity for fuel conversion (GW_output)",
+        loc="center left",
+        bbox_to_anchor=(0.78, 0.78),
+        frameon=True,
+        borderpad=1.2,
+        labelspacing=0.8,
+        handlelength=1.8,
+        handletextpad=0.8,
+    )
+    leg0.get_frame().set_linewidth(1.2)
+
+    handles1 = [plt.Line2D([0], [0], color=carrier_cmap.get(k, DEFAULT_COLOR), lw=10) for k in carrier_present]
+    leg1 = fig.legend(
+        handles1,
+        carrier_present,
+        title="Supply of fuels and chemicals (TWh)",
+        loc="center left",
+        bbox_to_anchor=(0.78, 0.22),
+        frameon=True,
+        borderpad=1.2,
+        labelspacing=0.8,
+        handlelength=1.8,
+        handletextpad=0.8,
+    )
+    leg1.get_frame().set_linewidth(1.2)
+
+    if EXPORT_FIGURES and outdir is not None:
+        outdir.mkdir(parents=True, exist_ok=True)
+        fig.savefig(outdir / "RQ1C_fuelconv_and_supply.png", dpi=300, bbox_inches="tight")
+
+    plt.show()
+
+
+def plot_rq3_a_costs_and_lcoe(ind_long: pd.DataFrame, ind_det_long: pd.DataFrame, cba_long: pd.DataFrame, outdir: Path | None = None):
+    sns.set_theme(style="whitegrid")
+
+    costs = build_cost_long_from_detailed(ind_det_long)
+    lcoe_df = build_lcoe(ind_det_long, cba_long)
+
+    if costs.empty or lcoe_df.empty:
+        print("RQ3-A: cost or LCOE data missing.")
+        return
+
+    comp_order = ["FuelCost", "Invest", "OMFix", "SlackCost", "SpillPenalty"]
+    comp_order = [c for c in comp_order if c in costs["component"].unique().tolist()]
+
+    colors = evenly_spaced_colors_from_cmap("viridis", n=len(comp_order), start=0.0, stop=1.0)
+    cmap = {c: col for c, col in zip(comp_order, colors)}
+
+    fig, axes = plt.subplots(2, 1, figsize=(18, 11), sharex=True)
+    fig.subplots_adjust(left=0.08, right=0.75, top=0.98, bottom=0.12, hspace=0.06)
+
+    year_gap = YEAR_GAP * 0.5
+
+    stacked_grouped_bars(
+        ax=axes[0],
+        df_long=costs,
+        value_col="value_bEUR",
+        category_col="component",
+        y_label="Total annualised cost (billion EUR)",
+        years=YEAR_INTS,
+        scen_order=SCEN_ORDER,
+        cmap=cmap,
+        cat_order=comp_order,
+        dx_in=DX_IN,
+        year_gap=year_gap,
+        year_pad=YEAR_PAD,
+        show_scen_labels=False,
+    )
+
+    for scen in SCEN_ORDER:
+        df_s = lcoe_df[lcoe_df["scenario"] == scen]
+        if df_s.empty:
+            continue
+        df_s = df_s.sort_values("year")
+        axes[1].plot(df_s["year"], df_s["LCOE_EUR_MWh"], marker="o", label=scen)
+
+    axes[1].set_xlabel("Year")
+    axes[1].set_ylabel("LCOE (EUR/MWh)")
+    axes[1].grid(axis="y", alpha=0.25)
+
+    scen_handles, scen_labels = axes[1].get_legend_handles_labels()
+    axes[1].legend(
+        scen_handles,
+        scen_labels,
+        title="LCOE (EUR/MWh)",
+        frameon=True,
+    )
+
+    leg = shared_legend(
+        fig=fig,
+        labels=comp_order,
+        cmap=cmap,
+        title="Total annualised cost (billion EUR)",
+        x=0.78,
+        y=0.5,
+    )
+
+    if EXPORT_FIGURES and outdir is not None:
+        outdir.mkdir(parents=True, exist_ok=True)
+        fig.savefig(outdir / "RQ3A_costs_and_lcoe.png", dpi=300, bbox_inches="tight")
+
+    plt.show()
+
+
+def plot_rq3_b_co2(ind_long: pd.DataFrame, ind_det_long: pd.DataFrame, outdir: Path | None = None):
+    sns.set_theme(style="whitegrid")
+
+    total = build_total_co2(ind_long)
+    contrib = build_co2_contributors_2050(ind_det_long)
+
+    if total.empty or contrib.empty:
+        print("RQ3-B: CO2 data missing.")
+        return
+
+    fig, axes = plt.subplots(2, 1, figsize=(10, 10))
+    fig.subplots_adjust(left=0.10, right=0.95, top=0.95, bottom=0.10, hspace=0.25)
+
+    for scen in SCEN_ORDER:
+        df_s = total[total["scenario"] == scen]
+        if df_s.empty:
+            continue
+        df_s = df_s.sort_values("year")
+        axes[0].plot(df_s["year"], df_s["value_mt"], marker="o", label=scen)
+
+    axes[0].set_xlabel("Year")
+    axes[0].set_ylabel("Total CO2 emissions (Mt CO2)")
+    axes[0].grid(axis="y", alpha=0.25)
+    axes[0].legend(
+        title="Total CO2 emissions (Mt CO2)",
+        frameon=True,
+    )
+
+    contrib = contrib.copy()
+    cats = sorted(contrib["category"].unique().tolist())
+    colors = evenly_spaced_colors_from_cmap("plasma", n=len(SCEN_ORDER), start=0.0, stop=1.0)
+    cmap_scen = {s: col for s, col in zip(SCEN_ORDER, colors)}
+
+    x = np.arange(len(cats))
+    width = 0.15
+
+    for i, scen in enumerate(SCEN_ORDER):
+        df_s = contrib[contrib["scenario"] == scen]
+        if df_s.empty:
+            continue
+        vals = [df_s[df_s["category"] == c]["value_mt"].sum() for c in cats]
+        axes[1].bar(x + i * width, vals, width=width, label=scen, color=cmap_scen[scen])
+
+    axes[1].set_xticks(x + width * (len(SCEN_ORDER) - 1) / 2.0)
+    axes[1].set_xticklabels(cats, rotation=45, ha="right")
+    axes[1].set_ylabel("CO2 emissions in 2050 (Mt CO2)")
+    axes[1].grid(axis="y", alpha=0.25)
+    axes[1].legend(
+        title="CO2 emissions in 2050 (Mt CO2)",
+        frameon=True,
+    )
+
+    if EXPORT_FIGURES and outdir is not None:
+        outdir.mkdir(parents=True, exist_ok=True)
+        fig.savefig(outdir / "RQ3B_co2.png", dpi=300, bbox_inches="tight")
+
+    plt.show()
+
+
+# ---------------------------------------------------------------------------
+# MAIN
+# ---------------------------------------------------------------------------
+
+def main():
+    outdir = BASE_DIR / "comparison_outputs"
+
+    cba_long, caps_long, ind_long, ind_det_long = load_needed_data()
+
+    plot_rq1_a_capacity_lines(caps_long=caps_long, outdir=outdir)
+    plot_rq1_b_capacity_and_generation(caps_long=caps_long, cba_long=cba_long, outdir=outdir)
+    plot_rq1_c_fuelconv_and_supply(caps_long=caps_long, cba_long=cba_long, outdir=outdir)
+    plot_rq3_a_costs_and_lcoe(ind_long=ind_long, ind_det_long=ind_det_long, cba_long=cba_long, outdir=outdir)
+    plot_rq3_b_co2(ind_long=ind_long, ind_det_long=ind_det_long, outdir=outdir)
 
 
 if __name__ == "__main__":
