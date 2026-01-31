@@ -227,7 +227,7 @@ def add_demand(m):
 
     slack_sum = pd.DataFrame(index=slack_idx)
     slack_sum["lower"] = 0.0
-    slack_sum["upper"] = 50
+    slack_sum["upper"] = 10000
     m["Base"].parameter.add(slack_sum, "sourcesink_annualsum")
 
     # Slack cost (use horizon)
@@ -3146,12 +3146,8 @@ def print_capacity_built_and_alive(m, year=2020, tech_prefix=None, top_n_cols=No
 group_name = "GP-NT-ELEC-BIO-H2"
 
 # year combinations to build
-scenarios = ["BIO+",
-              "H2+",
-              "GP", 
-              "NT", 
-              "ELEC+"]
-             
+scenarios = ["GP", "NT", "ELEC", "BIO", "H2"]
+                     
 year_sets = [
     #[2020, 2050],
     [2020, 2025, 2030, 2035, 2040, 2045, 2050],
