@@ -450,6 +450,30 @@ def rq3_4_co2_by_contributor_2050(data: dict, year: int = 2050) -> pd.DataFrame:
     pv = _drop_all_zero_rows_cols(pv)
     return pv
 
+# Add output directories and export flags
+OUTPUT_DIR = Path("exports")
+OUTPUT_DIR.mkdir(exist_ok=True, parents=True)
+EXPORT_CSV = True
+EXPORT_TXT = True
+
+def save_table(table_name: str, df: pd.DataFrame):
+    """Save DataFrame as both CSV and TXT with consistent naming."""
+    if df.empty:
+        print(f"Skipping empty table: {table_name}")
+        return
+    
+    csv_path = OUTPUT_DIR / f"{table_name}.csv"
+    txt_path = OUTPUT_DIR / f"{table_name}.txt"
+    
+    # Save CSV
+    df.to_csv(csv_path, float_format="%.3f")
+    print(f"✓ CSV saved: {csv_path}")
+    
+    # Save TXT (tab-separated, readable)
+    df.to_csv(txt_path, sep="\t", float_format="%.3f", index=True)
+    print(f"✓ TXT saved: {txt_path}")
+
+
 
 def run_all(case_result_dirs):
     data = load_scenarios(case_result_dirs)
@@ -457,21 +481,26 @@ def run_all(case_result_dirs):
     _banner("RQ1-1 Installed electricity generation capacity (GW)")
     t11 = rq1_1_gen_capacity_gw(data, YEAR_INTS)
     print(t11 if not t11.empty else "Empty")
+    save_table("rq1_1_gen_capacity_gw", t11)
 
     _banner("RQ1-2A Electricity supply by tech (TWh)")
     t2s, t2d = rq1_2_elec_supply_demand_twh(data, YEAR_INTS)
     print(t2s if not t2s.empty else "Empty")
+    save_table("rq1_2a_elec_supply_twh", t2s)
 
     _banner("RQ1-2B Electricity demand by tech (TWh)")
     print(t2d if not t2d.empty else "Empty")
+    save_table("rq1_2b_elec_demand_twh", t2d)
 
     _banner("RQ1-3 Total installed capacity for fuel conversion (GW_[output])")
     t13 = rq1_3_fuel_conversion_capacity_gw_out(data, [y for y in YEAR_INTS if y != 2020])
     print(t13 if not t13.empty else "Empty")
+    save_table("rq1_3_fuel_conversion_capacity", t13)
 
     _banner("RQ3-1 Total annualised costs (billion EUR) [components + SystemCost separate]")
     t31, w31 = rq3_1_system_cost_components_billion_eur(data, YEAR_INTS)
     print(t31 if not t31.empty else "Empty")
+    save_table("rq3_1_system_costs", t31)
 
     if w31:
         _banner("Warnings: SystemCost consistency")
@@ -483,15 +512,18 @@ def run_all(case_result_dirs):
     print(lcoe if not lcoe.empty else "Empty")
     print()
     print(comp if not comp.empty else "Empty")
+    save_table("rq3_2a_lcoe", lcoe)
+    save_table("rq3_2b_lcoe_components", comp)
 
     _banner("RQ3-3 Total CO2 emissions (Mt CO2)")
     t33 = rq3_3_total_co2_mt(data, YEAR_INTS)
     print(t33 if not t33.empty else "Empty")
+    save_table("rq3_3_total_co2", t33)
 
     _banner("RQ3-4 CO2 emissions by contributor in 2050 (Mt CO2) [aggregated across nodes]")
     t34 = rq3_4_co2_by_contributor_2050(data, 2050)
     print(t34 if not t34.empty else "Empty")
-
+    save_table("rq3_4_co2_by_contributor_2050", t34)
 
 if __name__ == "__main__":
     run_all(CASE_RESULT_DIRS)

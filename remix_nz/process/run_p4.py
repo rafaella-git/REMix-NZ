@@ -6,10 +6,7 @@ from pathlib import Path
 
 from remix.framework.api.instance import Instance
 
-# -------------------------
-# user settings
-# -------------------------
-save_tempfiles = True
+save_tempfiles = False # set to True to save .lst/.log files to temp_files/
 
 process_dir = Path(r"C:\Local\REMix\remix_nz\process")
 lst_src = process_dir / "run_remix.lst"
@@ -18,18 +15,14 @@ log_src = process_dir / "run_remix.log"
 temp_dir = Path(r"C:\Local\REMix\remix_nz\project\GP-NT-ELEC-BIO-H2\temp_files")
 temp_dir.mkdir(parents=True, exist_ok=True)
 
-# -------------------------
-# cases
-# -------------------------
 cases = [
-    ("GP-NT-ELEC-BIO-H2", "nz_case_GP_2020-2025-2030-2035-2040-2045-2050", "gurobi"),
-    ("GP-NT-ELEC-BIO-H2", "nz_case_NT_2020-2025-2030-2035-2040-2045-2050", "gurobi"),
-    ("GP-NT-ELEC-BIO-H2", "nz_case_H2+_2020-2025-2030-2035-2040-2045-2050", "gurobi"),
-    ("GP-NT-ELEC-BIO-H2", "nz_case_BIO+_2020-2025-2030-2035-2040-2045-2050", "gurobi"),
-    ("GP-NT-ELEC-BIO-H2", "nz_case_ELEC+_2020-2025-2030-2035-2040-2045-2050", "gurobi"),
+    #("GP-NT-ELEC-BIO-H2", "nz_case_GP_2020-2025-2030-2035-2040-2045-2050", "gurobi"),
+    #("GP-NT-ELEC-BIO-H2", "nz_case_NT_2020-2025-2030-2035-2040-2045-2050", "gurobi"),
+    ("GP-NT-ELEC-BIO-H2", "nz_case_H2+_2020-2025-2030-2035-2040-2045-2050", "cplex "),
+    ("GP-NT-ELEC-BIO-H2", "nz_case_BIO+_2020-2025-2030-2035-2040-2045-2050", "cplex"),
+    ("GP-NT-ELEC-BIO-H2", "nz_case_ELEC+_2020-2025-2030-2035-2040-2045-2050", "cplex"),
 ]
 
-# -----------------------------------------------------------------------------
 script_dir = Path(__file__).parent.resolve()
 os.chdir(script_dir)
 
@@ -59,7 +52,7 @@ for group_name, case_name, solver in cases:
             lo=4,
             postcalc=1,
             roundts=1,
-            names=1,
+            names=0,
             timeres=1,      # hourly
             threads=8,
             pathopt="myopic",  # "myopic"/"foresight" /"target"
@@ -71,12 +64,12 @@ for group_name, case_name, solver in cases:
             log_dst = temp_dir / f"{case_name}__{ts}.log"
 
             if lst_src.exists():
-                shutil.copy2(lst_src, lst_dst)  # preserves metadata where possible [web:80]
+                shutil.copy2(lst_src, lst_dst)
             else:
                 print(f"  [warn] Missing .lst: {lst_src}")
 
             if log_src.exists():
-                shutil.copy2(log_src, log_dst)  # preserves metadata where possible [web:80]
+                shutil.copy2(log_src, log_dst)  
             else:
                 print(f"  [warn] Missing .log: {log_src}")
 
