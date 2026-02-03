@@ -305,6 +305,16 @@ def stacked_grouped_bars(
 
     return piv.columns.tolist()
 
+def filter_to_global(df: pd.DataFrame, node_cols=("accNodesModel", "nodesModel")) -> pd.DataFrame:
+    df = df.copy()
+    node_col = next((c for c in node_cols if c in df.columns), None)
+    if node_col is None:
+        return df
+    s = df[node_col].astype(str).str.lower()
+    if (s == "global").any():
+        return df[s == "global"].copy()
+    print(f"WARNING: no {node_col}=='global' rows; aggregating across {node_col}")
+    return df
 
 def shared_legend(fig, labels: list[str], cmap: dict[str, str], title: str, x: float, y: float):
     handles = [plt.Line2D([0], [0], color=cmap.get(l, DEFAULT_COLOR), lw=10) for l in labels]
@@ -382,9 +392,7 @@ def load_needed_data():
 
 def build_capacity_grouped(caps_long: pd.DataFrame) -> pd.DataFrame:
     df = caps_long.copy()
-    if "nodesModel" in df.columns and (df["nodesModel"] == "global").any():
-        df = df[df["nodesModel"] == "global"].copy()
-
+    df = filter_to_global(df)
     df = df[
         (df["capType"] == "total")
         & (df["commodity"] == "Elec")
@@ -403,8 +411,7 @@ def build_capacity_grouped(caps_long: pd.DataFrame) -> pd.DataFrame:
 
 def build_generation_grouped(cba_long: pd.DataFrame) -> pd.DataFrame:
     df = cba_long.copy()
-    if "accNodesModel" in df.columns and (df["accNodesModel"] == "global").any():
-        df = df[df["accNodesModel"] == "global"].copy()
+    df = filter_to_global(df)
 
     df = df[
         (df["commodity"] == "Elec")
@@ -427,9 +434,7 @@ def build_generation_grouped(cba_long: pd.DataFrame) -> pd.DataFrame:
 
 def build_fuelconv_caps(caps_long: pd.DataFrame) -> pd.DataFrame:
     df = caps_long.copy()
-    if "accNodesModel" in df.columns and (df["accNodesModel"] == "global").any():
-        df = df[df["accNodesModel"] == "global"].copy()
-
+    df = filter_to_global(df)
     df = df[
         (df["capType"] == "total")
         & (df["year"].isin(YEAR_INTS))
@@ -445,8 +450,7 @@ def build_fuelconv_caps(caps_long: pd.DataFrame) -> pd.DataFrame:
 
 def build_fuel_supply(cba_long: pd.DataFrame) -> pd.DataFrame:
     df = cba_long.copy()
-    if "accNodesModel" in df.columns and (df["accNodesModel"] == "global").any():
-        df = df[df["accNodesModel"] == "global"].copy()
+    df = filter_to_global(df)
 
     df = df[
         (df["year"].isin(YEAR_INTS))
@@ -522,6 +526,7 @@ def build_cost_long_from_detailed_full(ind_det_long: pd.DataFrame) -> pd.DataFra
         return pd.DataFrame(columns=["year", "scenario", "component", "value_bEUR"])
 
     df = ind_det_long.copy()
+    df = filter_to_global(df)
 
     df = df[df["indicator"].isin(["FuelCost", "Invest", "OMFix", "SlackCost", "SpillPenalty"])].copy()
 
@@ -658,6 +663,13 @@ def plot_capacity_and_generation_grouped(
     sns.set_theme(style="whitegrid")
 
     cap = build_capacity_grouped(caps_long)
+
+    tmp = caps_long.copy()
+    
+    #print("converter_caps columns:", tmp.columns.tolist())
+    if "nodesModel" in tmp.columns:
+        print(tmp["nodesModel"].astype(str).value_counts().head(20))
+
     gen = build_generation_grouped(cba_long)
 
     if cap.empty or gen.empty:
@@ -883,8 +895,16 @@ def tech_group_pretty(tech: str) -> str:
 
 def build_fuelconv_caps(caps_long: pd.DataFrame) -> pd.DataFrame:
     df = caps_long.copy()
-    if "accNodesModel" in df.columns and (df["accNodesModel"] == "global").any():
-        df = df[df["accNodesModel"] == "global"].copy()
+    
+    if "accNodesModel" in df.columns:
+        if (df["accNodesModel"].astype(str) == "global").any():
+            df = df[df["accNodesModel"].astype(str) == "global"].copy()
+        else:
+            print("WARNING: no accNodesModel=='global' rows; aggregating across accNodesModel")
+              
+
+
+
 
     df = df[
         (df["capType"] == "total")
