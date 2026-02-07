@@ -198,9 +198,11 @@ data-for-paper/
 
 # GP-NT-ELEC-BIO-H2: do not version generated data folders anywhere under this project
 remix_nz/project/GP-NT-ELEC-BIO-H2/**/data/
+/remix_nz/project/GP-NT-ELEC-BIO-H2-copy/
+/remix_nz/project/safe/
 /remix_nz/input/demand/GP-NT-ELEC-BIO-H2/hourly_electricity_GP-NT-ELEC-BIO-H2.csv
 remix_nz/project/GP-NT-ELEC-BIO-H2/comparison/results
-
+remix_nz/project/GP-NT-ELEC-BIO-H2/comparison/results
 # Never commit GAMS output/input artifacts
 *.gdx
 *.gsp

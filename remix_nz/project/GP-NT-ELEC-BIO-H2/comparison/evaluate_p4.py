@@ -47,7 +47,8 @@ GEN_TECH_MIN_TWH = 0.01
 CAP_TECH_MIN_GW = 0.01
 
 FUEL_CONV_TECHS = ["Methanizer", "FTropschSyn", "Electrolyser", "DAC"]
-FUEL_CONV_STACK_ORDER = ["Electrolyser", "Methanizer", "FTropschSyn", "DAC"]
+FUEL_CONV_STACK_ORDER = [ "DAC",  "FTropschSyn","Methanizer", "Electrolyser", ]
+
 
 COST_COMPONENTS = ["FuelCost", "Invest", "OMFix", "SlackCost", "SpillPenalty", "Slack_CO2"]
 
@@ -746,7 +747,9 @@ def plot_fuelconv_and_supply(
 
     # YlOrBr-style sequence for fuel conversion techs
     n_cap = len(cap_order) if cap_order else 1
+    ylbr_colors = ylbr_colors[::-1]
     ylbr_colors = evenly_spaced_colors_from_cmap("YlOrBr", n_cap, start=0.2, stop=0.9)
+    
     cap_cmap = {tech: col for tech, col in zip(cap_order, ylbr_colors)}
 
     all_carriers = sorted(sup["carrier"].unique().tolist())
@@ -943,6 +946,7 @@ def plot_fuelconv_and_supply(
 
     n_cap = len(cap_order) if cap_order else 1
     ylbr_colors = evenly_spaced_colors_from_cmap("YlOrBr", n_cap, start=0.2, stop=0.9)
+    ylbr_colors = ylbr_colors[::-1]
     cap_cmap = {tech: col for tech, col in zip(cap_order, ylbr_colors)}
 
     all_carriers = sorted(sup["carrier"].unique().tolist())
