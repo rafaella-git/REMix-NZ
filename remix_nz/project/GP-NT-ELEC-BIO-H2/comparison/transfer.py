@@ -16,7 +16,7 @@ REGIONS_GEOJSON = r"C:\Local\REMix\remix_nz\input\shapefiles\11regionsNZ.geojson
 BASE_DIR = Path(r"C:\Local\REMix\remix_nz\project\GP-NT-ELEC-BIO-H2")
 
 CASE_DIRS = [
-    "nz_case_GP_2020-2025-2030-2035-2040-2045-2050",
+    "nz_case_GP_2020-2050",
     "nz_case_NT_2020-2025-2030-2035-2040-2045-2050",
     "nz_case_ELEC+_2020-2025-2030-2035-2040-2045-2050",
     "nz_case_BIO+_2020-2025-2030-2035-2040-2045-2050",
@@ -25,7 +25,7 @@ CASE_DIRS = [
 
 SCEN_ORDER = ["GP", "NT", "ELEC+", "BIO+", "H2+"]
 
-YEAR_FIRST_PANEL = 2025
+YEAR_FIRST_PANEL = 2020
 YEAR_OTHER_PANELS = 2050
 
 TRANSFER_TECH = "HV"
@@ -34,7 +34,7 @@ CAP_TYPE = "total"
 FLOW_NET_TYPE = "net"
 FLOW_FLH_TYPE = "flh"
 
-WIDTH_MODE = "net"   # "net" or "cap"
+WIDTH_MODE = "cap"   # "net" or "cap"
 SHOW_LABELS = True
 
 LABEL_LEFT = {"AKL", "WTO", "TRN"}   # these labels appear left of centroid

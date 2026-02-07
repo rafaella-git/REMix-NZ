@@ -277,13 +277,11 @@ def add_demand(m):
     m["Base"].profile.add(slack_lower, "sourcesink_profile")
 
 
+
 def add_network(m):
 
     print("\n--- ADDING TRANSMISSION NETWORK + ACCOUNTING ---")
 
-    # ------------------------------------------------------------------
-    # Define links and types
-    # ------------------------------------------------------------------
     link_names = [
         "NIS__AKL",
         "AKL__WTO",
@@ -316,42 +314,30 @@ def add_network(m):
 
     link_connections.loc[idx["NIS__AKL", "NIS"], "start"] = 1
     link_connections.loc[idx["NIS__AKL", "AKL"], "end"] = 1
-
     link_connections.loc[idx["AKL__WTO", "AKL"], "start"] = 1
     link_connections.loc[idx["AKL__WTO", "WTO"], "end"] = 1
-
     link_connections.loc[idx["WTO__BOP", "WTO"], "start"] = 1
     link_connections.loc[idx["WTO__BOP", "BOP"], "end"] = 1
-
     link_connections.loc[idx["WTO__CEN", "WTO"], "start"] = 1
     link_connections.loc[idx["WTO__CEN", "CEN"], "end"] = 1
-
     link_connections.loc[idx["CEN__HBY", "CEN"], "start"] = 1
     link_connections.loc[idx["CEN__HBY", "HBY"], "end"] = 1
-
     link_connections.loc[idx["TRN__CEN", "TRN"], "start"] = 1
     link_connections.loc[idx["TRN__CEN", "CEN"], "end"] = 1
-
     link_connections.loc[idx["CEN__WEL", "CEN"], "start"] = 1
     link_connections.loc[idx["CEN__WEL", "WEL"], "end"] = 1
-
     link_connections.loc[idx["WEL__CAN", "WEL"], "start"] = 1
     link_connections.loc[idx["WEL__CAN", "CAN"], "end"] = 1
-
     link_connections.loc[idx["NEL__CAN", "NEL"], "start"] = 1
     link_connections.loc[idx["NEL__CAN", "CAN"], "end"] = 1
-
     link_connections.loc[idx["CAN__OTG", "CAN"], "start"] = 1
     link_connections.loc[idx["CAN__OTG", "OTG"], "end"] = 1
-
     link_connections.loc[idx["AKL__TRN", "AKL"], "start"] = 1
     link_connections.loc[idx["AKL__TRN", "TRN"], "end"] = 1
-
     link_connections.loc[idx["WTO__HBY", "WTO"], "start"] = 1
     link_connections.loc[idx["WTO__HBY", "HBY"], "end"] = 1
 
     m["Base"].parameter.add(link_connections.fillna(0.0), "transfer_linkstartend")
-
 
     link_lengths = pd.DataFrame(
         index=pd.MultiIndex.from_product(
@@ -374,14 +360,12 @@ def add_network(m):
 
     m["Base"].parameter.add(link_lengths.fillna(0.0), "transfer_lengthparam")
 
-
     transport_techs = ["HV"]
     m["Base"].set.add(transport_techs, "transfer_techs")
 
     years_model = sorted(str(y) for y in m["Base"].set.yearssel)
     commodities = ["Elec"]
 
-    # --- corridor capacities in MW (from your table) ---
     cap_mw = {
         "CAN__OTG": 972,
         "NEL__CAN": 890,
@@ -397,56 +381,52 @@ def add_network(m):
         "NIS__AKL": 1055,
     }
 
-    # convert to GW (REMix unit)
-    cap_gw_2020 = {k: v / 1000.0 for k, v in cap_mw.items()}
+    cap_gw = {k: v / 1000.0 for k, v in cap_mw.items()}
+    expansion_cap_multiplier = 10.0
 
-    # expansion headroom after 2020 (choose)
-    expansion_cap_multiplier = 10.0   # allow up to 10x reinforcement
-    # If you prefer "unbounded", you can set upper to np.inf instead.
-
-    # Build the linksparam table in one shot (vectorised)
     mi = pd.MultiIndex.from_product(
         [link_names, years_model, transport_techs],
         names=["linksData", "years", "transfer_techs"],
     )
     link_caps = pd.DataFrame(index=mi)
 
-    # Defaults
     link_caps["limitFlows"] = 1
     link_caps["flowAlongLimit"] = 1
     link_caps["flowAgainstLimit"] = 1
-    link_caps["noExpansion"] = 0  # allow by default
+    link_caps["linksBuild"] = 0.0
+    link_caps["linksLowerLimit"] = 0.0
+    link_caps["linksUpperLimit"] = 0.0
+    link_caps["noExpansion"] = 0
 
-    # Map 2020 capacities onto the MultiIndex
-    cap_series = pd.Series(cap_gw_2020, name="cap2020_GW")  # index = link_names
+    cap_series = pd.Series(cap_gw, name="cap2020_GW")
     link_caps = link_caps.join(cap_series, on="linksData")
 
-    # Lower limit is always at least existing 2020 capacity (all years)
-    link_caps["linksLowerLimit"] = link_caps["cap2020_GW"]
-
-    # Upper limit:
-    # - 2020 fixed: equals existing
-    # - later years: allow expansion up to multiplier * existing
     is_2020 = link_caps.index.get_level_values("years") == "2020"
-    link_caps.loc[is_2020, "linksUpperLimit"] = link_caps.loc[is_2020, "cap2020_GW"]
-    link_caps.loc[~is_2020, "linksUpperLimit"] = (
-        link_caps.loc[~is_2020, "cap2020_GW"] * expansion_cap_multiplier
-    )
 
-    # - 2020 fixed
-    link_caps.loc[is_2020, "noExpansion"] = 1
+    link_caps.loc[is_2020, "linksBuild"] = link_caps.loc[is_2020, "cap2020_GW"]
+    link_caps.loc[is_2020, "linksLowerLimit"] = link_caps.loc[is_2020, "cap2020_GW"]
+    link_caps.loc[is_2020, "linksUpperLimit"] = link_caps.loc[is_2020, "cap2020_GW"]
+    link_caps.loc[is_2020, "noExpansion"] = 0 #fixme
+
+    link_caps.loc[~is_2020, "linksBuild"] = 0.0
+    link_caps.loc[~is_2020, "linksLowerLimit"] = link_caps.loc[~is_2020, "cap2020_GW"]
+    link_caps.loc[~is_2020, "linksUpperLimit"] = link_caps.loc[~is_2020, "cap2020_GW"] * expansion_cap_multiplier
     link_caps.loc[~is_2020, "noExpansion"] = 0
 
-    # Cleanup helper col
-    link_caps = link_caps.drop(columns=["cap2020_GW"]).fillna(0.0)
-
-    # Optiona
-    link_caps = link_caps.sort_index()
-
+    link_caps = link_caps.drop(columns=["cap2020_GW"]).fillna(0.0).sort_index()
     m["Base"].parameter.add(link_caps, "transfer_linksparam")
 
+    print("\n[DIAG] Total existing transmission capacity (GW):", float(sum(cap_gw.values())))
 
-    # transfer_techparam (transfer_techs x vintage)
+    df2020 = link_caps.xs(("2020", "HV"), level=("years", "transfer_techs"))[
+        ["linksBuild", "linksLowerLimit", "linksUpperLimit", "noExpansion", "limitFlows"]
+    ]
+    print("\n[DIAG] 2020 transfer_linksparam snapshot:")
+    print(df2020)
+
+    print("\n[DIAG] 2020 check (linksBuild vs lower):")
+    print((df2020["linksBuild"] - df2020["linksLowerLimit"]).describe())
+
     tech_params = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [transport_techs, years_model],
@@ -454,10 +434,9 @@ def add_network(m):
         )
     )
     tech_params["lifeTime"] = 40
-    tech_params["flowUpperLimit"] = 1  # per-link flow factor (dimensionless)
+    tech_params["flowUpperLimit"] = 1
     m["Base"].parameter.add(tech_params, "transfer_techparam")
 
-    # transfer_coefficient (transfer_techs x vintage x commodity)
     transfer_coefficient = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [transport_techs, years_model, commodities],
@@ -467,7 +446,6 @@ def add_network(m):
     transfer_coefficient["coefficient"] = 1
     m["Base"].parameter.add(transfer_coefficient, "transfer_coefficient")
 
-    # transfer_coefperflow (transfer_techs x vintage x commodity)
     coef_per_flow = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [transport_techs, years_model, commodities],
@@ -477,7 +455,6 @@ def add_network(m):
     coef_per_flow["coefPerFlow"] = -0.014
     m["Base"].parameter.add(coef_per_flow, "transfer_coefperflow")
 
-    # transfer_coefperlength (transfer_techs x vintage x commodity x link_types)
     coef_per_dist = pd.DataFrame(
         index=pd.MultiIndex.from_product(
             [transport_techs, years_model, commodities, link_types],
@@ -488,52 +465,8 @@ def add_network(m):
     coef_per_dist.loc[idx[:, :, :, "sea"], "coefPerLength"] = -0.00003
     m["Base"].parameter.add(coef_per_dist.fillna(0.0), "transfer_coefperlength")
 
+    print("[add_network] links:", len(link_names), "techs:", transport_techs, "years:", years_model)
 
-    cost_indicators = ["Invest", "OMFix"]
-    accLinksData = ["global"]
-    accYears_vals = ["horizon"]
-    vintages = list(years_model)
-
-    acc_tl = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [cost_indicators, accLinksData, accYears_vals, transport_techs, vintages],
-            names=["indicator", "accLinksData", "accYears", "transfer_techs", "vintage"],
-        )
-    )
-    acc_tl.loc[idx["Invest", "global", :, :, :], "perLinkBuild"] = 180
-    acc_tl.loc[idx["Invest", "global", :, :, :], "interest"] = 0.06
-    acc_tl.loc[idx["Invest", "global", :, :, :], "amorTime"] = 40
-    acc_tl.loc[idx["Invest", "global", :, :, :], "useAnnuity"] = 1
-    acc_tl.loc[idx["OMFix", "global", :, :, :], "perLinkTotal"] = 1.8
-    m["Base"].parameter.add(acc_tl.fillna(0.0), "accounting_transferlinks")
-
-    acc_tpl = pd.DataFrame(
-        index=pd.MultiIndex.from_product(
-            [cost_indicators, accLinksData, accYears_vals, transport_techs, vintages, link_types],
-            names=["indicator", "accLinksData", "accYears", "transfer_techs", "vintage", "link_types"],
-        )
-    )
-    # land
-    acc_tpl.loc[idx["Invest", "global", :, :, :, "land"], "perLengthBuild"] = 0.544
-    acc_tpl.loc[idx["Invest", "global", :, :, :, "land"], "interest"] = 0.06
-    acc_tpl.loc[idx["Invest", "global", :, :, :, "land"], "amorTime"] = 40
-    acc_tpl.loc[idx["Invest", "global", :, :, :, "land"], "useAnnuity"] = 1
-    acc_tpl.loc[idx["OMFix", "global", :, :, :, "land"], "perLengthTotal"] = 0.00544
-    # sea
-    acc_tpl.loc[idx["Invest", "global", :, :, :, "sea"], "perLengthBuild"] = 0.975
-    acc_tpl.loc[idx["Invest", "global", :, :, :, "sea"], "interest"] = 0.06
-    acc_tpl.loc[idx["Invest", "global", :, :, :, "sea"], "amorTime"] = 40
-    acc_tpl.loc[idx["Invest", "global", :, :, :, "sea"], "useAnnuity"] = 1
-    acc_tpl.loc[idx["OMFix", "global", :, :, :, "sea"], "perLengthTotal"] = 0.00975
-
-    m["Base"].parameter.add(acc_tpl.fillna(0.0), "accounting_transferperlength")
-
-    print(
-        "[add_network] links:", len(link_names),
-        "transfer techs:", transport_techs,
-        "vintages:", vintages,
-        "accYears:", accYears_vals,
-    )
 
 def add_accounting(m):
     #  The value global uses all the regions in the system
@@ -3186,7 +3119,7 @@ group_name = "GP-NT-ELEC-BIO-H2"
 scenarios = ["GP", "NT", "ELEC+", "BIO+", "H2+"]
                      
 year_sets = [
-    [2020, 2050],
+    #[2020, 2050],
     [2020, 2025, 2030, 2035, 2040, 2045, 2050],
 ]
 # ---------------------------------------------------------------------------------

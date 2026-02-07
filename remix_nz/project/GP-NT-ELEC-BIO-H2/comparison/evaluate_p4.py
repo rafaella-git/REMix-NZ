@@ -29,7 +29,7 @@ CASE_DIRS = [
     "nz_case_H2+_2020-2025-2030-2035-2040-2045-2050",
 ]
 
-INCLUDE_2020 = False
+INCLUDE_2020 = True
 USE_SEPARATE_FOLDERS = True
 SINGLE_GDX_FOLDER = Path(r"C:\Local\REMix\remix_nz\project\GP-NT-ELEC-BIO-H2\gdxs")
 
